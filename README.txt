@@ -57,4 +57,5 @@ file for info).
 sudo service supervisor restart
 
 Note that you will have to set up Apache/NGINX with SSL proxying to both the
-doorserver ort and the webapp port for everything to work properly.
+doorserver port and the webapp port for everything to work properly.  See
+configs/apache for sample configurations.
