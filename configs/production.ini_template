@@ -1,0 +1,63 @@
+###
+# app configuration
+# https://docs.pylonsproject.org/projects/pyramid/en/latest/narr/environment.html
+###
+
+[app:main]
+use = egg:breakonthru
+
+pyramid.reload_templates = true
+pyramid.debug_authorization = false
+pyramid.debug_notfound = false
+pyramid.debug_routematch = false
+pyramid.default_locale_name = en
+
+password_file = /home/chrism/lockit/passwords
+secret = mysecret
+websocket_url = wss://lockit.mydomain.org/
+
+###
+# wsgi server configuration
+###
+
+[server:main]
+use = egg:waitress#main
+listen = *:6544
+url_scheme = https
+
+###
+# logging configuration
+# https://docs.pylonsproject.org/projects/pyramid/en/latest/narr/logging.html
+###
+
+[loggers]
+keys = root, breakonthru
+
+[handlers]
+keys = console, file
+
+[formatters]
+keys = generic
+
+[logger_root]
+level = INFO
+handlers = console, file
+
+[logger_breakonthru]
+level = INFO
+handlers =
+qualname = breakonthru
+
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = NOTSET
+formatter = generic
+
+[handler_file]
+class = FileHandler
+formatter = generic
+args = ('/home/chrism/uiserver.log', 'a')
+
+[formatter_generic]
+format = %(asctime)s %(levelname)-5.5s [%(name)s:%(lineno)s][%(threadName)s] %(message)s
