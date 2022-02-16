@@ -19,7 +19,7 @@ While still in "lockit", create a Python virtual environment "python3 -m venv en
 cd into "breakonthru"
 
 ../env/bin/pip install --upgrade pip setuptools
-export CFLAGS=-fcommon
+export CFLAGS=-fcommon   # to allow RPi.GPIO to build properly
 ../env/bin/pip install -e .
 
 sudo apt install supervisor
