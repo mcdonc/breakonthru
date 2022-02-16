@@ -1,7 +1,8 @@
 breakonthru
 ===========
 
-Door unlock/comms hack for 80s-tastic apartment intercom system.
+Door unlock/comms hack for 80s-tastic apartment intercom system.  See
+https://www.youtube.com/watch?v=cVQtVz5TQ54 for more info.
 
 On Pi
 =====
