@@ -12,13 +12,14 @@ import websockets.exceptions
 class Doorclient:
     webrtc_client_proc = None
     comm_start_time = None
-    talk_max_duration = 60
-    door_unlocked_max_duration = 10
-    gpio_pin = 18
     unlocking = False
     
     def __init__(self, sink, source, webrtc_cli_path, server, secret,
-                 logfile=None, echocancel=False):
+                 logfile=None, echocancel=False, gpio_pin=18,
+                 talk_duration=60, door_unlocked_duration=10):
+        self.gpio_pin = gpio_pin
+        self.talk_duration = talk_duration
+        self.door_unlocked_duration = door_unlocked_duration
         if echocancel:
             os.system( "/usr/bin/pactl unload-module module-echo-cancel")
             os.system(f"/usr/bin/pactl load-module module-echo-cancel aec_method=webrtc "
@@ -88,7 +89,7 @@ class Doorclient:
         GPIO.output(self.gpio_pin, 1)
         self.unlocking = True
         loop = asyncio.get_event_loop()
-        loop.call_later(self.door_unlocked_max_duration, self.lock)
+        loop.call_later(self.door_unlocked_duration, self.lock)
 
     async def serve(self):
         webrtc_client_command = (
@@ -130,7 +131,7 @@ class Doorclient:
                         await websocket.pong()
                     if self.webrtc_client_proc is not None:
                         now = time.time()
-                        if now > (self.comm_start_time + self.talk_max_duration):
+                        if now > (self.comm_start_time + self.talk_duration):
                             self.log("killing webrtc client: exceed max durat")
                             self.kill_webrtc_client_proc()
                             continue
@@ -233,10 +234,27 @@ def main():
     parser.add_argument('--echocancel', dest='echocancel',
                         help="Use Pulse echo cancellation",
                         action='store_true')
+    parser.add_argument('--gpio-pin', help="door unlock gpio signal pin num",
+                        type=int, default=18)
+    parser.add_argument('--talk-duration', help="Duration to leave comms open",
+                        type=int, default=60)
+    parser.add_argument('--door-unlock-duration',
+                        help="Duration to leave door unlocked",
+                        type=int, default=18)
     parser.set_defaults(echocancel=False)
     args = parser.parse_args()
-    client = Doorclient(args.sink, args.source, args.webrtc_cli, args.server,
-                        args.secret, args.logfile, args.echocancel)
+    client = Doorclient(
+        args.sink,
+        args.source,
+        args.webrtc_cli,
+        args.server,
+        args.secret,
+        args.logfile,
+        args.echocancel,
+        args.gpio_pin,
+        args.talk_duration,
+        args.door_unlock_duration
+    )
     client.run()
     
             
