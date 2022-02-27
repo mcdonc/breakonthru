@@ -34,8 +34,8 @@ function fetchTokendata() {
 }
 
 function createWebSocket() {
-    if (typeof ws !== 'undefined') { return }
     fetchTokendata();
+    if (typeof ws !== 'undefined') { return }
     url = websocket_url; // from index.pt
     ws = new WebSocket(url)
     ws.onmessage = function(event) {
