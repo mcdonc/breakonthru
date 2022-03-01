@@ -25,6 +25,8 @@ function unlockDoor() {
 }
 
 function fetchTokendata() {
+    window.tokendata = undefined
+    printLog("fetching token data")
     var url = "/token"
     fetch(url).then(
         response=>{return response.json()}
@@ -35,7 +37,6 @@ function fetchTokendata() {
 
 function createWebSocket() {
     if (typeof ws !== 'undefined') { return }
-    fetchTokendata();
     url = websocket_url; // from index.pt
     ws = new WebSocket(url)
     ws.onmessage = function(event) {
@@ -51,6 +52,7 @@ function createWebSocket() {
     }
     ws.onopen = function(event) {
         printLog("Websocket opened")
+        fetchTokendata();
         identify()
     }
 }
