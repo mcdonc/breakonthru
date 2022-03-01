@@ -1,7 +1,8 @@
 breakonthru
 ===========
 
-Door unlock/comms hack for 80s-tastic apartment intercom system.
+Door unlock/comms hack for 80s-tastic apartment intercom system.  See
+https://www.youtube.com/watch?v=cVQtVz5TQ54 for more info.
 
 On Pi
 =====
@@ -19,7 +20,7 @@ While still in "lockit", create a Python virtual environment "python3 -m venv en
 cd into "breakonthru"
 
 ../env/bin/pip install --upgrade pip setuptools
-export CFLAGS=-fcommon
+export CFLAGS=-fcommon   # to allow RPi.GPIO to build properly
 ../env/bin/pip install -e .
 
 sudo apt install supervisor
@@ -57,4 +58,5 @@ file for info).
 sudo service supervisor restart
 
 Note that you will have to set up Apache/NGINX with SSL proxying to both the
-doorserver ort and the webapp port for everything to work properly.
+doorserver port and the webapp port for everything to work properly.  See
+configs/apache for sample configurations.
