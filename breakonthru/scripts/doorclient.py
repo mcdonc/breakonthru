@@ -61,7 +61,7 @@ class Doorclient:
             strpid = pagerlockfile.read()
             pagerpid = int(strpid)
         except ValueError:
-            self.log(f'skipped page, garbage in lockfile: {stripid}')
+            self.log(f'skipped page, garbage in lockfile: {strpid}')
             return
 
         if now > (self.lastpage + self.page_throttle_duration):
