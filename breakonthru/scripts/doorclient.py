@@ -13,11 +13,14 @@ class Doorclient:
     webrtc_client_proc = None
     comm_start_time = None
     unlocking = False
+    pagethrottle = 20 # seconds
     
     def __init__(self, sink, source, webrtc_cli_path, server, secret,
-                 logfile=None, echocancel=False, gpio_pin=18,
-                 talk_duration=60, door_unlocked_duration=10):
-        self.gpio_pin = gpio_pin
+                 logfile=None, echocancel=False, unlock_gpio_pin=18,
+                 talk_duration=60, door_unlocked_duration=10, callbutton_gpio_pin=16):
+        self.unlock_gpio_pin = unlock_gpio_pin
+        self.callbutton_gpio_pin = callbutton_gpio_pin
+        self.lastpage = 0
         self.talk_duration = talk_duration
         self.door_unlocked_duration = door_unlocked_duration
         if echocancel:
@@ -56,8 +59,20 @@ class Doorclient:
         import RPi.GPIO as GPIO
         GPIO.setwarnings(False)
         GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.gpio_pin, GPIO.OUT)
-        
+        GPIO.setup(self.unlock_gpio_pin, GPIO.OUT)
+        GPIO.setup(self.callbutton_gpio_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.add_event_detect(self.callbutton_gpio_pin, GPIO.FALLING, 
+                              callback=self.page, bouncetime=100)
+
+    def page(self, _):
+        now = time.time()
+        if now > (self.lastpage + self.pagethrottle):
+            self.lastpage = now
+            self.log('paging')
+            os.system("killall -USR1 pager")
+        else:
+            self.log('skipped page')
+
     def log(self, msg):
         self.logger.info(msg)
             
@@ -74,7 +89,7 @@ class Doorclient:
         import RPi.GPIO as GPIO
         self.log("door locking")
         try:
-            GPIO.output(self.gpio_pin, 0)
+            GPIO.output(self.unlock_gpio_pin, 0)
         finally:
             self.unlocking = False
 
@@ -86,7 +101,7 @@ class Doorclient:
             return
 
         self.log("door unlocking")
-        GPIO.output(self.gpio_pin, 1)
+        GPIO.output(self.unlock_gpio_pin, 1)
         self.unlocking = True
         loop = asyncio.get_event_loop()
         loop.call_later(self.door_unlocked_duration, self.lock)
@@ -234,13 +249,15 @@ def main():
     parser.add_argument('--echocancel', dest='echocancel',
                         help="Use Pulse echo cancellation",
                         action='store_true')
-    parser.add_argument('--gpio-pin', help="door unlock gpio signal pin num",
+    parser.add_argument('--unlock-gpio-pin', help="door unlock gpio output pin num",
                         type=int, default=18)
     parser.add_argument('--talk-duration', help="Duration to leave comms open",
                         type=int, default=60)
     parser.add_argument('--door-unlock-duration',
                         help="Duration to leave door unlocked",
                         type=int, default=18)
+    parser.add_argument('--callbutton-gpio-pin', help="callbutton gpio input pin num",
+                        type=int, default=16)
     parser.set_defaults(echocancel=False)
     args = parser.parse_args()
     client = Doorclient(
@@ -251,10 +268,9 @@ def main():
         args.secret,
         args.logfile,
         args.echocancel,
-        args.gpio_pin,
+        args.unlock_gpio_pin,
         args.talk_duration,
-        args.door_unlock_duration
+        args.door_unlock_duration,
+        args.callbutton_gpio_pin,
     )
     client.run()
-    
-            
