@@ -18,7 +18,7 @@ class Doorclient:
             unlock_gpio_pin=18,
             door_unlocked_duration=10,
             callbutton_gpio_pin=16,
-            page_throttle_duration=20,
+            page_throttle_duration=30,
     ):
         self.server = server
         self.secret = secret
@@ -168,7 +168,7 @@ def main():
         '--page-throttle-duration',
         help="only page if this many seconds has elapsed between call button presses",
         type=int,
-        default=10,
+        default=30,
     )
     args = parser.parse_args()
     client = Doorclient(
