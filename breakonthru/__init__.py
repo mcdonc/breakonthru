@@ -25,8 +25,11 @@ def main(global_config, **settings):
         config.add_route('home', '/')
         policy = SessionSecurityPolicy()
         config.set_security_policy(policy)
-        factory = SignedCookieSessionFactory('whoppersaredelicious',
-                max_age=fiveyears, timeout=fiveyears)
+        factory = SignedCookieSessionFactory(
+            settings['secret'],
+            max_age=fiveyears,
+            timeout=fiveyears
+        )
         config.set_session_factory(factory)
         config.scan()
     return config.make_wsgi_app()
