@@ -52,7 +52,10 @@ def logout_view(request):
     permission='view'
 )
 def index_view(request):
-    return {"websocket_url":request.registry.settings['websocket_url']}
+    return {
+        "websocket_url":request.registry.settings['websocket_url'],
+        "doorsip":request.registry.settings['doorsip'],
+    }
 
 
 @view_config(

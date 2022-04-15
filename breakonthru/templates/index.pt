@@ -25,7 +25,7 @@
     <script>
       websocket_url = "${websocket_url}";
     </script>
-        
+
     <style>
       textarea {
           font-family: monospace;
@@ -53,11 +53,8 @@
                 </div>
                 
                 <div class="row">
-                  <button id="talk" class="btn btn-primary" onclick="window.createSession()">
+                  <button id="talk" class="btn btn-primary" onclick="window.location.href='sip:${doorsip}'"">
           Talk to Front Door
-                  </button>
-                  <button id="hangup" class="btn btn-danger" onclick="window.stopSession()" disabled="true">
-          Hang Up
                   </button>
                 </div>
 
