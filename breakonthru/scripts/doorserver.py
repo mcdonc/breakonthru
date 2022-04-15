@@ -8,8 +8,6 @@ import logging
 from breakonthru.authentication import parse_passwords, make_token
 
 class Doorserver:
-    offerdata = None
-    answerdata = None
     unlockdata = None
 
     def __init__(self, secret, password_file, logfile=None):
@@ -55,24 +53,11 @@ class Doorserver:
                 break
             except asyncio.TimeoutError:
                 if identification == "doorclient":
-                    if self.offerdata is not None:
-                        # we are sending this to webrtc-cli on pi
-                        self.log("sending offer data")
-                        await websocket.send(self.offerdata)
-                        self.log("sent offer data")
-                        self.offerdata = None
                     if self.unlockdata is not None:
                         self.log("sending unlock request")
                         await websocket.send(self.unlockdata)
                         self.log("sent unlock request")
                         self.unlockdata = None
-                if identification == "webclient":
-                    if self.answerdata is not None:
-                        # we are sending the answer back to web client
-                        self.log("sending answer back to web client")
-                        await websocket.send(self.answerdata)
-                        self.log("sent answer back to web client")
-                        self.answerdata = None
 
                 continue
 
@@ -101,16 +86,6 @@ class Doorserver:
                     self.log("bad identification for %s (%s)" % (ident, user))
 
             if identification == "webclient":
-                if msgtype == "offer":
-                    self.log("got offer from web client")
-                    offer = message["body"]
-                    # we must send the secret to the doorclient
-                    offerdata = {
-                        "type":"offer",
-                        "body":offer,
-                        "secret":self.secret,
-                    }
-                    self.offerdata = json.dumps(offerdata)
                 if msgtype == "unlock":
                     # we must send the secret to the doorclient
                     user = message["body"]
@@ -120,17 +95,6 @@ class Doorserver:
                         "secret":self.secret,
                     }
                     self.unlockdata = json.dumps(unlockdata)
-
-            if identification == "doorclient":
-                if msgtype == "answer":
-                    answer = message.get('body')
-                    clientprovidedsecret = message.get("secret")
-                    if answer and clientprovidedsecret == self.secret:
-                        self.log("got answer from doorclient")
-                        # we don't send the secret back to the webclient
-                        self.answerdata = json.dumps(
-                            {"type":"answer", "body":answer}
-                        )
 
 def main():
     global passwords
