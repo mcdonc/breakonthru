@@ -16,7 +16,7 @@
     <!-- Custom styles for this scaffold -->
     <link href="${request.static_url('breakonthru:static/theme.css')}" rel="stylesheet">
 
-    <!-- HTML5 shiv and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
       <script src="//oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js" integrity="sha384-0s5Pv64cNZJieYFkXYOTId2HMA2Lfb6q2nAcx2n0RTLUnCAoTTsS0nKEO27XyKcY" crossorigin="anonymous"></script>
       <script src="//oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js" integrity="sha384-ZoaMbDF+4LeFxg6WdScQ9nnR1QC2MIRxA1O9KWEXQwns1G8UNyIEZIQidzb0T1fo" crossorigin="anonymous"></script>
@@ -58,12 +58,6 @@
                   </button>
                 </div>
 
-	        <div id="tracks"></div>
-	        <div> 
-                  <input type="hidden" id="offer" readonly="true"></input>
-                  <input type="hidden" id="answer" readonly="true"></input>
-                </div>
-                
 	        <div>              
                   <textarea class="form-control" id="log" readonly="true"></textarea>
                 </div>
