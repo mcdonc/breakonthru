@@ -48,22 +48,28 @@ class Doorclient:
             # add ch to logger
             logger.addHandler(ch)
         self.logger = logger
-        import RPi.GPIO as GPIO
-        GPIO.setwarnings(False)
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.unlock_gpio_pin, GPIO.OUT)
-        GPIO.setup(self.callbutton_gpio_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        GPIO.add_event_detect(self.callbutton_gpio_pin, GPIO.FALLING, 
-                              callback=self.page, bouncetime=100)
 
     def page(self, _):
         now = time.time()
+        try:
+            pagerlockfile = open('/tmp/pager.lock', 'r')
+        except IOError:
+            self.log('skipped page, no /tmp/pager.lock file')
+            return
+
+        try:
+            strpid = pagerlockfile.read()
+            pagerpid = int(strpid)
+        except ValueError:
+            self.log(f'skipped page, garbage in lockfile: {stripid}')
+            return
+
         if now > (self.lastpage + self.page_throttle_duration):
             self.lastpage = now
-            self.log('paging')
-            os.system("killall -USR1 pager")
+            self.log(f'paging, sending USR1 to {pagerpid}')
+            os.system(f'kill -USR1 {pagerpid}')
         else:
-            self.log('skipped page')
+            self.log('skipped page due to duration throttle')
 
     def log(self, msg):
         self.logger.info(msg)
@@ -127,8 +133,20 @@ class Doorclient:
                             self.unlock()
 
     def run(self):
-        while True:
-            asyncio.run(self.serve())
+        import RPi.GPIO as GPIO
+        GPIO.setwarnings(False)
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.unlock_gpio_pin, GPIO.OUT)
+        GPIO.setup(self.callbutton_gpio_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.add_event_detect(self.callbutton_gpio_pin, GPIO.FALLING, 
+                              callback=self.page, bouncetime=100)
+        try:
+            while True:
+                asyncio.run(self.serve())
+        except KeyboardInterrupt:
+            pass
+        finally:
+            GPIO.cleanup()
 
 def main():
     parser = argparse.ArgumentParser()

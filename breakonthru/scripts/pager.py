@@ -2,6 +2,7 @@ import argparse
 import enum
 import fasteners
 import logging
+import os
 import pexpect
 import sys
 import time
@@ -20,9 +21,16 @@ class Pager:
         self.pagerequested = False
 
     def runforever(self, drainevery=0):
-        lockfile = fasteners.InterProcessLock('/tmp/pager.lock')
-        with lockfile: # protect from 2 instances running same time
-            self._run(drainevery)
+        lock = fasteners.InterProcessLock('/tmp/pager.lock')
+        with lock: # protect from 2 instances running same time,
+            lock.lockfile.seek(0)
+            lock.lockfile.truncate()
+            lock.lockfile.write(str(os.getpid()))
+            lock.lockfile.flush()
+            try:
+                self._run(drainevery)
+            except KeyboardInterrupt:
+                pass
 
     def _run(self, drainevery=0):
         self.child = pexpect.spawn(
