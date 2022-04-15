@@ -50,6 +50,14 @@ sudo service supervisor restart
 
 Connect SIP softphones like Zoiper to your asterisk server (7001, 7002, etc).
 
+If your pi is behind a NAT, you'll need to set up port forwarding from your router to
+your pi.  Pass through these ports to the Pi.
+
+  Port 6065 (SIP) both UDP and TCP
+  Ports 10000-20000 (SIP media) both UDP and TCP
+  
+You'll also need to set up a dynamic DNS service to give your router a stable hostname.
+
 On Internet Host
 ================
 
