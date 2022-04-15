@@ -53,7 +53,7 @@
                 </div>
                 
                 <div class="row">
-                  <button id="talk" class="btn btn-primary" onclick="window.location.href='sip:${doorsip}'"">
+                  <button id="talk" class="btn btn-primary" onclick="window.location.href='sip:${doorsip}'">
           Talk to Front Door
                   </button>
                 </div>
