@@ -37,7 +37,7 @@ copy the "client.conf" from the configs/supervisor directory into
 /etc/supervisor/conf.d and change as necessary.
 
 copy the .conf files from the configs/asterisk directory into /etc/asterisk (it
-will overwrite some), and change as necessary.
+will overwrite some, make backups first if you care), and change as necessary.
 
 copy the pjsua.conf file from the configs directory into /home/pi/lockit and
 change as necessary.
