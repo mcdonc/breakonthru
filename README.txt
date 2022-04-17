@@ -99,7 +99,7 @@ your pi.  Pass through these ports to the Pi.
 Add a ddns service to your router configuration which gives it a stable hostname.  I
 use duckdns.org for this.
 
-Connect SIP softphones like Zoiper to your asterisk server (7001, 7002, etc).
+Connect SIP softphones like Zoiper to your asterisk server (7002, 7003, etc).
 
 On Internet Host
 ================
