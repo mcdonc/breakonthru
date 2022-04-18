@@ -70,7 +70,7 @@ class Pager:
                     self.page()
                 else:
                     self.log("Skipping page due to throttle duration")
-            if False: #drainevery: # see all output more quickly, for debugging
+            if drainevery: # see all output more quickly, for debugging
                 now = time.time()
                 if now > (last + drainevery):
                     last = now
