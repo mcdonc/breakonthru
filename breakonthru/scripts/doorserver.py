@@ -4,6 +4,7 @@ import websockets
 import websockets.exceptions
 import json
 import logging
+import socket
 
 from breakonthru.authentication import parse_passwords, make_token
 
@@ -15,22 +16,7 @@ class Doorserver:
         with open(password_file, "r") as f:
             passwords = f.read()
         self.passwords = parse_passwords(passwords)
-        logging.basicConfig(filename=logfile,
-                            level=logging.INFO,
-                            format='%(asctime)s %(message)s',
-                            datefmt='%m/%d/%Y %I:%M:%S %p')
-        logger = logging.getLogger()
-        if logfile is not None:
-            # tee to stdout too
-            ch = logging.StreamHandler()
-            ch.setLevel(logging.INFO)
-            formatter = logging.Formatter(
-                '%(asctime)s %(message)s',
-                datefmt='%m/%d/%Y %I:%M:%S %p'
-            )
-            ch.setFormatter(formatter)
-            logger.addHandler(ch)
-        self.logger = logger
+        self.logger = teelogger(logfile)
 
     def log(self, msg):
         self.logger.info(msg)

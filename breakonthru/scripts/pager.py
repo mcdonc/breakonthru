@@ -8,17 +8,33 @@ import sys
 import time
 import signal
 
+from breakonthru.util import teelogger
 
 class Pager:
-    """ Uses pjsua to make a call to a SIP number when the USR1 signal is received """
+    """ Uses pjsua to make a call to a SIP number when a USR1/USR2 signal is
+        received """
+    lastpage = 0
 
-    def __init__(self, pjsua_bin, pjsua_config_file, pagingsip, pagingduration):
+    def __init__(
+            self,
+            pjsua_bin,
+            pjsua_config_file,
+            pagingsip,
+            pagingduration,
+            page_throttle_duration,
+            logfile = None,
+    ):
         self.child = None
         self.pjsua_bin = pjsua_bin
         self.pjsua_config_file = pjsua_config_file
         self.pagingsip = pagingsip
         self.pagingduration = pagingduration
         self.pagerequested = False
+        self.page_throttle_duration = page_throttle_duration
+        self.logger = teelogger(logfile)
+
+    def log(self, msg):
+        self.logger.info(msg)
 
     def runforever(self, drainevery=0):
         lock = fasteners.InterProcessLock('/tmp/pager.lock')
@@ -45,15 +61,22 @@ class Pager:
 
         while True:
             if self.pagerequested:
-                self.pagerequested = False
-                self.page()
-            if drainevery: # see all output more quickly, for debugging
+                self.log("Page requested")
                 now = time.time()
-                if now > (last + drainevery): # drain stderr/stdout (required?)
+                self.pagerequested = False
+                if now > (self.lastpage + self.page_throttle_duration):
+                    self.log("Paging")
+                    self.lastpage = now
+                    self.page()
+                else:
+                    self.log("Skipping page due to throttle duration")
+            if False: #drainevery: # see all output more quickly, for debugging
+                now = time.time()
+                if now > (last + drainevery):
                     last = now
                     self.child.sendline('echo 1')
                     self.child.expect('>>>') # fail if it died
-            time.sleep(.5)
+            time.sleep(.1)
 
     def page(self):
         self.make_call(self.pagingsip, self.pagingduration)
@@ -83,7 +106,13 @@ class Pager:
         time.sleep(1) # allow any pending operations to complete
         self.child.close(force=force)
 
-    def sighandler(self, signum, frame):
+    def usr1(self, signum, frame):
+        self.log("USR1 received")
+        self.pagerequested = True
+
+    def usr2(self, signum, frame):
+        self.log("USR2 received")
+        self.lastpage = 0
         self.pagerequested = True
 
 def main():
@@ -112,12 +141,25 @@ def main():
         type=int,
         default=0,
     )
+    parser.add_argument(
+        '--page-throttle-duration',
+        help="only page if this many seconds has elapsed since the last page",
+        type=int,
+        default=30,
+    )
+    parser.add_argument(
+        '--logfile',
+        default=None
+    )
     args = parser.parse_args()
     maker = Pager(
         args.pjsua_bin,
         args.pjsua_config_file,
         args.paging_sip,
-        args.paging_duration
+        args.paging_duration,
+        args.page_throttle_duration,
+        args.logfile,
     )
-    signal.signal(signal.SIGUSR1, maker.sighandler) # page on SIGUSR1
+    signal.signal(signal.SIGUSR1, maker.usr1) # page (throttled) on SIGUSR1
+    signal.signal(signal.SIGUSR2, maker.usr2) # page unconditionally on SIGUSR2
     maker.runforever(args.drainevery)

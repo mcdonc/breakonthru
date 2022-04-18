@@ -1,11 +1,12 @@
 import argparse
 import asyncio
 import json
-import logging
 import os
 import time
 import websockets
 import websockets.exceptions
+
+from breakonthru.util import teelogger
 
 class Doorclient:
     unlocking = False
@@ -18,36 +19,13 @@ class Doorclient:
             unlock_gpio_pin=18,
             door_unlocked_duration=10,
             callbutton_gpio_pin=16,
-            page_throttle_duration=30,
     ):
         self.server = server
         self.secret = secret
         self.door_unlocked_duration = door_unlocked_duration
         self.unlock_gpio_pin = unlock_gpio_pin
         self.callbutton_gpio_pin = callbutton_gpio_pin
-        self.page_throttle_duration = page_throttle_duration
-        self.lastpage = 0
-
-        logging.basicConfig(filename=logfile,
-                            level=logging.INFO,
-                            format='%(asctime)s %(message)s',
-                            datefmt='%m/%d/%Y %I:%M:%S %p')
-
-        logger = logging.getLogger()
-        if logfile is not None:
-            # tee to stdout too
-            ch = logging.StreamHandler()
-            ch.setLevel(logging.INFO)
-            # create formatter
-            formatter = logging.Formatter(
-                '%(asctime)s %(message)s',
-                datefmt='%m/%d/%Y %I:%M:%S %p'
-            )
-            # add formatter to ch
-            ch.setFormatter(formatter)
-            # add ch to logger
-            logger.addHandler(ch)
-        self.logger = logger
+        self.logger = teelogger(logfile)
 
     def page(self, _):
         now = time.time()
@@ -64,12 +42,8 @@ class Doorclient:
             self.log(f'skipped page, garbage in lockfile: {strpid}')
             return
 
-        if now > (self.lastpage + self.page_throttle_duration):
-            self.lastpage = now
-            self.log(f'paging, sending USR1 to {pagerpid}')
-            os.system(f'kill -USR1 {pagerpid}')
-        else:
-            self.log('skipped page due to duration throttle')
+        self.log(f'paging, sending USR1 to {pagerpid}')
+        os.system(f'kill -USR1 {pagerpid}')
 
     def log(self, msg):
         self.logger.info(msg)
@@ -182,12 +156,6 @@ def main():
         type=int,
         default=16
     )
-    parser.add_argument(
-        '--page-throttle-duration',
-        help="only page if this many seconds has elapsed between call button presses",
-        type=int,
-        default=30,
-    )
     args = parser.parse_args()
     client = Doorclient(
         args.server,
@@ -196,6 +164,5 @@ def main():
         args.unlock_gpio_pin,
         args.door_unlock_duration,
         args.callbutton_gpio_pin,
-        args.page_throttle_duration,
     )
     client.run()
