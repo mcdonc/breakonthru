@@ -131,3 +131,39 @@ sudo service supervisor restart
 Note that you will have to set up Apache/NGINX with SSL proxying to both the
 doorserver port and the webapp port for everything to work properly.  See
 configs/apache for sample configurations.
+
+Q&A
+===
+
+You can call the front door by dialing its extension.  pjsua will autoanswer.
+
+What happens when you call the front door and it's already on a call?  It seems like 
+a poor man's conference call. Both can hear the front door mic.  Both can speak to
+the front door speaker.  But clients can't hear each other directly, although they 
+can hear each other through the front door speaker feeding back into the front door mic.
+
+What happens if you have Wifi calling on on your phone?  No clue.
+
+Why stun and ice in pjsua.conf? Seems to make off-LAN *inbound* calling work better,
+but it's lightly tested and may be unneccessary.
+
+Does the person who presses the front door button hear a phone dialing?  Yes.
+
+What happens if somebody spams the callbutton?  Pages are throttled to one
+every 20 seconds (configurable in an argument to the pager process).
+
+There is no "not answering" message played or voicemail box set up in Asterisk.
+It's possible to do, I just didn't.
+
+Calls are limited via pjsua.conf to a total duration of 120 seconds if you just
+copy it out of breakonthru/config (it's --duration 120).
+
+Calls will ring when the button is pressed for 30 seconds.  You can change this
+in asterisk's extensions.conf (in each Dial directive).
+
+Why not inline the paging logic into the doorclient?  Why a separate pager.py?
+The doorclient's mainloop already does a lot of work, dealing with async
+websockets requests.  It was clearer to put the paging logic, which actually
+drives a cli program via pexpect, into a separate process.
+
+
