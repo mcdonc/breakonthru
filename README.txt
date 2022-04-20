@@ -85,10 +85,11 @@ For me this is:
 
 Reboot to take effect.
 
-Use alsamixer to set mic and speaker levels (about 3/4 way up works for me for both speaker and mic).
+Use alsamixer to set mic and speaker levels (about 3/4 way up works for me for both
+speaker and mic).
 
-After you set the levels with alsa mixer use "sudo alsactl store" to store the settings persistently
-so they'll work across reboots.
+After you set the levels with alsa mixer use "sudo alsactl store" to store the settings
+persistently so they'll work across reboots.
 
 If your pi is behind a NAT, you'll need to set up port forwarding from your router to
 your pi.  Pass through these ports to the Pi.
