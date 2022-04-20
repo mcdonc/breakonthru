@@ -78,7 +78,7 @@ device:
    defaults.pcm.card <cardno>
    defaults.ctl.card <cardno>
 
-For me this is
+For me this is:
 
    defaults.pcm.card 1
    defaults.ctl.card 1
@@ -135,7 +135,8 @@ configs/apache for sample configurations.
 Q&A
 ===
 
-You can call the front door by dialing its extension.  pjsua will autoanswer.
+You can call the front door by dialing its extension (7001 if you kept default
+config).  pjsua will autoanswer.
 
 What happens when you call the front door and it's already on a call?  It seems like 
 a poor man's conference call. Both can hear the front door mic.  Both can speak to
@@ -158,8 +159,8 @@ It's possible to do, I just didn't.
 Calls are limited via pjsua.conf to a total duration of 120 seconds if you just
 copy it out of breakonthru/config (it's --duration 120).
 
-Calls will ring when the button is pressed for 30 seconds.  You can change this
-in asterisk's extensions.conf (in each Dial directive).
+Calls will ring when the button is pressed for 30 seconds before giving up.  You
+can change this in asterisk's extensions.conf (in each Dial directive).
 
 Why not inline the paging logic into the doorclient?  Why a separate pager.py?
 The doorclient's mainloop already does a lot of work, dealing with async
