@@ -19,16 +19,23 @@ class Doorclient:
             unlock_gpio_pin=18,
             door_unlocked_duration=10,
             callbutton_gpio_pin=16,
+            callbutton_bouncetime=60,
     ):
         self.server = server
         self.secret = secret
         self.door_unlocked_duration = door_unlocked_duration
         self.unlock_gpio_pin = unlock_gpio_pin
         self.callbutton_gpio_pin = callbutton_gpio_pin
+        self.callbutton_bouncetime = callbutton_bouncetime
         self.logger = teelogger(logfile)
 
     def page(self, _):
         now = time.time()
+        if now < self.last_lock_or_unlock + 1:
+            # XXX hack until I can figure out what's causing the door unlock
+            # circuit completion to activate the callbutton circuit
+            self.log("Paging disallowed due to door unlock")
+            return
         try:
             pagerlockfile = open('/tmp/pager.lock', 'r')
         except IOError:
@@ -55,6 +62,7 @@ class Doorclient:
             GPIO.output(self.unlock_gpio_pin, 0)
         finally:
             self.unlocking = False
+            self.last_lock_or_unlock = time.time()
 
     def unlock(self):
         import RPi.GPIO as GPIO
@@ -64,6 +72,7 @@ class Doorclient:
             return
 
         self.log("door unlocking")
+        self.last_lock_or_unlock = time.time()
         GPIO.output(self.unlock_gpio_pin, 1)
         self.unlocking = True
         loop = asyncio.get_event_loop()
@@ -108,14 +117,20 @@ class Doorclient:
 
     def run(self):
         import RPi.GPIO as GPIO
-        GPIO.setwarnings(False)
+        GPIO.setwarnings(False) # squash RuntimeWarning: This channel is already in use
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.unlock_gpio_pin, GPIO.OUT)
         GPIO.setup(self.callbutton_gpio_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        GPIO.add_event_detect(self.callbutton_gpio_pin, GPIO.FALLING, 
-                              callback=self.page, bouncetime=100)
+        GPIO.add_event_detect(
+            self.callbutton_gpio_pin,
+            GPIO.FALLING, 
+            callback=self.page,
+            bouncetime=self.callbutton_bouncetime
+        )
         try:
             while True:
+                # serve exits if doorserver is disconnected, just reestablish
+                # a connection in this case via this loop
                 asyncio.run(self.serve())
         except KeyboardInterrupt:
             pass
@@ -156,6 +171,12 @@ def main():
         type=int,
         default=16
     )
+    parser.add_argument(
+        '--callbutton-bouncetime',
+        help="callbutton bouncetime in milliseconds",
+        type=int,
+        default=60,
+    )
     args = parser.parse_args()
     client = Doorclient(
         args.server,
@@ -164,5 +185,6 @@ def main():
         args.unlock_gpio_pin,
         args.door_unlock_duration,
         args.callbutton_gpio_pin,
+        args.callbutton_bouncetime,
     )
     client.run()
