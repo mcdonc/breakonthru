@@ -4,7 +4,7 @@ import configparser
 import json
 import os
 import pexpect
-from queue import Empty
+import queue
 import sys
 import time
 import websockets
@@ -14,92 +14,31 @@ from multiprocessing import Process, Queue
 
 from breakonthru.util import teelogger
 
-class Doorclient:
-    def __init__(
-            self,
-            server,
-            secret,
-            logfile,
-            unlock_gpio_pin,
-            door_unlocked_duration,
-            callbutton_gpio_pin,
-            callbutton_bouncetime,
-            pjsua_bin,
-            pjsua_config_file,
-            paging_sip,
-            paging_duration,
-            drainevery,
-            page_throttle_duration,
-            ):
-
-        unlock_queue = Queue()
-        page_queue = Queue()
-
-        unlock_listener = Process(
-            target=UnlockListener(
-                unlock_queue,
-                server,
-                secret,
-                logfile,
-            ).run
-        )
-        unlock_listener.start()
-
-        unlock_executor = Process(
-            target=UnlockExecutor(
-                unlock_queue,
-                unlock_gpio_pin,
-                door_unlocked_duration,
-                logfile,
-            ).run
-        )
-        unlock_executor.start()
-        
-        page_listener = Process(
-            target=PageListener(
-                page_queue,
-                callbutton_gpio_pin,
-                callbutton_bouncetime,
-                logfile,
-            ).run
-        )
-        page_listener.start()
-
-        page_executor = Process(
-            target=PageExecutor(
-                page_queue,
-                pjsua_bin,
-                pjsua_config_file,
-                paging_sip,
-                paging_duration,
-                page_throttle_duration,
-                drainevery,
-                logfile,
-            ).run,
-        )
-        page_executor.start()
-
-        unlock_listener.join()
-        unlock_executor.join()
-        page_listener.join()
-        page_executor.join()
-
-
 class UnlockListener:
-    def __init__(self, queue, server, secret, logfile):
+    def __init__(self, queue, server, secret, clientidentity, logfile):
         self.queue = queue
         self.server = server
         self.secret = secret
-        self.logger = teelogger(logfile)
+        self.clientidentity = clientidentity
+        self.logfile = logfile
         
     def log(self, msg):
         self.logger.info(msg)
 
     def run(self):
-        while True:
-            # serve exits if doorserver is disconnected, just reestablish
-            # a connection in this case via this loop
-            asyncio.run(self.serve())
+        try:
+            self.logger = teelogger("UNLKL", self.logfile)
+            self.log("starting unlock listener")
+            while True:
+                # serve exits if doorserver is disconnected, just reestablish
+                # a connection in this case via this loop
+                try:
+                    asyncio.run(self.serve())
+                except (websockets.exceptions.ConnectionClosedError,
+                        asyncio.TimeoutError):
+                    pass
+        except KeyboardInterrupt:
+            return
 
     async def serve(self):
         async with websockets.connect(self.server) as websocket:
@@ -107,7 +46,7 @@ class UnlockListener:
             await websocket.send(
                 json.dumps(
                     {"type":"identification",
-                     "body":"doorclient",
+                     "body":self.clientidentity,
                      "secret":self.secret}
                 )
             )
@@ -135,7 +74,7 @@ class UnlockListener:
                         msgtype = message.get("type")
                         if msgtype == "unlock":
                             user = message["body"]
-                            self.log("received unlock request by %s" % user)
+                            self.log("enqueueing received unlock request by %s" % user)
                             self.queue.put(now)
 
 
@@ -144,12 +83,21 @@ class UnlockExecutor:
         self.queue = queue
         self.unlock_gpio_pin = unlock_gpio_pin
         self.door_unlocked_duration = door_unlocked_duration
-        self.logger = teelogger(logfile)
+        self.logfile = logfile
 
     def log(self, msg):
         self.logger.info(msg)
 
     def run(self):
+        try:
+            self._run()
+        except KeyboardInterrupt:
+            return
+
+    def _run(self):
+        self.logger = teelogger("UNLKX", self.logfile)
+        self.log("starting unlock executor")
+        self.log(f"unlock gpio pin is {self.unlock_gpio_pin}")
         import RPi.GPIO as GPIO
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.unlock_gpio_pin, GPIO.OUT)
@@ -160,7 +108,7 @@ class UnlockExecutor:
                     result = self.queue.get(timeout=.5)
                     if result > last_unlock_time:
                         break
-            except Empty:
+            except queue.Empty:
                 continue
 
             self.log("door unlocking")
@@ -182,29 +130,47 @@ class PageListener:
             callbutton_bouncetime,
             logfile,
             ):
-        self.queue = Queue
+        self.queue = queue
         self.callbutton_gpio_pin = callbutton_gpio_pin
         self.callbutton_bouncetime = callbutton_bouncetime
-        self.logger = teelogger(logfile)
+        self.logfile = logfile
 
     def log(self, msg):
         self.logger.info(msg)
 
-    def enqueue_page(self, _):
-        now = time.time()
-        self.queue.put(now)
-
     def run(self):
+        try:
+            self._run()
+        except KeyboardInterrupt:
+            return
+
+    def _run(self):
+        self.logger = teelogger("PAGEL", self.logfile)
+        self.log("starting page listener")
+        self.log(f"callbutton gpio pin is {self.callbutton_gpio_pin}")
         import RPi.GPIO as GPIO
         GPIO.setwarnings(False) # squash RuntimeWarning: This channel is already in use
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.callbutton_gpio_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+        last = 0
+        
+        def enqueue_page(_):
+            nonlocal last
+            now = time.time()
+            if now > (last + .5):
+                last = now
+                self.log("Enqueueing page")
+                self.queue.put(now)
+
         GPIO.add_event_detect(
-            self.callbutton_gpio_pin,
-            GPIO.FALLING, 
-            callback=self.enqueue_page,
-            bouncetime=self.callbutton_bouncetime
+             self.callbutton_gpio_pin,
+             GPIO.FALLING, 
+             callback=enqueue_page,
+             bouncetime=self.callbutton_bouncetime
         )
+        while True:
+            time.sleep(.1)
 
 
 class PageExecutor:
@@ -226,50 +192,56 @@ class PageExecutor:
         self.pagingduration = pagingduration
         self.page_throttle_duration = page_throttle_duration
         self.drainevery = drainevery
-        self.logger = teelogger(logfile)
+        self.logfile = logfile
 
     def log(self, msg):
         self.logger.info(msg)
 
     def run(self):
+        try:
+            self._run()
+        except KeyboardInterrupt:
+            return
+
+    def _run(self):
+        self.logger = teelogger("PAGEX", self.logfile)
+        self.log("starting page executor")
         last_page_time = 0
         last_drain = 0
 
         self.child = pexpect.spawn(
             f'{self.pjsua_bin} --config-file {self.pjsua_config_file}',
             encoding='utf-8',
-            timeout=2,
+            timeout=10,
         )
         self.child.logfile_read = sys.stdout
         self.child.expect('registration success') # fail if not successful
 
         while True:
             now = time.time()
-            if self.drainevery: # see all output more quickly, for debugging
-                if now > (last_drain + self.drainevery):
-                    last_drain = now
-                    self.child.sendline('echo 1')
-                    self.child.expect('>>>') # fail if it died
+
+            # see all output more quickly, for debugging
+            if self.drainevery and (now > (last_drain + self.drainevery)):
+                last_drain = now
+                self.child.sendline('echo 1')
+                self.child.expect('>>>') # fail if it died
 
             try:
-                while True:
-                    result = self.queue.get(timeout=.5)
-                    if result > last_page_time:
-                        break
-            except Empty:
+                request = self.queue.get(timeout=1)
+            except queue.Empty:
                 continue
-
-            self.log("Page requested")
-            self.pagerequested = False
-            if now > (last_page_time + self.page_throttle_duration):
+            
+            if request > (last_page_time + self.page_throttle_duration):
+                last_page_time = now
                 self.log("Paging")
                 self.page()
             else:
-                self.log("Skipping page due to throttle duration")
+                self.log(f"Throttled page request from time {lastrequest}")
 
     def page(self):
         child = self.child
-        self.hangup()
+        self.child.sendline('h')
+        self.child.expect('>>>')
         child.sendline('m')
         child.expect('Make call:')
         child.sendline(self.pagingsip)
@@ -285,6 +257,84 @@ class PageExecutor:
             self.child.sendline('h')
             self.child.expect('>>>')
 
+def run_doorclient(
+        server,
+        secret,
+        logfile,
+        unlock_gpio_pin,
+        door_unlocked_duration,
+        clientidentity,
+        callbutton_gpio_pin,
+        callbutton_bouncetime,
+        pjsua_bin,
+        pjsua_config_file,
+        paging_sip,
+        paging_duration,
+        drainevery,
+        page_throttle_duration,
+):
+
+    unlock_queue = Queue()
+    page_queue = Queue()
+
+    unlock_listener = Process(
+        name = 'unlock_listener',
+        target=UnlockListener(
+            unlock_queue,
+            server,
+            secret,
+            clientidentity,
+            logfile,
+        ).run
+    )
+    unlock_listener.start()
+
+    unlock_executor = Process(
+        name = 'unlock_executor',
+        target=UnlockExecutor(
+            unlock_queue,
+            unlock_gpio_pin,
+            door_unlocked_duration,
+            logfile,
+        ).run
+    )
+    unlock_executor.start()
+
+    page_listener = Process(
+        name = 'page_listener',
+        target=PageListener(
+            page_queue,
+            callbutton_gpio_pin,
+            callbutton_bouncetime,
+            logfile,
+        ).run
+    )
+    page_listener.start()
+
+    page_executor = Process(
+        name = 'page_executor',
+        target=PageExecutor(
+            page_queue,
+            pjsua_bin,
+            pjsua_config_file,
+            paging_sip,
+            paging_duration,
+            page_throttle_duration,
+            drainevery,
+            logfile,
+        ).run,
+    )
+    page_executor.start()
+
+    try:
+        for subproc in (unlock_listener, unlock_executor, page_listener, page_executor):
+            if not subproc.is_alive():
+                raise AssertionError(f"subprocess {subproc} died")
+            subproc.join(timeout=.1)
+    except KeyboardInterrupt:
+        pass
+
+
 def main():
     args = {}
     try:
@@ -292,6 +342,10 @@ def main():
     except IndexError:
         print("doorclient <config_file_name>")
         sys.exit(2)
+    if config_file in ('-h', '--help'):
+        print("doorclient <config_file_name>")
+        sys.exit(2)
+        
     config = configparser.ConfigParser()
     config.read(config_file)
     section = config['doorclient']
@@ -315,10 +369,10 @@ def main():
     args['logfile'] = section.get("logfile")
     args['unlock_gpio_pin'] = int(section.get("unlock_gpio_pin", 18))
     args['door_unlocked_duration'] = int(section.get("door_unlocked_duration", 10))
+    args['clientidentity'] = section.get("clientidentity", "doorclient")
     args['callbutton_gpio_pin'] = int(section.get("callbutton_gpio_pin", 16))
     args['callbutton_bouncetime'] = int(section.get("callbutton_bouncetime", 60))
     args['paging_duration'] = int(section.get("paging_duration", 100))
     args['page_throttle_duration'] = int(section.get("page_throttle_duration", 30))
     args['drainevery'] = int(section.get("drainevery", 0))
-    client = Doorclient(**args)
-    client.run()
+    client = run_doorclient(**args)
