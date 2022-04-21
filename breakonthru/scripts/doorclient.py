@@ -35,7 +35,7 @@ class UnlockListener:
                 try:
                     asyncio.run(self.serve())
                 except (websockets.exceptions.ConnectionClosedError,
-                        asyncio.TimeoutError):
+                        asyncio.TimeoutError, socket.gaierror):
                     pass
         except KeyboardInterrupt:
             return
@@ -256,6 +256,7 @@ class PageExecutor:
                     break
             self.child.sendline('h')
             self.child.expect('>>>')
+
 
 def run_doorclient(
         server,
