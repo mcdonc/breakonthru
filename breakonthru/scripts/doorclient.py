@@ -246,7 +246,7 @@ class PageExecutor:
                 self.log("Paging")
                 self.page()
             else:
-                self.log(f"Throttled page request from time {lastrequest}")
+                self.log(f"Throttled page request from time {request}")
 
     def page(self):
         child = self.child
