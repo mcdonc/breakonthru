@@ -29,7 +29,7 @@ Install supervisor and configure it:
    /etc/supervisor/conf.d and change as necessary.
 
    copy the "client.ini_template" from the configs directory into
-   /home/pi/lockit and change as necessary.
+   /home/pi/lockit/client.ini and change as necessary.
 
    sudo service supervisor restart
 
