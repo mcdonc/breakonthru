@@ -28,6 +28,9 @@ Install supervisor and configure it:
    copy the "client.conf" from the configs/supervisor directory into
    /etc/supervisor/conf.d and change as necessary.
 
+   copy the "client.ini_template" from the configs directory into
+   /home/pi/lockit and change as necessary.
+
    sudo service supervisor restart
 
 Install asterisk and configure it:
@@ -141,6 +144,8 @@ What happens when you call the front door and it's already on a call?  It seems 
 a poor man's conference call. Both can hear the front door mic.  Both can speak to
 the front door speaker.  But clients can't hear each other directly, although they 
 can hear each other through the front door speaker feeding back into the front door mic.
+I have since discovered pjsua's --auto-conf option, which may change this
+behavior, but haven't done any testing yet.
 
 What happens if you have Wifi calling on on your phone?  No clue.
 
@@ -152,18 +157,11 @@ Does the person who presses the front door button hear a phone dialing?  Yes.
 What happens if somebody spams the callbutton?  Pages are throttled to one
 every 20 seconds (configurable in an argument to the pager process).
 
-There is no "not answering" message played or voicemail box set up in Asterisk.
-It's possible to do, I just didn't.
+There is no "not answering" message played or voicemail box set up in Asterisk to
+handle never-answered calls from the front door.  It's possible to do, I just didn't.
 
 Calls are limited via pjsua.conf to a total duration of 120 seconds if you just
 copy it out of breakonthru/config (it's --duration 120).
 
 Calls will ring when the button is pressed for 30 seconds.  You can change this
 in asterisk's extensions.conf (in each Dial directive).
-
-Why not inline the paging logic into the doorclient?  Why a separate pager.py?
-The doorclient's mainloop already does a lot of work, dealing with async
-websockets requests.  It was clearer to put the paging logic, which actually
-drives a cli program via pexpect, into a separate process.
-
-
