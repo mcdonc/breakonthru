@@ -209,14 +209,24 @@ class PageExecutor:
         last_page_time = 0
         last_drain = 0
 
-        self.child = pexpect.spawn(
-            f'{self.pjsua_bin} --config-file {self.pjsua_config_file}',
-            encoding='utf-8',
-            timeout=10,
-        )
-        self.child.logfile_read = sys.stdout
-        self.child.expect('registration success') # fail if not successful
-
+        while True:
+            self.log("pjsua attempting to register with asterisk")
+            try:
+                self.child = pexpect.spawn(
+                    f'{self.pjsua_bin} --config-file {self.pjsua_config_file}',
+                    encoding='utf-8',
+                    timeout=10,
+                )
+                self.child.logfile_read = sys.stdout
+                self.child.expect('registration success') # fail if not successful
+                self.log("pjsua registration success")
+                break
+            except pexpect.exceptions.TIMEOUT:
+                self.log("pjsua registration failure, retrying")
+                self.child.terminate()
+                continue
+                
+        
         while True:
             now = time.time()
 
