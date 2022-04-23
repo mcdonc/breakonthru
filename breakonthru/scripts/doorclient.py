@@ -186,7 +186,7 @@ class PageListener:
              self.callbutton_gpio_pin,
              GPIO.FALLING, 
              callback=enqueue_page,
-             bouncetime=self.callbutton_bouncetime
+             bouncetime=self.callbutton_bouncetime,
         )
         while True:
             time.sleep(.1)
