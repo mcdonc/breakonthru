@@ -309,20 +309,20 @@ class PageExecutor:
 
 
 def run_doorclient(
-        server,
-        secret,
-        logfile,
-        unlock_gpio_pin,
-        door_unlocked_duration,
-        clientidentity,
-        callbutton_gpio_pin,
-        callbutton_bouncetime,
-        pjsua_bin,
-        pjsua_config_file,
-        paging_sip,
-        paging_duration,
-        drainevery,
-        page_throttle_duration,
+    server,
+    secret,
+    logfile,
+    unlock_gpio_pin,
+    door_unlocked_duration,
+    clientidentity,
+    callbutton_gpio_pin,
+    callbutton_bouncetime,
+    pjsua_bin,
+    pjsua_config_file,
+    paging_sip,
+    paging_duration,
+    drainevery,
+    page_throttle_duration,
 ):
 
     unlock_queue = Queue()
