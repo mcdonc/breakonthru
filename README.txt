@@ -165,5 +165,5 @@ handle never-answered calls from the front door.  It's possible to do, I just di
 Calls are limited via pjsua.conf to a total duration of 120 seconds if you just
 copy it out of breakonthru/config (it's --duration 120).
 
-Calls will ring when the button is pressed for 30 seconds.  You can change this
+Calls will ring for 30 seconds when the button is pressed.  You can change this
 in asterisk's extensions.conf (in each Dial directive).
