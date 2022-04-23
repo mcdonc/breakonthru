@@ -15,8 +15,16 @@ from multiprocessing import Process, Queue
 from breakonthru.util import teelogger
 
 class UnlockListener:
-    def __init__(self, queue, server, secret, clientidentity, logfile):
-        self.queue = queue
+    def __init__(
+            self,
+            unlock_queue,
+            page_queue,
+            server,
+            secret,
+            clientidentity,
+            logfile
+    ):
+        self.unlock_queue = unlock_queue
         self.server = server
         self.secret = secret
         self.clientidentity = clientidentity
@@ -75,12 +83,20 @@ class UnlockListener:
                         if msgtype == "unlock":
                             user = message["body"]
                             self.log("enqueueing received unlock request by %s" % user)
-                            self.queue.put(now)
+                            self.unlock_queue.put(now)
 
 
 class UnlockExecutor:
-    def __init__(self, queue, unlock_gpio_pin, door_unlocked_duration, logfile):
-        self.queue = queue
+    def __init__(
+            self,
+            unlock_queue,
+            page_queue,
+            unlock_gpio_pin,
+            door_unlocked_duration,
+            logfile
+    ):
+        self.unlock_queue = unlock_queue
+        self.page_queue = page_queue
         self.unlock_gpio_pin = unlock_gpio_pin
         self.door_unlocked_duration = door_unlocked_duration
         self.logfile = logfile
@@ -105,32 +121,35 @@ class UnlockExecutor:
         while True:
             try:
                 while True:
-                    result = self.queue.get(timeout=.5)
+                    result = self.unlock_queue.get(timeout=.5)
                     if result > last_unlock_time:
                         break
             except queue.Empty:
                 continue
 
-            self.log("door unlocking")
             now = time.time()
+            self.log("door unlocking")
             try:
+                # XXX hack to work around hardware bug: don't page while unlocking
+                self.page_queue.put(True)
                 GPIO.output(self.unlock_gpio_pin, 1)
                 time.sleep(self.door_unlocked_duration)
             finally:
                 GPIO.output(self.unlock_gpio_pin, 0)
                 self.log("door relocked")
+                self.page_queue.put(False)
                 last_unlock_time = now
 
 
 class PageListener:
     def __init__(
             self,
-            queue, 
+            page_queue,
             callbutton_gpio_pin,
             callbutton_bouncetime,
             logfile,
-            ):
-        self.queue = queue
+    ):
+        self.page_queue = page_queue
         self.callbutton_gpio_pin = callbutton_gpio_pin
         self.callbutton_bouncetime = callbutton_bouncetime
         self.logfile = logfile
@@ -161,7 +180,7 @@ class PageListener:
             if now > (last + .5):
                 last = now
                 self.log("Enqueueing page")
-                self.queue.put(now)
+                self.page_queue.put(now)
 
         GPIO.add_event_detect(
              self.callbutton_gpio_pin,
@@ -176,7 +195,7 @@ class PageListener:
 class PageExecutor:
     def __init__(
             self,
-            queue,
+            page_queue,
             pjsua_bin,
             pjsua_config_file,
             pagingsip,
@@ -185,7 +204,7 @@ class PageExecutor:
             drainevery,
             logfile,
     ):
-        self.queue = queue
+        self.page_queue = page_queue
         self.pjsua_bin = pjsua_bin
         self.pjsua_config_file = pjsua_config_file
         self.pagingsip = pagingsip
@@ -225,7 +244,8 @@ class PageExecutor:
                 self.log("pjsua registration failure, retrying")
                 self.child.terminate()
                 continue
-                
+
+        suspend_paging_until = 0
         
         while True:
             now = time.time()
@@ -237,8 +257,28 @@ class PageExecutor:
                 self.child.expect('>>>') # fail if it died
 
             try:
-                request = self.queue.get(timeout=1)
+                request = self.page_queue.get(timeout=1)
             except queue.Empty:
+                continue
+
+            now = time.time()
+
+            # XXX hack: suspend paging while door is unlocking; this
+            # should be fixed in hardware.
+            if request is True:
+                self.log("Suspending paging")
+                suspend_paging_until = sys.maxsize
+                continue
+
+            if request is False:
+                self.log("Reenabling paging from suspend")
+                suspend_paging_until = now + 3
+                continue
+
+            if now > suspend_paging_until:
+                suspend_paging_until = 0
+            else:
+                self.log("Skipping page that happened during suspension")
                 continue
             
             if request > (last_page_time + self.page_throttle_duration):
@@ -304,6 +344,7 @@ def run_doorclient(
         name = 'unlock_executor',
         target=UnlockExecutor(
             unlock_queue,
+            page_queue,
             unlock_gpio_pin,
             door_unlocked_duration,
             logfile,
