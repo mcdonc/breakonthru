@@ -5,6 +5,8 @@ import json
 import os
 import pexpect
 import queue
+import signal
+import socket
 import sys
 import time
 import websockets
@@ -304,6 +306,16 @@ class PageExecutor:
             self.child.sendline('h')
             self.child.expect('>>>')
 
+unlock_queue = Queue()
+page_queue = Queue()
+
+def enqueue_page(*arg):
+    now = time.time()
+    page_queue.put(now)
+
+def enqueue_unlock(*arg):
+    now = time.time()
+    unlock_queue.put(now)
 
 def run_doorclient(
     server,
@@ -321,9 +333,6 @@ def run_doorclient(
     drainevery,
     page_throttle_duration,
 ):
-
-    unlock_queue = Queue()
-    page_queue = Queue()
 
     unlock_listener = Process(
         name = 'unlock_listener',
@@ -375,14 +384,24 @@ def run_doorclient(
     )
     page_executor.start()
 
+    listeners = (unlock_listener, unlock_executor, page_listener, page_executor)
+
     try:
-        for subproc in (unlock_listener, unlock_executor, page_listener, page_executor):
-            if not subproc.is_alive():
-                raise AssertionError(f"subprocess {subproc} died")
-            subproc.join(timeout=.1)
+        while True:
+            for subproc in listeners:
+                if not subproc.is_alive():
+                    raise AssertionError(f"subprocess {subproc} died")
+                subproc.join(timeout=.1)
     except KeyboardInterrupt:
         pass
+    finally:
+        for subproc in listeners:
+            if subproc.is_alive():
+                subproc.kill()
 
+# for testing
+signal.signal(signal.SIGUSR1, enqueue_unlock)
+signal.signal(signal.SIGUSR2, enqueue_page)
 
 def main():
     args = {}
