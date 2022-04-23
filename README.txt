@@ -13,8 +13,8 @@ Create a directory inside the pi user's home directory named "lockit":
 
 Install pjsua and configure it:
 
-    Check out https://github.com/pjsip/pjproject into lockit and configure it (no Debian
-    package AFAICT).
+    Check out https://github.com/pjsip/pjproject into /home/pi/lockit and configure
+    it (no Debian package AFAICT).
 
      sudo apt install build-essential asterisk libbcg729-0 libbcg729-dev ffmpeg \
             libasound2-dev
@@ -28,7 +28,7 @@ Install pjsua and configure it:
      ./configure; make dep; make
 
     copy the pjsua.conf file from the breakonthru/configs directory into
-    /home/pi/lockit and change as necessary.
+    /home/pi/lockit/pjsua.conf and change as necessary.
 
 Configure audio:
 
@@ -86,7 +86,7 @@ Install supervisor and configure it:
    sudo apt install supervisor
 
    copy the "client.conf" from the breakonthru/configs/supervisor directory into
-   /etc/supervisor/conf.d and change as necessary.
+   /etc/supervisor/conf.d/client.conf and change as necessary.
 
    copy the "client.ini_template" from the breakonthru/configs directory into
    /home/pi/lockit/client.ini and change as necessary.
@@ -104,7 +104,7 @@ Install asterisk and configure it:
 Network configuraton:
 
     If your pi is behind a NAT, you'll need to set up port forwarding from your router
-    to your pi.  Pass through these ports to the Pi.
+    to your pi.  Pass through these ports to the pi.
 
       Port 5065 (SIP) both UDP and TCP
       Ports 10000-20000 (SIP media) both UDP and TCP
@@ -174,8 +174,8 @@ handle never-answered calls from the front door.  It's possible to do, I just di
 Calls are limited via pjsua.conf to a total duration of 120 seconds if you just
 copy it out of breakonthru/config (it's --duration 120).
 
-Calls will ring for 30 seconds when the button is pressed.  You can change this
-in asterisk's extensions.conf (in each Dial directive).
+Calls will ring for at most 30 seconds if no one answers when the button is pressed.
+You can change this in asterisk's extensions.conf (in each Dial directive).
 
 You might play around with pjsua.conf --ec-tail and related options to try to
 get some echo cancellation wrt front door speaker feeding back into front door
