@@ -74,14 +74,14 @@ class UnlockListener:
                         lasttime = now
                         await websocket.pong()
                 else:
-                    self.log("got message")
+                    self.log("got websocket message")
                     message = json.loads(message)
                     serverprovidedsecret = message.get('secret')
                     if serverprovidedsecret == self.secret:
                         msgtype = message.get("type")
                         if msgtype == "unlock":
                             user = message["body"]
-                            self.log("enqueueing received unlock request by %s" % user)
+                            self.log("enqueueing unlock request by %s" % user)
                             self.unlock_queue.put(now)
 
 
