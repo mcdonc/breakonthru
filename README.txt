@@ -147,8 +147,8 @@ What happens when you call the front door and it's already on a call?  It seems 
 a poor man's conference call. Both can hear the front door mic.  Both can speak to
 the front door speaker.  But clients can't hear each other directly, although they 
 can hear each other through the front door speaker feeding back into the front door mic.
-I have since discovered pjsua's --auto-conf option, which may change this
-behavior, but haven't done any testing yet.
+I had thought maybe pjsua's --auto-conf option would change this behavior, but
+it doesn't seem to (with limited testing).
 
 What happens if you have Wifi calling on on your phone?  No clue.
 

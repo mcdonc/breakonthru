@@ -230,11 +230,9 @@ class PageExecutor:
         while True:
             self.log("pjsua attempting to register with asterisk")
             try:
-                self.child = pexpect.spawn(
-                    f'{self.pjsua_bin} --config-file {self.pjsua_config_file}',
-                    encoding='utf-8',
-                    timeout=10,
-                )
+                cmd = f'{self.pjsua_bin} --config-file {self.pjsua_config_file}'
+                self.log(f"executing {cmd}")
+                self.child = pexpect.spawn(cmd, encoding='utf-8', timeout=10)
                 self.child.logfile_read = sys.stdout
                 self.child.expect('registration success') # fail if not successful
                 self.log("pjsua registration success")
@@ -252,7 +250,7 @@ class PageExecutor:
             # see all output more quickly, for debugging
             if self.drainevery and (now > (last_drain + self.drainevery)):
                 last_drain = now
-                self.child.sendline('echo 1')
+                self.child.sendline('echo ping')
                 self.child.expect('>>>') # fail if it died
 
             try:
