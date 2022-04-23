@@ -25,10 +25,10 @@ Install supervisor and configure it:
 
    sudo apt install supervisor
 
-   copy the "client.conf" from the configs/supervisor directory into
+   copy the "client.conf" from the breakonthru/configs/supervisor directory into
    /etc/supervisor/conf.d and change as necessary.
 
-   copy the "client.ini_template" from the configs directory into
+   copy the "client.ini_template" from the breakonthru/configs directory into
    /home/pi/lockit/client.ini and change as necessary.
 
    sudo service supervisor restart
@@ -37,8 +37,9 @@ Install asterisk and configure it:
 
    sudo apt install asterisk
 
-   copy the .conf files from the configs/asterisk directory into /etc/asterisk (it
-   will overwrite some, make backups first if you care), and change as necessary.
+   copy the .conf files from the breakonthru/configs/asterisk directory into
+   /etc/asterisk (it will overwrite some, make backups first if you care), and
+   change as necessary.
 
 Install pjsua and configure it:
 
@@ -56,8 +57,8 @@ Install pjsua and configure it:
 
    ./configure; make dep; make
 
-  copy the pjsua.conf file from the configs directory into /home/pi/lockit and
-  change as necessary.
+  copy the pjsua.conf file from the breakonthru/configs directory into
+  /home/pi/lockit and change as necessary.
 
 Find your USB sound card with:
 
@@ -121,7 +122,7 @@ cd into "breakonthru"
 
 sudo apt install supervisor
 
-copy the "server.conf" from the configs/supervisor directory into
+copy the "server.conf" from the breakonthru/configs/supervisor directory into
 /etc/supervisor/conf.d and change as necessary.
 
 copy the production.ini_template into $HOME/lockit/production.ini and change as
@@ -134,7 +135,7 @@ sudo service supervisor restart
 
 Note that you will have to set up Apache/NGINX with SSL proxying to both the
 doorserver port and the webapp port for everything to work properly.  See
-configs/apache for sample configurations.
+breakonthru/configs/apache for sample configurations.
 
 Q&A
 ===
