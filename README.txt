@@ -158,7 +158,7 @@ but it's lightly tested and may be unneccessary.
 Does the person who presses the front door button hear a phone dialing?  Yes.
 
 What happens if somebody spams the callbutton?  Pages are throttled to one
-every 20 seconds (configurable in an argument to the pager process).
+every 30 seconds (configurable in client.ini via page_throttle_duration).
 
 There is no "not answering" message played or voicemail box set up in Asterisk to
 handle never-answered calls from the front door.  It's possible to do, I just didn't.
@@ -168,3 +168,7 @@ copy it out of breakonthru/config (it's --duration 120).
 
 Calls will ring for 30 seconds when the button is pressed.  You can change this
 in asterisk's extensions.conf (in each Dial directive).
+
+You might play around with pjsua.conf --ec-tail and related options to try to
+get some echo cancellation wrt front door speaker feeding back into front door
+mic.  My limited attempts at this were not successful.
