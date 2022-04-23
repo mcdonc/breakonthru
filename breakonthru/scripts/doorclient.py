@@ -18,7 +18,6 @@ class UnlockListener:
     def __init__(
             self,
             unlock_queue,
-            page_queue,
             server,
             secret,
             clientidentity,
