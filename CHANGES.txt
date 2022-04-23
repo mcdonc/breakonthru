@@ -1,3 +1,10 @@
 breakonthru changes
 ===================
 
+- 3/16/2022: Initial release
+
+- 4/16/2022: Switch to asterisk/pjsua, disuse WebRTC/webrtc-cli.
+
+- 4/22/2022: Use multiprocessing from a single Python file rather than having
+             supervisor control multiple processes.  Switch to .ini configuration
+             instead of command line switches.
