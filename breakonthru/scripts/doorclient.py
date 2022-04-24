@@ -23,20 +23,19 @@ class UnlockListener:
             server,
             secret,
             clientidentity,
-            logfile
+            logger,
     ):
         self.unlock_queue = unlock_queue
         self.server = server
         self.secret = secret
         self.clientidentity = clientidentity
-        self.logfile = logfile
+        self.logger = logger
         
     def log(self, msg):
-        self.logger.info(msg)
+        self.logger.info(f"UNLKL {msg}")
 
     def run(self):
         try:
-            self.logger = teelogger("UNLKL", self.logfile)
             self.log("starting unlock listener")
             while True:
                 # serve exits if doorserver is disconnected, just reestablish
@@ -91,19 +90,19 @@ class UnlockExecutor:
     def __init__(
             self,
             unlock_queue,
-            page_queue,
             unlock_gpio_pin,
             door_unlocked_duration,
-            logfile
+            logger,
     ):
         self.unlock_queue = unlock_queue
-        self.page_queue = page_queue
         self.unlock_gpio_pin = unlock_gpio_pin
         self.door_unlocked_duration = door_unlocked_duration
-        self.logfile = logfile
+        self.logger = logger
+        import RPi.GPIO
+        self.GPIO = RPi.GPIO
 
     def log(self, msg):
-        self.logger.info(msg)
+        self.logger.info(f"UNLKX {msg}")
 
     def run(self):
         try:
@@ -112,19 +111,17 @@ class UnlockExecutor:
             return
 
     def _run(self):
-        self.logger = teelogger("UNLKX", self.logfile)
         self.log("starting unlock executor")
         self.log(f"unlock gpio pin is {self.unlock_gpio_pin}")
-        import RPi.GPIO as GPIO
-        GPIO.setwarnings(False) # squash RuntimeWarning: This channel is already in use
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.unlock_gpio_pin, GPIO.OUT)
-        last_unlock_time = 0
+        self.GPIO.setwarnings(False) # squash RuntimeWarning
+        self.GPIO.setmode(self.GPIO.BCM)
+        self.GPIO.setup(self.unlock_gpio_pin, self.GPIO.OUT)
+        last_relock_time = 0
         while True:
             try:
                 while True:
                     result = self.unlock_queue.get(timeout=.5)
-                    if result > last_unlock_time:
+                    if result > last_relock_time:
                         break
             except queue.Empty:
                 continue
@@ -132,32 +129,32 @@ class UnlockExecutor:
             now = time.time()
             self.log("door unlocking")
             try:
-                # XXX hack to work around hardware bug: don't page while unlocking
-                self.page_queue.put(True)
-                GPIO.output(self.unlock_gpio_pin, 1)
+                self.GPIO.output(self.unlock_gpio_pin, 1)
                 time.sleep(self.door_unlocked_duration)
             finally:
-                GPIO.output(self.unlock_gpio_pin, 0)
+                self.GPIO.output(self.unlock_gpio_pin, 0)
                 self.log("door relocked")
-                self.page_queue.put(False)
-                last_unlock_time = now
+                last_relock_time = now
 
 
 class PageListener:
+    _rising = 0
     def __init__(
             self,
             page_queue,
             callbutton_gpio_pin,
             callbutton_bouncetime,
-            logfile,
+            logger,
     ):
         self.page_queue = page_queue
         self.callbutton_gpio_pin = callbutton_gpio_pin
         self.callbutton_bouncetime = callbutton_bouncetime
-        self.logfile = logfile
+        self.logger = logger
+        import RPi.GPIO
+        self.GPIO = RPi.GPIO
 
     def log(self, msg):
-        self.logger.info(msg)
+        self.logger.info(f"PAGEL {msg}")
 
     def run(self):
         try:
@@ -166,32 +163,47 @@ class PageListener:
             return
 
     def _run(self):
-        self.logger = teelogger("PAGEL", self.logfile)
         self.log("starting page listener")
         self.log(f"callbutton gpio pin is {self.callbutton_gpio_pin}")
-        import RPi.GPIO as GPIO
-        GPIO.setwarnings(False) # squash RuntimeWarning: This channel is already in use
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.callbutton_gpio_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        last = 0
+        self.GPIO.setwarnings(False) # squash RuntimeWarning
+        self.GPIO.setmode(self.GPIO.BCM)
+        self.GPIO.setup(
+            self.callbutton_gpio_pin,
+            self.GPIO.IN,
+            pull_up_down=self.GPIO.PUD_UP
+        )
         
-        def enqueue_page(_):
-            nonlocal last
-            now = time.time()
-            if now > (last + .5):
-                last = now
-                self.log("Enqueueing page")
-                self.page_queue.put(now)
-
-        GPIO.add_event_detect(
+        self.GPIO.add_event_detect(
              self.callbutton_gpio_pin,
-             GPIO.FALLING, 
-             callback=enqueue_page,
+             self.GPIO.BOTH, 
+             callback=self.edge_detect,
              bouncetime=self.callbutton_bouncetime,
         )
         while True:
             time.sleep(.1)
 
+    def rising(self, now):
+        self._rising = now
+
+    def falling(self, now):
+        # this is not a debounce.  This is a filter for GPIO pin shorts that
+        # seem to be caused fluctuations to the power supplied to the Pi.  Good times.
+        # https://raspberrypi.stackexchange.com/questions/69820/doorbell-gpio-to-ground-randomly-triggers
+        if now > self._rising + .1: # 100 millseconds at least
+            self.enqueue_page(now)
+
+    def enqueue_page(self, now):
+        self.log("Enqueueing page")
+        self.page_queue.put(now)
+
+    def edge_detect(self, pin):
+        # https://raspi.tv/2014/rpi-gpio-update-and-detecting-both-rising-and-falling-edges (lame, many bytecodes could execute before we read the input)
+        state = self.GPIO.input(pin)
+        now = time.time()
+        if state:
+            self.rising(now)
+        else:
+            self.falling(now)
 
 class PageExecutor:
     def __init__(
@@ -203,7 +215,7 @@ class PageExecutor:
             pagingduration,
             page_throttle_duration,
             drainevery,
-            logfile,
+            logger,
     ):
         self.page_queue = page_queue
         self.pjsua_bin = pjsua_bin
@@ -212,10 +224,10 @@ class PageExecutor:
         self.pagingduration = pagingduration
         self.page_throttle_duration = page_throttle_duration
         self.drainevery = drainevery
-        self.logfile = logfile
+        self.logger = logger
 
     def log(self, msg):
-        self.logger.info(msg)
+        self.logger.info(f"PAGEX {msg}")
 
     def run(self):
         try:
@@ -224,7 +236,6 @@ class PageExecutor:
             return
 
     def _run(self):
-        self.logger = teelogger("PAGEX", self.logfile)
         self.log("starting page executor")
         last_page_time = 0
         last_drain = 0
@@ -244,8 +255,6 @@ class PageExecutor:
                 self.child.terminate()
                 continue
 
-        suspend_paging_until = 0
-        
         while True:
             now = time.time()
 
@@ -262,24 +271,6 @@ class PageExecutor:
 
             now = time.time()
 
-            # XXX hack: suspend paging while door is unlocking; this
-            # should be fixed in hardware.
-            if request is True:
-                self.log("Suspending paging")
-                suspend_paging_until = sys.maxsize
-                continue
-
-            if request is False:
-                self.log("Reenabling paging from suspend")
-                suspend_paging_until = now + 3
-                continue
-
-            if now > suspend_paging_until:
-                suspend_paging_until = 0
-            else:
-                self.log("Skipping page that happened during suspension")
-                continue
-            
             if request > (last_page_time + self.page_throttle_duration):
                 last_page_time = now
                 self.log("Paging")
@@ -320,7 +311,7 @@ def enqueue_unlock(*arg):
 def run_doorclient(
     server,
     secret,
-    logfile,
+    logger,
     unlock_gpio_pin,
     door_unlocked_duration,
     clientidentity,
@@ -341,7 +332,7 @@ def run_doorclient(
             server,
             secret,
             clientidentity,
-            logfile,
+            logger,
         ).run
     )
     unlock_listener.start()
@@ -350,10 +341,9 @@ def run_doorclient(
         name = 'unlock_executor',
         target=UnlockExecutor(
             unlock_queue,
-            page_queue,
             unlock_gpio_pin,
             door_unlocked_duration,
-            logfile,
+            logger,
         ).run
     )
     unlock_executor.start()
@@ -364,7 +354,7 @@ def run_doorclient(
             page_queue,
             callbutton_gpio_pin,
             callbutton_bouncetime,
-            logfile,
+            logger,
         ).run
     )
     page_listener.start()
@@ -379,7 +369,7 @@ def run_doorclient(
             paging_duration,
             page_throttle_duration,
             drainevery,
-            logfile,
+            logger,
         ).run,
     )
     page_executor.start()
@@ -434,7 +424,9 @@ def main():
         raise AssertionError('pjsua_config_file must be supplied')
     args['pjsua_config_file'] = pjsua_config_file
     args['paging_sip'] = section.get("paging_sip", "sip:7000@127.0.0.1:5065")
-    args['logfile'] = section.get("logfile")
+    logfile = section.get("logfile")
+    logger = teelogger(logfile)
+    args['logger'] = logger
     args['unlock_gpio_pin'] = int(section.get("unlock_gpio_pin", 18))
     args['door_unlocked_duration'] = int(section.get("door_unlocked_duration", 10))
     args['clientidentity'] = section.get("clientidentity", "doorclient")
@@ -443,4 +435,5 @@ def main():
     args['paging_duration'] = int(section.get("paging_duration", 100))
     args['page_throttle_duration'] = int(section.get("page_throttle_duration", 30))
     args['drainevery'] = int(section.get("drainevery", 0))
+    logger.info(f"MAIN pid is {os.getpid()}")
     client = run_doorclient(**args)

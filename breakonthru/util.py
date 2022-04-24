@@ -1,11 +1,11 @@
 import logging
 
-def teelogger(subsystem, logfile=None):
+def teelogger(logfile=None):
     """ Log to stdout and logfile """
     logging.basicConfig(
         filename=logfile,
         level=logging.INFO,
-        format=f'{subsystem} %(asctime)s %(message)s',
+        format='%(asctime)s %(message)s',
         datefmt='%m/%d/%Y %I:%M:%S %p'
     )
     logger = logging.getLogger()
@@ -14,7 +14,7 @@ def teelogger(subsystem, logfile=None):
         ch = logging.StreamHandler()
         ch.setLevel(logging.INFO)
         formatter = logging.Formatter(
-            f'{subsystem} %(asctime)s %(message)s',
+            '%(asctime)s %(message)s',
             datefmt='%m/%d/%Y %I:%M:%S %p'
         )
         ch.setFormatter(formatter)
