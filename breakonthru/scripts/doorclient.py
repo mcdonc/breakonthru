@@ -189,7 +189,7 @@ class PageListener:
         # this is not a debounce.  This is a filter for GPIO pin shorts that
         # seem to be caused fluctuations to the power supplied to the Pi.  Good times.
         # https://raspberrypi.stackexchange.com/questions/69820/doorbell-gpio-to-ground-randomly-triggers
-        if now > self._rising + .1: # 100 millseconds at least
+        if now > self._rising + .2: # 200 millseconds at least
             self.enqueue_page(now)
 
     def enqueue_page(self, now):
