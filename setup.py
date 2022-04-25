@@ -15,9 +15,8 @@ requires = [
     'waitress',
     'cryptacular',
     'websockets',
-    'RPi.GPIO',
+    'gpiozero',
     'pexpect',
-    'fasteners',
     ]
 
 tests_require = [

@@ -78,7 +78,6 @@ Create a Python virtualenv and install breakonthru into it:
    cd into "breakonthru"
 
    ../env/bin/pip install --upgrade pip setuptools
-   export CFLAGS=-fcommon   # to allow RPi.GPIO to build properly
    ../env/bin/pip install -e .
 
 Install supervisor and configure it:

@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import configparser
+import gpiozero
 import json
 import os
 import pexpect
@@ -98,8 +99,6 @@ class UnlockExecutor:
         self.unlock_gpio_pin = unlock_gpio_pin
         self.door_unlocked_duration = door_unlocked_duration
         self.logger = logger
-        import RPi.GPIO
-        self.GPIO = RPi.GPIO
 
     def log(self, msg):
         self.logger.info(f"UNLKX {msg}")
@@ -113,10 +112,9 @@ class UnlockExecutor:
     def _run(self):
         self.log("starting unlock executor")
         self.log(f"unlock gpio pin is {self.unlock_gpio_pin}")
-        self.GPIO.setwarnings(False) # squash RuntimeWarning
-        self.GPIO.setmode(self.GPIO.BCM)
-        self.GPIO.setup(self.unlock_gpio_pin, self.GPIO.OUT)
         last_relock_time = 0
+        # gpio objects cannot be defined in the main process, only in subproc
+        buzzer = gpiozero.Buzzer(self.unlock_gpio_pin)
         while True:
             try:
                 while True:
@@ -129,10 +127,10 @@ class UnlockExecutor:
             now = time.time()
             self.log("door unlocking")
             try:
-                self.GPIO.output(self.unlock_gpio_pin, 1)
+                buzzer.on()
                 time.sleep(self.door_unlocked_duration)
             finally:
-                self.GPIO.output(self.unlock_gpio_pin, 0)
+                buzzer.off()
                 self.log("door relocked")
                 last_relock_time = now
 
@@ -144,66 +142,38 @@ class PageListener:
             page_queue,
             callbutton_gpio_pin,
             callbutton_bouncetime,
+            callbutton_holdtime,
             logger,
     ):
         self.page_queue = page_queue
         self.callbutton_gpio_pin = callbutton_gpio_pin
         self.callbutton_bouncetime = callbutton_bouncetime
+        self.callbutton_holdtime = callbutton_holdtime
         self.logger = logger
-        import RPi.GPIO
-        self.GPIO = RPi.GPIO
 
     def log(self, msg):
         self.logger.info(f"PAGEL {msg}")
 
     def run(self):
+        # gpio objects cannot be defined in the main process, only in subproc
+        button = gpiozero.Button(
+            pin=self.callbutton_gpio_pin,
+            bounce_time=self.callbutton_bouncetime / 1000.0,
+            hold_time=self.callbutton_holdtime /1000.0,
+        )
         try:
-            self._run()
+            self.log("starting page listener")
+            self.log(f"callbutton gpio pin is {self.callbutton_gpio_pin}")
+            def enqueue(*arg):
+                self.log("enqueuing page")
+            button.when_held = enqueue
+            while True:
+                self.logger.debug(
+                    f"page listener waiting for pin {self.callbutton_gpio_pin}"
+                )
+                time.sleep(.5)
         except KeyboardInterrupt:
-            return
-
-    def _run(self):
-        self.log("starting page listener")
-        self.log(f"callbutton gpio pin is {self.callbutton_gpio_pin}")
-        self.GPIO.setwarnings(False) # squash RuntimeWarning
-        self.GPIO.setmode(self.GPIO.BCM)
-        self.GPIO.setup(
-            self.callbutton_gpio_pin,
-            self.GPIO.IN,
-            pull_up_down=self.GPIO.PUD_UP
-        )
-        
-        self.GPIO.add_event_detect(
-             self.callbutton_gpio_pin,
-             self.GPIO.BOTH, 
-             callback=self.edge_detect,
-             bouncetime=self.callbutton_bouncetime,
-        )
-        while True:
-            time.sleep(.1)
-
-    def rising(self, now):
-        self._rising = now
-
-    def falling(self, now):
-        # this is not a debounce.  This is a filter for GPIO pin shorts that
-        # seem to be caused fluctuations to the power supplied to the Pi.  Good times.
-        # https://raspberrypi.stackexchange.com/questions/69820/doorbell-gpio-to-ground-randomly-triggers
-        if now > self._rising + .2: # 200 millseconds at least
-            self.enqueue_page(now)
-
-    def enqueue_page(self, now):
-        self.log("Enqueueing page")
-        self.page_queue.put(now)
-
-    def edge_detect(self, pin):
-        # https://raspi.tv/2014/rpi-gpio-update-and-detecting-both-rising-and-falling-edges (lame, many bytecodes could execute before we read the input)
-        state = self.GPIO.input(pin)
-        now = time.time()
-        if state:
-            self.rising(now)
-        else:
-            self.falling(now)
+            pass
 
 class PageExecutor:
     def __init__(
@@ -300,14 +270,6 @@ class PageExecutor:
 unlock_queue = Queue()
 page_queue = Queue()
 
-def enqueue_page(*arg):
-    now = time.time()
-    page_queue.put(now)
-
-def enqueue_unlock(*arg):
-    now = time.time()
-    unlock_queue.put(now)
-
 def run_doorclient(
     server,
     secret,
@@ -317,6 +279,7 @@ def run_doorclient(
     clientidentity,
     callbutton_gpio_pin,
     callbutton_bouncetime,
+    callbutton_holdtime,
     pjsua_bin,
     pjsua_config_file,
     paging_sip,
@@ -324,6 +287,7 @@ def run_doorclient(
     drainevery,
     page_throttle_duration,
 ):
+    procs = []
 
     unlock_listener = Process(
         name = 'unlock_listener',
@@ -335,7 +299,7 @@ def run_doorclient(
             logger,
         ).run
     )
-    unlock_listener.start()
+    procs.append(unlock_listener)
 
     unlock_executor = Process(
         name = 'unlock_executor',
@@ -346,7 +310,7 @@ def run_doorclient(
             logger,
         ).run
     )
-    unlock_executor.start()
+    procs.append(unlock_executor)
 
     page_listener = Process(
         name = 'page_listener',
@@ -354,6 +318,7 @@ def run_doorclient(
             page_queue,
             callbutton_gpio_pin,
             callbutton_bouncetime,
+            callbutton_holdtime,
             logger,
         ).run
     )
@@ -372,24 +337,32 @@ def run_doorclient(
             logger,
         ).run,
     )
-    page_executor.start()
+    procs.append(page_executor)
 
-    listeners = (unlock_listener, unlock_executor, page_listener, page_executor)
+    [ proc.start() for proc in procs ]
 
     try:
         while True:
-            for subproc in listeners:
+            for subproc in procs:
                 if not subproc.is_alive():
                     raise AssertionError(f"subprocess {subproc} died")
                 subproc.join(timeout=.1)
     except KeyboardInterrupt:
         pass
     finally:
-        for subproc in listeners:
+        for subproc in procs:
             if subproc.is_alive():
                 subproc.kill()
 
 # for testing
+def enqueue_page(*arg):
+    now = time.time()
+    page_queue.put(now)
+
+def enqueue_unlock(*arg):
+    now = time.time()
+    unlock_queue.put(now)
+
 signal.signal(signal.SIGUSR1, enqueue_unlock)
 signal.signal(signal.SIGUSR2, enqueue_page)
 
@@ -424,14 +397,16 @@ def main():
         raise AssertionError('pjsua_config_file must be supplied')
     args['pjsua_config_file'] = pjsua_config_file
     args['paging_sip'] = section.get("paging_sip", "sip:7000@127.0.0.1:5065")
+    loglevel = section.get("loglevel", "INFO")
     logfile = section.get("logfile")
-    logger = teelogger(logfile)
+    logger = teelogger(logfile, loglevel)
     args['logger'] = logger
     args['unlock_gpio_pin'] = int(section.get("unlock_gpio_pin", 18))
     args['door_unlocked_duration'] = int(section.get("door_unlocked_duration", 10))
     args['clientidentity'] = section.get("clientidentity", "doorclient")
     args['callbutton_gpio_pin'] = int(section.get("callbutton_gpio_pin", 16))
     args['callbutton_bouncetime'] = int(section.get("callbutton_bouncetime", 60))
+    args['callbutton_holdtime'] = int(section.get("callbutton_holdtime", 250))
     args['paging_duration'] = int(section.get("paging_duration", 100))
     args['page_throttle_duration'] = int(section.get("page_throttle_duration", 30))
     args['drainevery'] = int(section.get("drainevery", 0))
