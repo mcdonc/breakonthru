@@ -171,7 +171,7 @@ class PageListener:
                 self.logger.debug(
                     f"page listener waiting for pin {self.callbutton_gpio_pin}"
                 )
-                time.sleep(.5)
+                time.sleep(.1)
         except KeyboardInterrupt:
             pass
 
