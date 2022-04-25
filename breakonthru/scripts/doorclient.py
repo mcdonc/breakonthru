@@ -7,6 +7,7 @@ import os
 import pexpect
 import queue
 import socket
+import signal
 import sys
 import time
 import websockets
