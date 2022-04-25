@@ -6,7 +6,6 @@ import json
 import os
 import pexpect
 import queue
-import signal
 import socket
 import sys
 import time
