@@ -6,6 +6,7 @@ unlock_gpio_pin = 18
 door_unlocked_duration = 10
 callbutton_gpio_pin = 16
 callbutton_bouncetime = 60
+callbutton_holdtime = 250
 pjsua_bin = /home/pi/lockit/pjproject/pjsip-apps/bin/pjsua-aarch64-unknown-linux-gnu
 pjsua_config_file = /home/pi/lockit/pjsua.conf
 paging_sip = sip:7000@127.0.0.1:5065
