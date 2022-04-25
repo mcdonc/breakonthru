@@ -179,3 +179,10 @@ You can change this in asterisk's extensions.conf (in each Dial directive).
 You might play around with pjsua.conf --ec-tail and related options to try to
 get some echo cancellation wrt front door speaker feeding back into front door
 mic.  My limited attempts at this were not successful.
+
+Why do I use gpiozero instead of RPi.GPIO?  I used the former initially, but I
+had problems where sending volage to the output pin (for the door unlock) would
+trigger the input pin (for the callbutton detector).  It would also sometimes
+trigger with AC power fluctuations (hilariously the call button would trigger when
+I turned my soldering iron or box fan on or off).  I didn't get to the bottom
+of this, but switching to gpiozero made the problem go away.
