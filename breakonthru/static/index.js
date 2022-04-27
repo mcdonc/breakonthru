@@ -36,7 +36,10 @@ function fetchTokendata() {
 }
 
 function createWebSocket() {
-    if (typeof ws !== 'undefined') { return }
+    if (typeof ws !== 'undefined') {
+        printLog("websocket already created, not creating another")
+        return
+    }
     url = websocket_url; // from index.pt
     ws = new WebSocket(url)
     ws.onmessage = function(event) {
