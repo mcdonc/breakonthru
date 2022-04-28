@@ -5,6 +5,7 @@ import time
 from pyramid.authentication import SessionAuthenticationHelper
 from pyramid.security import Allowed, Denied
 
+
 class SessionSecurityPolicy:
     def __init__(self):
         self.helper = SessionAuthenticationHelper()
@@ -36,6 +37,7 @@ class SessionSecurityPolicy:
     def forget(self, request, **kw):
         return self.helper.forget(request, **kw)
 
+
 def parse_passwords(text):
     passwords = {}
     entries = text.splitlines()
@@ -51,6 +53,7 @@ def parse_passwords(text):
         passwords[name] = value
     return passwords
 
+
 def timeslice(period, currtime):
     low = int(math.floor(currtime)) - period + 1
     high = int(math.ceil(currtime)) + 1
@@ -58,7 +61,9 @@ def timeslice(period, currtime):
         if x % period == 0:
             return x
 
+
 token_valid_secs = 60
+
 
 def make_token(secret, password, valid_secs=token_valid_secs):
     now = time.time()
@@ -69,6 +74,7 @@ def make_token(secret, password, valid_secs=token_valid_secs):
         timed,
         'sha512_256'
     ).hexdigest()
+
 
 def refresh_token(request, username, valid_secs=token_valid_secs):
     storedhash = request.registry.settings['passwords'].get(username.lower())

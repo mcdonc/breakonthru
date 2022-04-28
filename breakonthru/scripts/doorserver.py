@@ -3,12 +3,11 @@ import asyncio
 import websockets
 import websockets.exceptions
 import json
-import logging
-import socket
 import uuid
 
 from breakonthru.authentication import parse_passwords, make_token
 from breakonthru.util import teelogger
+
 
 class Doorserver:
     unlockdata = None
@@ -35,7 +34,7 @@ class Doorserver:
     async def handler(self, websocket):
         self.log("handler kicked off with websocket %s" % websocket)
         wsid = websocket.id
-        identification = None # identification is per-connection
+        identification = None  # identification is per-connection
         while True:
             try:
                 message = await asyncio.wait_for(websocket.recv(), timeout=0.25)

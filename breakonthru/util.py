@@ -1,5 +1,6 @@
 import logging
 
+
 def teelogger(logfile=None, loglevel="INFO"):
     """ Log to stdout and logfile """
     loglevel = loglevel.upper()

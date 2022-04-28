@@ -2,11 +2,13 @@ import argparse
 import os
 import random
 
+
 def playrandom(directory, device):
     files = os.listdir(directory)
     fn = os.path.join(directory, random.choice(files))
     print(f"chose {fn}")
     os.system(f"aplay -D {device} {fn}")
+
 
 def main():
     parser = argparse.ArgumentParser()

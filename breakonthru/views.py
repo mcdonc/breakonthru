@@ -8,6 +8,7 @@ from pyramid.view import notfound_view_config
 
 from breakonthru.authentication import refresh_token
 
+
 @forbidden_view_config(
     renderer='breakonthru:templates/403.pt'
 )
@@ -15,12 +16,14 @@ def forbidden_view(request):
     request.response.status = 403
     return {}
 
+
 @notfound_view_config(
     renderer='breakonthru:templates/404.pt'
 )
 def notfound_view(request):
     request.response.status = 404
     return {}
+
 
 @view_config(
     route_name='login'
@@ -38,6 +41,7 @@ def login_view(request):
             headers = remember(request, username)
     return HTTPSeeOther(location='/', headers=headers)
 
+
 @view_config(
     route_name='logout',
 )
@@ -45,6 +49,7 @@ def logout_view(request):
     headers = forget(request)
     request.session.pop("token", None)
     return HTTPSeeOther(location='/', headers=headers)
+
 
 @view_config(
     route_name='home',
