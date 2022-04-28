@@ -40,7 +40,12 @@ function reenableBuzzButton() {
     buzzbutton.disabled = false
     buzzbutton.textContent = "Buzz Front Door"
 }
-   
+
+function disableBuzzButton() {
+    buzzbutton = document.getElementById('buzz')
+    buzzbutton.disabled = true
+    buzzbutton.textContent = "... Buzzing ..."
+}
 
 function createWebSocket() {
     if (typeof ws !== 'undefined') {
@@ -53,9 +58,7 @@ function createWebSocket() {
         if (message["type"] === "ack") {
             body = message["body"]
             if (body.startsWith("enqueued unlock")) {
-                buzzbutton = document.getElementById('buzz')
-                buzzbutton.disabled = true
-                buzzbutton.textContent = "... Buzzing ..."
+                disableBuzzButton();
             }
             if (body.startsWith("door relocked")) {
                 reenableBuzzButton();
