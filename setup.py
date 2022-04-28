@@ -55,7 +55,6 @@ setup(
             'doorserver = breakonthru.scripts.doorserver:main',
             'doorclient = breakonthru.scripts.doorclient:main',
             'wavplayer = breakonthru.scripts.wavplayer:main',
-            'pager = breakonthru.scripts.pager:main',
         ],
     },
 )
