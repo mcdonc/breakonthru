@@ -5,8 +5,10 @@ import websockets.exceptions
 import json
 import logging
 import socket
+import uuid
 
 from breakonthru.authentication import parse_passwords, make_token
+from breakonthru.util import teelogger
 
 class Doorserver:
     unlockdata = None
@@ -17,6 +19,8 @@ class Doorserver:
             passwords = f.read()
         self.passwords = parse_passwords(passwords)
         self.logger = teelogger(logfile)
+        self.acks = {}
+        self.pending_acks = {}
 
     def log(self, msg):
         self.logger.info(msg)
@@ -30,6 +34,7 @@ class Doorserver:
 
     async def handler(self, websocket):
         self.log("handler kicked off with websocket %s" % websocket)
+        wsid = websocket.id
         identification = None # identification is per-connection
         while True:
             try:
@@ -44,6 +49,10 @@ class Doorserver:
                         await websocket.send(self.unlockdata)
                         self.log("sent unlock request")
                         self.unlockdata = None
+                if identification == "webclient":
+                    ack = self.acks.pop(wsid, None)
+                    if ack is not None:
+                        await websocket.send(ack)
 
                 continue
 
@@ -75,12 +84,22 @@ class Doorserver:
                 if msgtype == "unlock":
                     # we must send the secret to the doorclient
                     user = message["body"]
+                    msgid = uuid.uuid4().hex
                     unlockdata = {
                         "type":"unlock",
                         "body":user,
+                        "msgid":msgid,
                         "secret":self.secret,
                     }
                     self.unlockdata = json.dumps(unlockdata)
+                    self.pending_acks[msgid] = wsid
+            if identification == "doorclient":
+                if msgtype == "ack":
+                    msgid = message["msgid"]
+                    wsid = self.pending_acks.pop(msgid, None)
+                    if wsid is not None:
+                        self.acks[wsid] = json.dumps(message)
+
 
 def main():
     global passwords
