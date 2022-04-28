@@ -38,7 +38,7 @@ class Doorserver:
         identification = None # identification is per-connection
         while True:
             try:
-                message = await asyncio.wait_for(websocket.recv(), timeout=1.0)
+                message = await asyncio.wait_for(websocket.recv(), timeout=0.25)
             except (websockets.ConnectionClosedOK,
                     websockets.exceptions.ConnectionClosedError):
                 break

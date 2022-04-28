@@ -35,9 +35,15 @@ function fetchTokendata() {
     )
 }
 
+function reenableBuzzButton() {
+    buzzbutton = document.getElementById('buzz')
+    buzzbutton.disabled = false
+    buzzbutton.textContent = "Buzz Front Door"
+}
+   
+
 function createWebSocket() {
     if (typeof ws !== 'undefined') {
-        printLog("websocket already created, not creating another")
         return
     }
     url = websocket_url; // from index.pt
@@ -45,6 +51,13 @@ function createWebSocket() {
     ws.onmessage = function(event) {
         var message = JSON.parse(event.data)
         if (message["type"] === "ack") {
+            body = message["body"]
+            if (body.startsWith("enqueued unlock")) {
+                buzzbutton = document.getElementById('buzz')
+                buzzbutton.disabled = true
+                buzzbutton.textContent = "... Buzzing ..."
+                setTimeout(reenableBuzzButton, 5000)
+            }
             printLog(message["body"])
         }
     }
