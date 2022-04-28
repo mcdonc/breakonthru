@@ -85,10 +85,10 @@ class Doorserver:
                     user = message["body"]
                     msgid = uuid.uuid4().hex
                     unlockdata = {
-                        "type":"unlock",
-                        "body":user,
-                        "msgid":msgid,
-                        "secret":self.secret,
+                        "type": "unlock",
+                        "body": user,
+                        "msgid": msgid,
+                        "secret": self.secret,
                     }
                     self.unlockdata = json.dumps(unlockdata)
                     self.pending_acks[msgid] = wsid
