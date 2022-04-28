@@ -43,8 +43,12 @@ class UnlockListener:
                 # a connection in this case via this loop
                 try:
                     asyncio.run(self.serve())
-                except (websockets.exceptions.ConnectionClosedError,
-                        asyncio.TimeoutError, socket.gaierror):
+                except (
+                        websockets.exceptions.ConnectionClosedError,
+                        websockets.exceptions.InvalidStatusCode,
+                        asyncio.TimeoutError,
+                        socket.gaierror
+                ):
                     pass
         except KeyboardInterrupt:
             return
@@ -83,8 +87,16 @@ class UnlockListener:
                         msgtype = message.get("type")
                         if msgtype == "unlock":
                             user = message["body"]
-                            self.log("enqueueing unlock request by %s" % user)
+                            self.log(f"enqueueing unlock request by {user}")
                             self.unlock_queue.put(now)
+                            await websocket.send(
+                                json.dumps(
+                                    {"type":"ack",
+                                     "msgid":message["msgid"],
+                                     "body":f"enqueued unlock request by {user}",
+                                     "secret":self.secret})
+                                )
+                            self.log("sent response")
 
 
 class UnlockExecutor:
@@ -291,6 +303,7 @@ def run_doorclient(
 
     unlock_listener = Process(
         name = 'unlock_listener',
+        daemon = True,
         target=UnlockListener(
             unlock_queue,
             server,
@@ -303,6 +316,7 @@ def run_doorclient(
 
     unlock_executor = Process(
         name = 'unlock_executor',
+        daemon = True,
         target=UnlockExecutor(
             unlock_queue,
             unlock_gpio_pin,
@@ -314,6 +328,7 @@ def run_doorclient(
 
     page_listener = Process(
         name = 'page_listener',
+        daemon = True,
         target=PageListener(
             page_queue,
             callbutton_gpio_pin,
@@ -326,6 +341,7 @@ def run_doorclient(
 
     page_executor = Process(
         name = 'page_executor',
+        daemon = True,
         target=PageExecutor(
             page_queue,
             pjsua_bin,
@@ -339,14 +355,15 @@ def run_doorclient(
     )
     procs.append(page_executor)
 
-    [ proc.start() for proc in procs ]
+    for proc in procs:
+        proc.start()
 
     try:
         while True:
             for subproc in procs:
                 if not subproc.is_alive():
                     raise AssertionError(f"subprocess {subproc} died")
-                subproc.join(timeout=.1)
+                time.sleep(1)
     except KeyboardInterrupt:
         pass
     finally:
