@@ -40,11 +40,9 @@ function createWebSocket() {
     url = websocket_url; // from index.pt
     ws = new WebSocket(url)
     ws.onmessage = function(event) {
-        printLog("got websocket answer message")
         var message = JSON.parse(event.data)
-        if (message["type"] === "answer") {
-            document.getElementById('answer').value = message["body"]
-            startSession()
+        if (message["type"] === "ack") {
+            printLog(message["body"])
         }
     }
     ws.onclose = function(event) {
@@ -66,7 +64,9 @@ function identify() {
             {"type":"identification",
              "body":"webclient",
              "user":window.tokendata["user"],
-             "token":window.tokendata["token"]}))
+             "token":window.tokendata["token"]}
+              )
+         )
     }
 }
 
