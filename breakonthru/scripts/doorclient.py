@@ -33,7 +33,7 @@ class UnlockListener:
         self.secret = secret
         self.clientidentity = clientidentity
         self.logger = logger
-        
+
     def log(self, msg):
         self.logger.info(f"UNLKL {msg}")
 
@@ -60,9 +60,9 @@ class UnlockListener:
             self.log("sending identification")
             await websocket.send(
                 json.dumps(
-                    {"type":"identification",
-                     "body":self.clientidentity,
-                     "secret":self.secret}
+                    {"type": "identification",
+                     "body": self.clientidentity,
+                     "secret": self.secret}
                 )
             )
             lasttime = 0
