@@ -21,12 +21,14 @@ class UnlockListener:
     def __init__(
             self,
             unlock_queue,
+            relock_queue,
             server,
             secret,
             clientidentity,
             logger,
     ):
         self.unlock_queue = unlock_queue
+        self.relock_queue = relock_queue
         self.server = server
         self.secret = secret
         self.clientidentity = clientidentity
@@ -64,12 +66,13 @@ class UnlockListener:
                 )
             )
             lasttime = 0
+            awaiting_relock = False
             while True:
                 now = time.time()
                 try:
                     message = await asyncio.wait_for(
                         websocket.recv(),
-                        timeout=1.0
+                        timeout=.25
                     )
                 except websockets.ConnectionClosedOK:
                     self.log("connection closed ok")
@@ -79,6 +82,22 @@ class UnlockListener:
                         # keepalive every 30 seconds
                         lasttime = now
                         await websocket.pong()
+                    if awaiting_relock:
+                        try:
+                            relock_event = self.relock_queue.get(timeout=.1)
+                        except queue.Empty:
+                            continue
+                        await websocket.send(
+                            json.dumps(
+                                {"type":"ack",
+                                 "msgid":awaiting_relock,
+                                 "final":True,
+                                 "body":f"door relocked",
+                                 }
+                            )
+                        )
+                        awaiting_relock = False
+
                 else:
                     self.log("got websocket message")
                     message = json.loads(message)
@@ -87,27 +106,33 @@ class UnlockListener:
                         msgtype = message.get("type")
                         if msgtype == "unlock":
                             user = message["body"]
+                            msgid = message["msgid"]
                             self.log(f"enqueueing unlock request by {user}")
                             self.unlock_queue.put(now)
+                            awaiting_relock = msgid
                             await websocket.send(
                                 json.dumps(
-                                    {"type":"ack",
-                                     "msgid":message["msgid"],
-                                     "body":f"enqueued unlock request by {user}",
-                                     "secret":self.secret})
+                                    {
+                                        "type":"ack",
+                                        "msgid":msgid,
+                                        "body":f"enqueued unlock request by {user}",
+                                    }
                                 )
-                            self.log("sent response")
+                            )
+                            self.log("sent ack")
 
 
 class UnlockExecutor:
     def __init__(
             self,
             unlock_queue,
+            relock_queue,
             unlock_gpio_pin,
             door_unlocked_duration,
             logger,
     ):
         self.unlock_queue = unlock_queue
+        self.relock_queue = relock_queue
         self.unlock_gpio_pin = unlock_gpio_pin
         self.door_unlocked_duration = door_unlocked_duration
         self.logger = logger
@@ -143,6 +168,7 @@ class UnlockExecutor:
                 time.sleep(self.door_unlocked_duration)
             finally:
                 buzzer.off()
+                self.relock_queue.put(now)
                 self.log("door relocked")
                 last_relock_time = now
 
@@ -280,6 +306,7 @@ class PageExecutor:
             self.child.expect('>>>')
 
 unlock_queue = Queue()
+relock_queue = Queue()
 page_queue = Queue()
 
 def run_doorclient(
@@ -306,6 +333,7 @@ def run_doorclient(
         daemon = True,
         target=UnlockListener(
             unlock_queue,
+            relock_queue,
             server,
             secret,
             clientidentity,
@@ -319,6 +347,7 @@ def run_doorclient(
         daemon = True,
         target=UnlockExecutor(
             unlock_queue,
+            relock_queue,
             unlock_gpio_pin,
             door_unlocked_duration,
             logger,
