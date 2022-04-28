@@ -1,4 +1,3 @@
-import argparse
 import asyncio
 import configparser
 import gpiozero
@@ -16,6 +15,7 @@ import websockets.exceptions
 from multiprocessing import Process, Queue
 
 from breakonthru.util import teelogger
+
 
 class UnlockListener:
     def __init__(
@@ -150,7 +150,7 @@ class UnlockExecutor:
         self.log("starting unlock executor")
         self.log(f"unlock gpio pin is {self.unlock_gpio_pin}")
         last_relock_time = 0
-        # gpio objects cannot be defined in the main process, only in subproc
+        # gpiozero objects cannot be defined in the main process, only in subproc
         buzzer = gpiozero.Buzzer(self.unlock_gpio_pin)
         while True:
             try:
@@ -193,17 +193,19 @@ class PageListener:
         self.logger.info(f"PAGEL {msg}")
 
     def run(self):
-        # gpio objects cannot be defined in the main process, only in subproc
+        # gpiozero objects cannot be defined in the main process, only in subproc
         button = gpiozero.Button(
             pin=self.callbutton_gpio_pin,
             bounce_time=self.callbutton_bouncetime / 1000.0,
-            hold_time=self.callbutton_holdtime /1000.0,
+            hold_time=self.callbutton_holdtime / 1000.0,
         )
         try:
             self.log("starting page listener")
             self.log(f"callbutton gpio pin is {self.callbutton_gpio_pin}")
+
             def enqueue(*arg):
                 self.log("enqueuing page")
+
             button.when_held = enqueue
             while True:
                 self.logger.debug(
@@ -212,6 +214,7 @@ class PageListener:
                 time.sleep(.1)
         except KeyboardInterrupt:
             pass
+
 
 class PageExecutor:
     def __init__(
@@ -255,7 +258,7 @@ class PageExecutor:
                 self.log(f"executing {cmd}")
                 self.child = pexpect.spawn(cmd, encoding='utf-8', timeout=10)
                 self.child.logfile_read = sys.stdout
-                self.child.expect('registration success') # fail if not successful
+                self.child.expect('registration success')  # fail if not successful
                 self.log("pjsua registration success")
                 break
             except pexpect.exceptions.TIMEOUT:
@@ -270,7 +273,7 @@ class PageExecutor:
             if self.drainevery and (now > (last_drain + self.drainevery)):
                 last_drain = now
                 self.child.sendline('echo ping')
-                self.child.expect('>>>') # fail if it died
+                self.child.expect('>>>')  # fail if it died
 
             try:
                 request = self.page_queue.get(timeout=1)
@@ -295,19 +298,21 @@ class PageExecutor:
         child.sendline(self.pagingsip)
         i = child.expect(['CONFIRMED', 'DISCONN', pexpect.EOF, pexpect.TIMEOUT])
         now = time.time()
-        if i == 0: # CONFIRMED, call ringing
-            while True: # wait til the duration is over to hang up
+        if i == 0:  # CONFIRMED, call ringing
+            while True:  # wait til the duration is over to hang up
                 i = child.expect(['DISCONN', pexpect.EOF, pexpect.TIMEOUT])
-                if i != 2: # if it's disconnected or program crashed
+                if i != 2:  # if it's disconnected or program crashed
                     break
                 if time.time() >= (now + self.pagingduration):
                     break
             self.child.sendline('h')
             self.child.expect('>>>')
 
+
 unlock_queue = Queue()
 relock_queue = Queue()
 page_queue = Queue()
+
 
 def run_doorclient(
     server,
@@ -329,8 +334,8 @@ def run_doorclient(
     procs = []
 
     unlock_listener = Process(
-        name = 'unlock_listener',
-        daemon = True,
+        name='unlock_listener',
+        daemon=True,
         target=UnlockListener(
             unlock_queue,
             relock_queue,
@@ -343,8 +348,8 @@ def run_doorclient(
     procs.append(unlock_listener)
 
     unlock_executor = Process(
-        name = 'unlock_executor',
-        daemon = True,
+        name='unlock_executor',
+        daemon=True,
         target=UnlockExecutor(
             unlock_queue,
             relock_queue,
@@ -356,8 +361,8 @@ def run_doorclient(
     procs.append(unlock_executor)
 
     page_listener = Process(
-        name = 'page_listener',
-        daemon = True,
+        name='page_listener',
+        daemon=True,
         target=PageListener(
             page_queue,
             callbutton_gpio_pin,
@@ -369,8 +374,8 @@ def run_doorclient(
     page_listener.start()
 
     page_executor = Process(
-        name = 'page_executor',
-        daemon = True,
+        name='page_executor',
+        daemon=True,
         target=PageExecutor(
             page_queue,
             pjsua_bin,
@@ -400,17 +405,21 @@ def run_doorclient(
             if subproc.is_alive():
                 subproc.kill()
 
+
 # for testing
 def enqueue_page(*arg):
     now = time.time()
     page_queue.put(now)
 
+
 def enqueue_unlock(*arg):
     now = time.time()
     unlock_queue.put(now)
 
+
 signal.signal(signal.SIGUSR1, enqueue_unlock)
 signal.signal(signal.SIGUSR2, enqueue_page)
+
 
 def main():
     args = {}
