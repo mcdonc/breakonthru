@@ -88,11 +88,9 @@ function identify() {
 
 function printLog(msg) {
     let current = new Date();
-    let cDate = current.getFullYear() + '-' + (current.getMonth() + 1) + '-' + current.getDate();
-    let cTime = current.getHours() + ":" + current.getMinutes() + ":" + current.getSeconds();
-    let dateTime = cDate + ' ' + cTime;
+    t = current.toLocaleTimeString()
+    d = current.toLocaleDateString()
     var log = document.getElementById('log')
-    log.value += dateTime + " " + msg + '\n'
+    log.value += d + " " + t + " " + msg + '\n'
     log.scrollTop = log.scrollHeight
 }
-
