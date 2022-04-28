@@ -50,8 +50,8 @@ class Doorserver:
                         self.log("sent unlock request")
                         self.unlockdata = None
                 if identification == "webclient":
-                    ack = self.acks.pop(wsid, None)
-                    if ack is not None:
+                    acklist = self.acks.pop(wsid, [])
+                    for ack in acklist:
                         await websocket.send(ack)
 
                 continue
@@ -96,9 +96,14 @@ class Doorserver:
             if identification == "doorclient":
                 if msgtype == "ack":
                     msgid = message["msgid"]
-                    wsid = self.pending_acks.pop(msgid, None)
+                    final = message.get("final")
+                    if final:
+                        wsid = self.pending_acks.pop(msgid, None)
+                    else:
+                        wsid = self.pending_acks.get(msgid, None)
                     if wsid is not None:
-                        self.acks[wsid] = json.dumps(message)
+                        acklist = self.acks.setdefault(wsid, [])
+                        acklist.append(json.dumps(message))
 
 
 def main():

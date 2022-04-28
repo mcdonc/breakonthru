@@ -56,7 +56,9 @@ function createWebSocket() {
                 buzzbutton = document.getElementById('buzz')
                 buzzbutton.disabled = true
                 buzzbutton.textContent = "... Buzzing ..."
-                setTimeout(reenableBuzzButton, 5000)
+            }
+            if (body.startsWith("door relocked")) {
+                reenableBuzzButton();
             }
             printLog(message["body"])
         }
