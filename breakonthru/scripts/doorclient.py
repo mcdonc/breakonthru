@@ -84,7 +84,7 @@ class UnlockListener:
                         await websocket.pong()
                     if awaiting_relock:
                         try:
-                            self.relock_queue.get(timeout=.1)
+                            self.relock_queue.get(block=False)
                         except queue.Empty:
                             continue
                         await websocket.send(
