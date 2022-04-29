@@ -174,7 +174,6 @@ class UnlockExecutor:
 
 
 class PageListener:
-    _rising = 0
 
     def __init__(
             self,
