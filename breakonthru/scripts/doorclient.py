@@ -209,11 +209,7 @@ class PageListener:
                 self.log("enqueued page")
 
             button.when_held = enqueue
-            while True:
-                self.logger.debug(
-                    f"page listener waiting for pin {self.callbutton_gpio_pin}"
-                )
-                time.sleep(.1)
+            signal.pause()
         except KeyboardInterrupt:
             pass
 
@@ -227,7 +223,6 @@ class PageExecutor:
             pagingsip,
             pagingduration,
             page_throttle_duration,
-            drainevery,
             logger,
     ):
         self.page_queue = page_queue
@@ -236,7 +231,6 @@ class PageExecutor:
         self.pagingsip = pagingsip
         self.pagingduration = pagingduration
         self.page_throttle_duration = page_throttle_duration
-        self.drainevery = drainevery
         self.logger = logger
 
     def log(self, msg):
@@ -250,8 +244,6 @@ class PageExecutor:
 
     def _run(self):
         self.log("starting page executor")
-        last_page_time = 0
-        last_drain = 0
 
         while True:
             self.log("pjsua attempting to register with asterisk")
@@ -268,17 +260,19 @@ class PageExecutor:
                 self.child.terminate()
                 continue
 
-        while True:
-            now = time.time()
+        last_page_time = 0
 
+        while True:
             # see all output more quickly, for debugging
-            if self.drainevery and (now > (last_drain + self.drainevery)):
-                last_drain = now
-                self.child.sendline('echo ping')
-                self.child.expect('>>>')  # fail if it died
+            try:
+                # doesn't wait half a second for 1000 bytes, waits
+                # half a second for one byte
+                self.child.read_nonblocking(1000, timeout=0.5)
+            except pexpect.exceptions.TIMEOUT:
+                pass
 
             try:
-                request = self.page_queue.get(timeout=1)
+                request = self.page_queue.get(timeout=0.5)
             except queue.Empty:
                 continue
 
@@ -292,17 +286,16 @@ class PageExecutor:
                 self.log(f"Throttled page request from time {request}")
 
     def page(self):
-        child = self.child
         self.child.sendline('h')
         self.child.expect('>>>')
-        child.sendline('m')
-        child.expect('Make call:')
-        child.sendline(self.pagingsip)
-        i = child.expect(['CONFIRMED', 'DISCONN', pexpect.EOF, pexpect.TIMEOUT])
+        self.child.sendline('m')
+        self.child.expect('Make call:')
+        self.child.sendline(self.pagingsip)
+        i = self.child.expect(['CONFIRMED', 'DISCONN', pexpect.EOF, pexpect.TIMEOUT])
         now = time.time()
         if i == 0:  # CONFIRMED, call ringing
             while True:  # wait til the duration is over to hang up
-                i = child.expect(['DISCONN', pexpect.EOF, pexpect.TIMEOUT])
+                i = self.child.expect(['DISCONN', pexpect.EOF, pexpect.TIMEOUT])
                 if i != 2:  # if it's disconnected or program crashed
                     break
                 if time.time() >= (now + self.pagingduration):
@@ -330,7 +323,6 @@ def run_doorclient(
     pjsua_config_file,
     paging_sip,
     paging_duration,
-    drainevery,
     page_throttle_duration,
 ):
     procs = []
@@ -385,7 +377,6 @@ def run_doorclient(
             paging_sip,
             paging_duration,
             page_throttle_duration,
-            drainevery,
             logger,
         ).run,
     )
@@ -466,6 +457,5 @@ def main():
     args['callbutton_holdtime'] = int(section.get("callbutton_holdtime", 80))
     args['paging_duration'] = int(section.get("paging_duration", 100))
     args['page_throttle_duration'] = int(section.get("page_throttle_duration", 10))
-    args['drainevery'] = int(section.get("drainevery", 0))
     logger.info(f"MAIN pid is {os.getpid()}")
     run_doorclient(**args)
