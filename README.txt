@@ -9,109 +9,109 @@ On Pi
 
 Create a directory inside the pi user's home directory named "lockit":
 
-    mkdir /home/pi/lockit
+  mkdir /home/pi/lockit
 
 Install pjsua and configure it:
 
-    Check out https://github.com/pjsip/pjproject into /home/pi/lockit and configure
-    it (no Debian package AFAICT).
+  Check out https://github.com/pjsip/pjproject into /home/pi/lockit and configure
+  it (no Debian package AFAICT).
 
-     sudo apt install build-essential asterisk libbcg729-0 libbcg729-dev ffmpeg \
+    sudo apt install build-essential asterisk libbcg729-0 libbcg729-dev ffmpeg \
             libasound2-dev
-     git clone git@github.com:pjsip/pjproject.git
-     add the file pjproject/pjlib/include/pj/config_site.h; it should have this content:
+    git clone git@github.com:pjsip/pjproject.git
+    add the file pjproject/pjlib/include/pj/config_site.h; it should have this content:
 
-       #define PJMEDIA_AUDIO_DEV_HAS_ALSA      1
-       #define PJMEDIA_AUDIO_DEV_HAS_PORTAUDIO 0
-       #define PJMEDIA_HAS_VIDEO  0   
+      #define PJMEDIA_AUDIO_DEV_HAS_ALSA      1
+      #define PJMEDIA_AUDIO_DEV_HAS_PORTAUDIO 0
+      #define PJMEDIA_HAS_VIDEO  0   
 
      ./configure; make dep; make
 
-    copy the pjsua.conf file from the breakonthru/configs directory into
-    /home/pi/lockit/pjsua.conf and change as necessary.
+     copy the pjsua.conf file from the breakonthru/configs directory into
+     /home/pi/lockit/pjsua.conf and change as necessary.
 
 Configure audio:
 
-    Find your USB sound card with:
+  Find your USB sound card with:
 
-       cat /proc/asound/cards
+    cat /proc/asound/cards
 
-    For me this outputs:
+  For me this outputs:
 
-       0 [Headphones     ]: bcm2835_headpho - bcm2835 Headphones
-                            bcm2835 Headphones
-       1 [Device         ]: USB-Audio - USB Audio Device
-                            C-Media Electronics Inc. USB Audio Device at
-                            usb-0000:01:00.0-1.4, full speed
-       2 [vc4hdmi0       ]: vc4-hdmi - vc4-hdmi-0
-                            vc4-hdmi-0
-       3 [vc4hdmi1       ]: vc4-hdmi - vc4-hdmi-1
+    0 [Headphones     ]: bcm2835_headpho - bcm2835 Headphones
+                         bcm2835 Headphones
+    1 [Device         ]: USB-Audio - USB Audio Device
+                         C-Media Electronics Inc. USB Audio Device at
+                         usb-0000:01:00.0-1.4, full speed
+    2 [vc4hdmi0       ]: vc4-hdmi - vc4-hdmi-0
+                         vc4-hdmi-0
+    3 [vc4hdmi1       ]: vc4-hdmi - vc4-hdmi-1
                             vc4-hdmi-1
 
-    and then create /etc/asound.conf with following to make the USB sound card the
-    default device:
+  And then create /etc/asound.conf with following to make the USB sound card the
+  default device:
 
-       defaults.pcm.card <cardno>
-       defaults.ctl.card <cardno>
+    defaults.pcm.card <cardno>
+    defaults.ctl.card <cardno>
 
-    For me this is:
+  For me this is:
 
-       defaults.pcm.card 1
-       defaults.ctl.card 1
+    defaults.pcm.card 1
+    defaults.ctl.card 1
 
-    Reboot to take effect.
+  Reboot to take effect.
 
-    Use alsamixer to set mic and speaker levels (about 3/4 way up works for me for
-    both speaker and mic).
+  Use alsamixer to set mic and speaker levels (about 3/4 way up works for me for
+  both speaker and mic).
 
-    After you set the levels with alsa mixer use "sudo alsactl store" to store the
-    settings persistently so they'll work across reboots.
+  After you set the levels with alsa mixer use "sudo alsactl store" to store the
+  settings persistently so they'll work across reboots.
 
 Create a Python virtualenv and install breakonthru into it:
 
-   While in "/home/pi/lockit", create a Python virtual environment:
+  While in "/home/pi/lockit", create a Python virtual environment:
 
-      python3 -m venv env
+    python3 -m venv env
 
-   Check this software (breakonthru) out into /home/pi/lockit.
+  Check this software (breakonthru) out into /home/pi/lockit.
 
-   cd into "breakonthru"
+    cd into "breakonthru"
 
-   ../env/bin/pip install --upgrade pip setuptools
-   ../env/bin/pip install -e .
+    ../env/bin/pip install --upgrade pip setuptools
+    ../env/bin/pip install -e .
 
 Install supervisor and configure it:
 
-   sudo apt install supervisor
+  sudo apt install supervisor
 
-   copy the "client.conf" from the breakonthru/configs/supervisor directory into
-   /etc/supervisor/conf.d/client.conf and change as necessary.
+  copy the "client.conf" from the breakonthru/configs/supervisor directory into
+  /etc/supervisor/conf.d/client.conf and change as necessary.
 
-   copy the "client.ini_template" from the breakonthru/configs directory into
-   /home/pi/lockit/client.ini and change as necessary.
+  copy the "client.ini_template" from the breakonthru/configs directory into
+  /home/pi/lockit/client.ini and change as necessary.
 
-   sudo service supervisor restart
+  sudo service supervisor restart
 
 Install asterisk and configure it:
 
-   sudo apt install asterisk
+  sudo apt install asterisk
 
-   copy the .conf files from the breakonthru/configs/asterisk directory into
-   /etc/asterisk (it will overwrite some, make backups first if you care), and
-   change as necessary.
+  copy the .conf files from the breakonthru/configs/asterisk directory into
+  /etc/asterisk (it will overwrite some, make backups first if you care), and
+  change as necessary.
 
 Network configuraton:
 
-    If your pi is behind a NAT, you'll need to set up port forwarding from your router
-    to your pi.  Pass through these ports to the pi.
+  If your pi is behind a NAT, you'll need to set up port forwarding from your router
+  to your pi.  Pass through these ports to the pi.
 
-      Port 5065 UDP (SIP)
-      Ports 10000-20000 UDP (SIP media)
+    Port 5065 UDP (SIP)
+    Ports 10000-20000 UDP (SIP media)
   
-    Add a ddns service to your router configuration which gives it a stable hostname.  I
-    use duckdns.org for this.
+  Add a ddns service to your router configuration which gives it a stable hostname.  I
+  use duckdns.org for this.
 
-    Connect SIP softphones like Zoiper to your asterisk server (7002, 7003, etc).
+  Connect SIP softphones like Zoiper to your asterisk server (7002, 7003, etc).
 
 On Internet Host
 ================
