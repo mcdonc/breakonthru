@@ -205,7 +205,9 @@ class PageListener:
             self.log(f"callbutton gpio pin is {self.callbutton_gpio_pin}")
 
             def enqueue(*arg):
-                self.log("enqueuing page")
+                now = time.time()
+                self.page_queue.put(now)
+                self.log("enqueued page")
 
             button.when_held = enqueue
             while True:
@@ -458,13 +460,13 @@ def main():
     logger = teelogger(logfile, loglevel)
     args['logger'] = logger
     args['unlock_gpio_pin'] = int(section.get("unlock_gpio_pin", 18))
-    args['door_unlocked_duration'] = int(section.get("door_unlocked_duration", 10))
+    args['door_unlocked_duration'] = int(section.get("door_unlocked_duration", 5))
     args['clientidentity'] = section.get("clientidentity", "doorclient")
     args['callbutton_gpio_pin'] = int(section.get("callbutton_gpio_pin", 16))
     args['callbutton_bouncetime'] = int(section.get("callbutton_bouncetime", 60))
-    args['callbutton_holdtime'] = int(section.get("callbutton_holdtime", 250))
+    args['callbutton_holdtime'] = int(section.get("callbutton_holdtime", 80))
     args['paging_duration'] = int(section.get("paging_duration", 100))
-    args['page_throttle_duration'] = int(section.get("page_throttle_duration", 30))
+    args['page_throttle_duration'] = int(section.get("page_throttle_duration", 10))
     args['drainevery'] = int(section.get("drainevery", 0))
     logger.info(f"MAIN pid is {os.getpid()}")
     run_doorclient(**args)
