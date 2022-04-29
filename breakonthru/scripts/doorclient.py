@@ -39,7 +39,7 @@ class UnlockListener:
         self.logger.info(f"UNLKL {msg}")
 
     def run(self):
-        setproctitle.setproctitle("doorclient-unlocklistener")
+        setproctitle.setproctitle("drclt-unlocklistener")
         try:
             self.log("starting unlock listener")
             while True:
@@ -143,7 +143,7 @@ class UnlockExecutor:
         self.logger.info(f"UNLKX {msg}")
 
     def run(self):
-        setproctitle.setproctitle("doorclient-unlockexecutor")
+        setproctitle.setproctitle("drclt-unlockexecutor")
         try:
             self._run()
         except KeyboardInterrupt:
@@ -196,7 +196,7 @@ class PageListener:
         self.logger.info(f"PAGEL {msg}")
 
     def run(self):
-        setproctitle.setproctitle("doorclient-pagelistener")
+        setproctitle.setproctitle("drclt-pagelistener")
         # gpiozero objects cannot be defined in the main process, only in subproc
         button = gpiozero.Button(
             pin=self.callbutton_gpio_pin,
@@ -241,7 +241,7 @@ class PageExecutor:
         self.logger.info(f"PAGEX {msg}")
 
     def run(self):
-        setproctitle.setproctitle("doorclient-pageexecutor")
+        setproctitle.setproctitle("drclt-pageexecutor")
         try:
             self._run()
         except KeyboardInterrupt:
