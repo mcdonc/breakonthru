@@ -43,7 +43,7 @@ def parse_passwords(text):
     entries = text.splitlines()
     for line in entries:
         line = line.strip()
-        if not '=' in line:
+        if not ('=' in line):
             continue
         if line.startswith("#"):
             continue
