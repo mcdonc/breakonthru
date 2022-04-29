@@ -5,8 +5,9 @@ import json
 import os
 import pexpect
 import queue
-import socket
+import setproctitle
 import signal
+import socket
 import sys
 import time
 import websockets
@@ -38,6 +39,7 @@ class UnlockListener:
         self.logger.info(f"UNLKL {msg}")
 
     def run(self):
+        setproctitle.setproctitle("doorclient-unlocklistener")
         try:
             self.log("starting unlock listener")
             while True:
@@ -141,6 +143,7 @@ class UnlockExecutor:
         self.logger.info(f"UNLKX {msg}")
 
     def run(self):
+        setproctitle.setproctitle("doorclient-unlockexecutor")
         try:
             self._run()
         except KeyboardInterrupt:
@@ -193,6 +196,7 @@ class PageListener:
         self.logger.info(f"PAGEL {msg}")
 
     def run(self):
+        setproctitle.setproctitle("doorclient-pagelistener")
         # gpiozero objects cannot be defined in the main process, only in subproc
         button = gpiozero.Button(
             pin=self.callbutton_gpio_pin,
@@ -237,6 +241,7 @@ class PageExecutor:
         self.logger.info(f"PAGEX {msg}")
 
     def run(self):
+        setproctitle.setproctitle("doorclient-pageexecutor")
         try:
             self._run()
         except KeyboardInterrupt:

@@ -17,6 +17,7 @@ requires = [
     'websockets',
     'gpiozero',
     'pexpect',
+    'setproctitle',
     ]
 
 tests_require = [
