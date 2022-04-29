@@ -265,9 +265,8 @@ class PageExecutor:
         while True:
             # see all output more quickly, for debugging
             try:
-                # doesn't wait half a second for 1000 bytes, waits
-                # half a second for one byte
-                self.child.read_nonblocking(1000, timeout=0.5)
+                # doesn't wait for 1000 bytes, waits for one byte if it's ready
+                self.child.read_nonblocking(1000, timeout=0)
             except pexpect.exceptions.TIMEOUT:
                 pass
 
