@@ -57,6 +57,9 @@ function createWebSocket() {
             }
             printLog(message["body"])
         }
+        else {
+            printLog(message["body"])
+        }
     }
     ws.onclose = function(event) {
         ws = undefined

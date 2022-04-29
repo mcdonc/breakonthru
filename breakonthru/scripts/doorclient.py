@@ -23,6 +23,7 @@ class UnlockListener:
             self,
             unlock_queue,
             relock_queue,
+            broadcast_queue,
             server,
             secret,
             clientidentity,
@@ -30,6 +31,7 @@ class UnlockListener:
     ):
         self.unlock_queue = unlock_queue
         self.relock_queue = relock_queue
+        self.broadcast_queue = broadcast_queue
         self.server = server
         self.secret = secret
         self.clientidentity = clientidentity
@@ -84,6 +86,19 @@ class UnlockListener:
                         # keepalive every 30 seconds
                         lasttime = now
                         await websocket.pong()
+                    try:
+                        bmesg = self.broadcast_queue.get(block=False)
+                    except queue.Empty:
+                        pass
+                    else:
+                        await websocket.send(
+                            json.dumps(
+                                {"type": "broadcast",
+                                 "body": bmesg,
+                                 }
+                            )
+                        )
+
                     if awaiting_relock:
                         try:
                             self.relock_queue.get(block=False)
@@ -222,6 +237,7 @@ class PageExecutor:
     def __init__(
             self,
             page_queue,
+            broadcast_queue,
             pjsua_bin,
             pjsua_config_file,
             pagingsip,
@@ -230,6 +246,7 @@ class PageExecutor:
             logger,
     ):
         self.page_queue = page_queue
+        self.broadcast_queue = broadcast_queue
         self.pjsua_bin = pjsua_bin
         self.pjsua_config_file = pjsua_config_file
         self.pagingsip = pagingsip
@@ -298,6 +315,8 @@ class PageExecutor:
         i = self.child.expect(['CONFIRMED', 'DISCONN', pexpect.EOF, pexpect.TIMEOUT])
         now = time.time()
         if i == 0:  # CONFIRMED, call ringing
+            print("paging all handsets")
+            self.broadcast_queue.put("SIP: paging all connected handsets")
             while True:  # wait til the duration is over to hang up
                 i = self.child.expect(['DISCONN', pexpect.EOF, pexpect.TIMEOUT])
                 if i != 2:  # if it's disconnected or program crashed
@@ -311,7 +330,7 @@ class PageExecutor:
 unlock_queue = Queue()
 relock_queue = Queue()
 page_queue = Queue()
-
+broadcast_queue = Queue()
 
 def run_doorclient(
     server,
@@ -337,6 +356,7 @@ def run_doorclient(
         target=UnlockListener(
             unlock_queue,
             relock_queue,
+            broadcast_queue,
             server,
             secret,
             clientidentity,
@@ -376,6 +396,7 @@ def run_doorclient(
         daemon=True,
         target=PageExecutor(
             page_queue,
+            broadcast_queue,
             pjsua_bin,
             pjsua_config_file,
             paging_sip,

@@ -20,6 +20,7 @@ class Doorserver:
         self.logger = teelogger(logfile)
         self.acks = {}
         self.pending_acks = {}
+        self.broadcasts = []
 
     def log(self, msg):
         self.logger.info(msg)
@@ -52,6 +53,11 @@ class Doorserver:
                     acklist = self.acks.pop(wsid, [])
                     for ack in acklist:
                         await websocket.send(ack)
+                    for broadcast in self.broadcasts:
+                        wids = broadcast['wids']
+                        if wsid not in wids:
+                            await websocket.send(broadcast['message'])
+                            wids.append(wsid)
 
                 continue
 
@@ -103,6 +109,8 @@ class Doorserver:
                     if wsid is not None:
                         acklist = self.acks.setdefault(wsid, [])
                         acklist.append(json.dumps(message))
+                if msgtype == "broadcast":
+                    self.broadcasts.append({'wids':[], "message":message})
 
 
 def main():
