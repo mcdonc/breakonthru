@@ -105,8 +105,8 @@ Network configuraton:
     If your pi is behind a NAT, you'll need to set up port forwarding from your router
     to your pi.  Pass through these ports to the pi.
 
-      Port 5065 (SIP) both UDP and TCP
-      Ports 10000-20000 (SIP media) both UDP and TCP
+      Port 5065 UDP (SIP)
+      Ports 10000-20000 UDP (SIP media)
   
     Add a ddns service to your router configuration which gives it a stable hostname.  I
     use duckdns.org for this.
