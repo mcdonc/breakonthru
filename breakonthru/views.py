@@ -35,7 +35,7 @@ def login_view(request):
     if username is not None:
         username = username.lower()
     storedhash = request.registry.settings['passwords'].get(username)
-    if not None in (storedhash, username, password):
+    if not (None in (storedhash, username, password)):
         manager = BCRYPTPasswordManager()
         if manager.check(storedhash, password):
             headers = remember(request, username)
@@ -58,8 +58,8 @@ def logout_view(request):
 )
 def index_view(request):
     return {
-        "websocket_url":request.registry.settings['websocket_url'],
-        "doorsip":request.registry.settings['doorsip'],
+        "websocket_url": request.registry.settings['websocket_url'],
+        "doorsip": request.registry.settings['doorsip'],
     }
 
 
@@ -71,4 +71,4 @@ def index_view(request):
 def token_view(request):
     user = request.authenticated_userid
     token = refresh_token(request, user)
-    return {"token":token, "user":user}
+    return {"token": token, "user": user}

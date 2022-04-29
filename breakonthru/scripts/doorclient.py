@@ -33,7 +33,7 @@ class UnlockListener:
         self.secret = secret
         self.clientidentity = clientidentity
         self.logger = logger
-        
+
     def log(self, msg):
         self.logger.info(f"UNLKL {msg}")
 
@@ -60,9 +60,9 @@ class UnlockListener:
             self.log("sending identification")
             await websocket.send(
                 json.dumps(
-                    {"type":"identification",
-                     "body":self.clientidentity,
-                     "secret":self.secret}
+                    {"type": "identification",
+                     "body": self.clientidentity,
+                     "secret": self.secret}
                 )
             )
             lasttime = 0
@@ -84,15 +84,15 @@ class UnlockListener:
                         await websocket.pong()
                     if awaiting_relock:
                         try:
-                            relock_event = self.relock_queue.get(timeout=.1)
+                            self.relock_queue.get(block=False)
                         except queue.Empty:
                             continue
                         await websocket.send(
                             json.dumps(
-                                {"type":"ack",
-                                 "msgid":awaiting_relock,
-                                 "final":True,
-                                 "body":f"door relocked",
+                                {"type": "ack",
+                                 "msgid": awaiting_relock,
+                                 "final": True,
+                                 "body": "door relocked",
                                  }
                             )
                         )
@@ -113,9 +113,9 @@ class UnlockListener:
                             await websocket.send(
                                 json.dumps(
                                     {
-                                        "type":"ack",
-                                        "msgid":msgid,
-                                        "body":f"enqueued unlock request by {user}",
+                                        "type": "ack",
+                                        "msgid": msgid,
+                                        "body": f"enqueued unlock request by {user}",
                                     }
                                 )
                             )
@@ -175,6 +175,7 @@ class UnlockExecutor:
 
 class PageListener:
     _rising = 0
+
     def __init__(
             self,
             page_queue,
@@ -431,7 +432,7 @@ def main():
     if config_file in ('-h', '--help'):
         print("doorclient <config_file_name>")
         sys.exit(2)
-        
+
     config = configparser.ConfigParser()
     config.read(config_file)
     section = config['doorclient']
@@ -466,4 +467,4 @@ def main():
     args['page_throttle_duration'] = int(section.get("page_throttle_duration", 30))
     args['drainevery'] = int(section.get("drainevery", 0))
     logger.info(f"MAIN pid is {os.getpid()}")
-    client = run_doorclient(**args)
+    run_doorclient(**args)
