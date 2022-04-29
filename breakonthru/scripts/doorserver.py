@@ -117,4 +117,7 @@ def main():
     parser.add_argument('--logfile', default=None)
     args = parser.parse_args()
     server = Doorserver(args.secret, args.passwords, args.logfile)
-    server.run()
+    try:
+        server.run()
+    except KeyboardInterrupt:
+        pass

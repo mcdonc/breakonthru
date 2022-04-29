@@ -8,7 +8,7 @@ function buzzDoor() {
 }
 
 function unlockDoor() {
-    if (window.tokendata === undefined) {
+    if (window.identified === undefined) {
         setTimeout(unlockDoor, 100)
     }
     else {
@@ -22,17 +22,6 @@ function unlockDoor() {
             ws.addEventListener('open', () => ws.send(unlockdata))
         }
     }
-}
-
-function fetchTokendata() {
-    window.tokendata = undefined
-    printLog("fetching token data")
-    var url = "/token"
-    fetch(url).then(
-        response=>{return response.json()}
-    ).then(
-        data=> window.tokendata = data
-    )
 }
 
 function reenableBuzzButton() {
@@ -49,7 +38,10 @@ function disableBuzzButton() {
 
 function createWebSocket() {
     if (typeof ws !== 'undefined') {
-        return
+        if (ws.readyState !== WebSocket.CLOSED  ||
+            ws.readyState !== WebSocket.CLOSING) {
+            return
+        }
     }
     url = websocket_url; // from index.pt
     ws = new WebSocket(url)
@@ -67,20 +59,36 @@ function createWebSocket() {
         }
     }
     ws.onclose = function(event) {
-        printLog("Websocket closed")
+        ws = undefined
+        window.tokendata = undefined
+        window.identified = undefined
+        printLog("websocket closed")
     }
     ws.onopen = function(event) {
-        printLog("Websocket opened")
+        printLog("websocket opened")
         fetchTokendata();
         identify()
     }
 }
 
+function fetchTokendata() {
+    window.tokendata = undefined
+    printLog("fetching token data")
+    var url = "/token"
+    fetch(url).then(
+        response=>{return response.json()}
+    ).then(
+        data=> window.tokendata = data
+    )
+}
+
 function identify() {
+    window.identified = undefined
     if (window.tokendata === undefined) {
         setTimeout(identify, 100)
     }
     else {
+        printLog("identifying")
         ws.send(JSON.stringify(
             {"type":"identification",
              "body":"webclient",
@@ -88,6 +96,7 @@ function identify() {
              "token":window.tokendata["token"]}
               )
          )
+        window.identified = true;
     }
 }
 
