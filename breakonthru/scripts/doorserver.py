@@ -56,7 +56,7 @@ class Doorserver:
                     for broadcast in self.broadcasts:
                         wids = broadcast['wids']
                         if wsid not in wids:
-                            await websocket.send(broadcast['message'])
+                            await websocket.send(json.dumps(broadcast['message']))
                             wids.append(wsid)
 
                 continue
