@@ -138,6 +138,8 @@ necessary.
 copy the passwords_template into $HOME/lockit/passwords and change as necessary (see
 file for info).
 
+copy the server.ini_template into $HOME/lockit/server.ini and change as necessary.
+
 sudo service supervisor restart
 
 Note that you will have to set up Apache/NGINX with SSL proxying to both the

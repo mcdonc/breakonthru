@@ -55,11 +55,8 @@ function createWebSocket() {
             if (body.startsWith("door relocked")) {
                 reenableBuzzButton();
             }
-            printLog(message["body"])
         }
-        else {
-            printLog(message["body"])
-        }
+        printLog(message["body"])
     }
     ws.onclose = function(event) {
         ws = undefined
