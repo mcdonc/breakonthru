@@ -115,7 +115,6 @@ class Doorserver:
                         acklist = self.acks.setdefault(wsid, [])
                         acklist.append(json.dumps(message))
                 if msgtype == "broadcast":
-                    print("received broadcast")
                     self.broadcasts.append(
                         {
                             "wids": [],

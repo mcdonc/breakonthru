@@ -316,7 +316,6 @@ class PageExecutor:
         i = self.child.expect(['CONFIRMED', 'DISCONN', pexpect.EOF, pexpect.TIMEOUT])
         now = time.time()
         if i == 0:  # CONFIRMED, call ringing
-            print("paging all handsets")
             self.broadcast_queue.put("SIP: paging all connected handsets")
             while True:  # wait til the duration is over to hang up
                 i = self.child.expect(['DISCONN', pexpect.EOF, pexpect.TIMEOUT])
