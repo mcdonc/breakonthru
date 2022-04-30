@@ -3,6 +3,7 @@ import asyncio
 import websockets
 import websockets.exceptions
 import json
+import time
 import uuid
 
 from breakonthru.authentication import parse_passwords, make_token
@@ -43,6 +44,10 @@ class Doorserver:
                     websockets.exceptions.ConnectionClosedError):
                 break
             except asyncio.TimeoutError:
+                now = time.time()
+                for (i, broadcast) in enumerate(self.broadcasts[:]):
+                    if now - broadcast["when"] > 30:
+                        del self.broadcasts[i]
                 if identification == "doorclient":
                     if self.unlockdata is not None:
                         self.log("sending unlock request")
@@ -111,7 +116,13 @@ class Doorserver:
                         acklist.append(json.dumps(message))
                 if msgtype == "broadcast":
                     print("received broadcast")
-                    self.broadcasts.append({'wids': [], "message": message})
+                    self.broadcasts.append(
+                        {
+                            "wids": [],
+                            "when": time.time(),
+                            "message": message,
+                        }
+                    )
 
 
 def main():
