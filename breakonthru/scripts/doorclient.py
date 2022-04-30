@@ -93,9 +93,10 @@ class UnlockListener:
                     else:
                         await websocket.send(
                             json.dumps(
-                                {"type": "broadcast",
-                                 "body": bmesg,
-                                 }
+                                {
+                                    "type": "broadcast",
+                                    "body": bmesg,
+                                }
                             )
                         )
 
