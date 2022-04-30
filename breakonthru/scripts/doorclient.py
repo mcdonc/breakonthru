@@ -308,6 +308,7 @@ class PageExecutor:
                 self.log(f"Throttled page request from time {request}")
 
     def page(self):
+        self.broadcast_queue.put("SIP: paging all connected handsets")
         self.child.sendline('h')
         self.child.expect('>>>')
         self.child.sendline('m')
@@ -316,7 +317,6 @@ class PageExecutor:
         i = self.child.expect(['CONFIRMED', 'DISCONN', pexpect.EOF, pexpect.TIMEOUT])
         now = time.time()
         if i == 0:  # CONFIRMED, call ringing
-            self.broadcast_queue.put("SIP: paging all connected handsets")
             while True:  # wait til the duration is over to hang up
                 i = self.child.expect(['DISCONN', pexpect.EOF, pexpect.TIMEOUT])
                 if i != 2:  # if it's disconnected or program crashed
