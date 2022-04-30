@@ -28,9 +28,18 @@
 
     <style>
       textarea {
-          font-family: monospace;
-          min-height: 200px;
-      }
+       font-family: monospace;
+       font-size: 8px;
+       min-height: 150px;
+       min-width: 320px;
+     }
+     #talk {
+       margin-top: 10px;
+       margin-bottom: 10px;
+     }
+     #logout {
+       margin-top: 10px;
+       }
     </style>
 
   </head>
@@ -59,10 +68,10 @@
                 </div>
 
 	        <div>              
-                  <textarea class="form-control" id="log" readonly="true"></textarea>
+                  <textarea class="" id="log" readonly="true"></textarea>
                 </div>
                 <div class="row">
-                  <button id="logout" class="btn btn-secondary" onclick="window.logout()">
+                  <button id="logout" class="btn btn-danger" onclick="window.logout()">
           Log Out
                   </button>
                 </div>
