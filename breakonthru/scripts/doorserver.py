@@ -21,6 +21,7 @@ class Doorserver:
         with open(password_file, "r") as f:
             passwords = f.read()
         self.passwords = parse_passwords(passwords)
+        self.logger = logger
         self.acks = {}
         self.pending_acks = {}
         self.broadcasts = []
