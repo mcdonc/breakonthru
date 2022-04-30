@@ -1,0 +1,4 @@
+[doorserver]
+secret = mysecret
+password_file = /home/chrism/lockit/passwords
+logfile = /home/chrism/lockit/doorserver.log
