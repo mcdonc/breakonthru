@@ -27,7 +27,7 @@ Install pjsua and configure it:
 
      ./configure; make dep; make
 
-     copy the pjsua.conf file from the breakonthru/configs directory into
+     copy the pjsua.conf_template file from the breakonthru/configs directory into
      /home/pi/lockit/pjsua.conf and change as necessary.
 
 Configure audio:
