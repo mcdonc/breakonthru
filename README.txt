@@ -194,7 +194,7 @@ trigger when I turned my soldering iron or box fan on or off). I tore my hair
 out for days trying to understand why I was getting crosstalk between input and
 output pins, and hair-trigger response to power fluctuations.  It would be
 interesting to know why, but I've not had time to figure it out.  Although I
-didn't get to the bottom of this, but switching to gpiozero made the problem go
+didn't get to the bottom of this, switching to gpiozero made the problem go
 away.
 
 Why is RPi.GPIO required by the breakonthru package's setup.py, if, as you say,
