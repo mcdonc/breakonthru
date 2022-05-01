@@ -78,6 +78,7 @@ Create a Python virtualenv and install breakonthru into it:
     cd into "breakonthru"
 
     ../env/bin/pip install --upgrade pip setuptools
+    export CFLAGS=-fcommon   # to allow RPi.GPIO to build properly
     ../env/bin/pip install -e .
 
 Install supervisor and configure it:
@@ -185,12 +186,32 @@ You might play around with pjsua.conf --ec-tail and related options to try to
 get some echo cancellation wrt front door speaker feeding back into front door
 mic.  My limited attempts at this were not successful.
 
-Why do I use gpiozero instead of raw RPi.GPIO?  I used the latter initially, but I
-had problems where sending volage to the output pin (for the door unlock) would
-trigger the input pin (for the callbutton detector).  It would also sometimes
-trigger with AC power fluctuations (hilariously the call button would trigger when
-I turned my soldering iron or box fan on or off).  I didn't get to the bottom
-of this, but switching to gpiozero made the problem go away.
+Why do I use gpiozero instead of raw RPi.GPIO?  I used the latter initially,
+but I had problems where sending volage to the output pin (for the door unlock)
+would trigger the input pin (for the callbutton detector).  It would also
+sometimes trigger with AC power fluctuations (hilariously the call button would
+trigger when I turned my soldering iron or box fan on or off). I tore my hair
+out for days trying to understand why I was getting crosstalk between input and
+output pins, and hair-trigger response to power fluctuations.  It would be
+interesting to know why, but I've not had time to figure it out.  Although I
+didn't get to the bottom of this, but switching to gpiozero made the problem go
+away.
+
+Why is RPi.GPIO required by the breakonthru package's setup.py, if, as you say,
+RPi.GPIO was doing poorly for you?  I'm sure the problem was how I was *using*
+the RPi.GPIO package, not how it works.  If RPi.GPIO is installed, gpiozero
+will use it to do pin detection.  If RPi.GPIO is *not* installed, gpiozero uses
+experimental native pin detection.  Experimental native pin detection misses
+most button presses in my testing (only maybe 1 in 5 are detected), so it is
+not really viable.  But somehow gpiozero uses RPi.GPIO properly, whereas I did
+not while I used it raw.  ¯\_(ツ)_/¯
+
+But even with RPi.GPIO installed, callbutton press detection via gpiozero is
+not perfect in my setup.  Some totally legitimate button presses are missed.
+This is not due to bad debouncing, or due to the button or the relay.  The
+button and the relay are doing their jobs fine, I verified this independently.
+Anyway, the upshot is that only maybe 80% of button presses are detected
+correctly.  It's irritating but I have no clue why yet.
 
 Why is the callbutton bouncetime "2"?  2 means 2 milliseconds.  In my
 configuration, the callbutton itself is hooked up to a relay, so it's the relay's

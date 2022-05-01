@@ -16,6 +16,7 @@ requires = [
     'cryptacular',
     'websockets',
     'gpiozero',
+    'RPi.GPIO',
     'pexpect',
     'setproctitle',
     ]
