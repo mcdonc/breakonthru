@@ -199,13 +199,11 @@ class PageListener:
             page_queue,
             callbutton_gpio_pin,
             callbutton_bouncetime,
-            callbutton_holdtime,
             logger,
     ):
         self.page_queue = page_queue
         self.callbutton_gpio_pin = callbutton_gpio_pin
         self.callbutton_bouncetime = callbutton_bouncetime
-        self.callbutton_holdtime = callbutton_holdtime
         self.logger = logger
 
     def log(self, msg):
@@ -217,7 +215,6 @@ class PageListener:
         button = gpiozero.Button(
             pin=self.callbutton_gpio_pin,
             bounce_time=self.callbutton_bouncetime / 1000.0,
-            hold_time=self.callbutton_holdtime / 1000.0,
         )
         try:
             self.log("starting page listener")
@@ -225,10 +222,11 @@ class PageListener:
 
             def enqueue(*arg):
                 now = time.time()
+                self.logger.debug("enqueuing page")
                 self.page_queue.put(now)
                 self.log("enqueued page")
 
-            button.when_held = enqueue
+            button.when_pressed = enqueue
             signal.pause()
         except KeyboardInterrupt:
             pass
@@ -242,7 +240,7 @@ class PageExecutor:
             pjsua_bin,
             pjsua_config_file,
             pagingsip,
-            pagingduration,
+            paging_duration,
             page_throttle_duration,
             logger,
     ):
@@ -251,7 +249,7 @@ class PageExecutor:
         self.pjsua_bin = pjsua_bin
         self.pjsua_config_file = pjsua_config_file
         self.pagingsip = pagingsip
-        self.pagingduration = pagingduration
+        self.paging_duration = paging_duration
         self.page_throttle_duration = page_throttle_duration
         self.logger = logger
 
@@ -321,7 +319,7 @@ class PageExecutor:
                 i = self.child.expect(['DISCONN', pexpect.EOF, pexpect.TIMEOUT])
                 if i != 2:  # if it's disconnected or program crashed
                     break
-                if time.time() >= (now + self.pagingduration):
+                if time.time() >= (now + self.paging_duration):
                     break
             self.child.sendline('h')
             self.child.expect('>>>')
@@ -341,7 +339,6 @@ def run_doorclient(
     clientidentity,
     callbutton_gpio_pin,
     callbutton_bouncetime,
-    callbutton_holdtime,
     pjsua_bin,
     pjsua_config_file,
     paging_sip,
@@ -385,7 +382,6 @@ def run_doorclient(
             page_queue,
             callbutton_gpio_pin,
             callbutton_bouncetime,
-            callbutton_holdtime,
             logger,
         ).run
     )
@@ -478,9 +474,8 @@ def main():
     args['door_unlocked_duration'] = int(section.get("door_unlocked_duration", 5))
     args['clientidentity'] = section.get("clientidentity", "doorclient")
     args['callbutton_gpio_pin'] = int(section.get("callbutton_gpio_pin", 16))
-    args['callbutton_bouncetime'] = int(section.get("callbutton_bouncetime", 50))
-    args['callbutton_holdtime'] = int(section.get("callbutton_holdtime", 100))
+    args['callbutton_bouncetime'] = int(section.get("callbutton_bouncetime", 2))
     args['paging_duration'] = int(section.get("paging_duration", 100))
-    args['page_throttle_duration'] = int(section.get("page_throttle_duration", 10))
+    args['page_throttle_duration'] = int(section.get("page_throttle_duration", 15))
     logger.info(f"MAIN pid is {os.getpid()}")
     run_doorclient(**args)

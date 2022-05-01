@@ -167,7 +167,7 @@ but it's lightly tested and may be unneccessary.
 Does the person who presses the front door button hear a phone dialing?  Yes.
 
 What happens if somebody spams the callbutton?  Pages are throttled to one
-every 10 seconds (configurable in client.ini via page_throttle_duration).
+every 15 seconds (configurable in client.ini via page_throttle_duration).
 
 There is no "not answering" message played or voicemail box set up in Asterisk to
 handle never-answered calls from the front door.  It's possible to do, I just didn't.
@@ -191,3 +191,11 @@ trigger the input pin (for the callbutton detector).  It would also sometimes
 trigger with AC power fluctuations (hilariously the call button would trigger when
 I turned my soldering iron or box fan on or off).  I didn't get to the bottom
 of this, but switching to gpiozero made the problem go away.
+
+Why is the callbutton bouncetime "2"?  2 means 2 milliseconds.  In my
+configuration, the callbutton itself is hooked up to a relay, so it's the relay's
+mechanical switch that is being measured by the bounce time, not the actual
+call button's mechanical switch.  The relay has a very low bouncetime of about
+400 microseconds (I measured it with a scope), so 2 milliseconds is plenty.  You
+may need to change this if you use some other method of relaying the call button
+into the Pi or if your relay is somehow terrible.
