@@ -109,10 +109,13 @@ Network configuraton:
     Port 5065 UDP (SIP)
     Ports 10000-20000 UDP (SIP media)
   
-  Add a ddns service to your router configuration which gives it a stable hostname.  I
-  use duckdns.org for this.
+  Add a ddns service to your router configuration which gives it a stable
+  hostname.  I use duckdns.org for this.  Let's pretend this hostname is
+  "my.dynamic.dns" for docs purposes.
 
   Connect SIP softphones like Zoiper to your asterisk server (7002, 7003, etc).
+  The URL you provide to each Zoiper instance will look something like
+  "sip:7002@my.dynamic.dns:5065"
 
 On Internet Host
 ================
