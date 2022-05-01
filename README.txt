@@ -149,7 +149,8 @@ sudo service supervisor restart
 
 Note that you will have to set up Apache/NGINX with SSL proxying to both the
 doorserver port and the webapp port for everything to work properly.  See
-breakonthru/configs/apache for sample configurations.
+breakonthru/configs/apache for sample configurations.  It is easiest (and
+cheapest, ironically) to use LetsEncrypt for this.
 
 Q&A
 ===
