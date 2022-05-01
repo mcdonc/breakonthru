@@ -172,8 +172,8 @@ every 15 seconds (configurable in client.ini via page_throttle_duration).
 There is no "not answering" message played or voicemail box set up in Asterisk to
 handle never-answered calls from the front door.  It's possible to do, I just didn't.
 
-Calls are limited via pjsua.conf to a total duration of 120 seconds if you just
-copy it out of breakonthru/config (it's --duration 120).
+Calls between the front door and humans are limited via pjsua.conf to a total duration
+of 120 seconds if you just copy it out of breakonthru/config (it's --duration 120).
 
 Calls will ring for at most 30 seconds if no one answers when the button is pressed.
 You can change this in asterisk's extensions.conf (in each Dial directive).
