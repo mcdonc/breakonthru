@@ -198,4 +198,5 @@ mechanical switch that is being measured by the bounce time, not the actual
 call button's mechanical switch.  The relay has a very low bouncetime of about
 400 microseconds (I measured it with a scope), so 2 milliseconds is plenty.  You
 may need to change this if you use some other method of relaying the call button
-into the Pi or if your relay is somehow terrible.
+into the Pi or if your relay is somehow terrible.  FWIW, the bouncetime of the
+actual callbutton switch I'm using for testing is close to 2 milliseconds.
