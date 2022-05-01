@@ -240,7 +240,6 @@ class PageExecutor:
             pjsua_bin,
             pjsua_config_file,
             pagingsip,
-            paging_duration,
             page_throttle_duration,
             logger,
     ):
@@ -249,7 +248,6 @@ class PageExecutor:
         self.pjsua_bin = pjsua_bin
         self.pjsua_config_file = pjsua_config_file
         self.pagingsip = pagingsip
-        self.paging_duration = paging_duration
         self.page_throttle_duration = page_throttle_duration
         self.logger = logger
 
@@ -307,23 +305,9 @@ class PageExecutor:
 
     def page(self):
         self.broadcast_queue.put("SIP: paging all connected handsets")
-        self.child.sendline('h')
-        self.child.expect('>>>')
         self.child.sendline('m')
         self.child.expect('Make call:')
         self.child.sendline(self.pagingsip)
-        i = self.child.expect(['CONFIRMED', 'DISCONN', pexpect.EOF, pexpect.TIMEOUT])
-        now = time.time()
-        if i == 0:  # CONFIRMED, call ringing
-            while True:  # wait til the duration is over to hang up
-                i = self.child.expect(['DISCONN', pexpect.EOF, pexpect.TIMEOUT])
-                if i != 2:  # if it's disconnected or program crashed
-                    break
-                if time.time() >= (now + self.paging_duration):
-                    break
-            self.child.sendline('h')
-            self.child.expect('>>>')
-
 
 unlock_queue = Queue()
 relock_queue = Queue()
@@ -342,7 +326,6 @@ def run_doorclient(
     pjsua_bin,
     pjsua_config_file,
     paging_sip,
-    paging_duration,
     page_throttle_duration,
 ):
     procs = []
@@ -396,7 +379,6 @@ def run_doorclient(
             pjsua_bin,
             pjsua_config_file,
             paging_sip,
-            paging_duration,
             page_throttle_duration,
             logger,
         ).run,
@@ -475,7 +457,6 @@ def main():
     args['clientidentity'] = section.get("clientidentity", "doorclient")
     args['callbutton_gpio_pin'] = int(section.get("callbutton_gpio_pin", 16))
     args['callbutton_bouncetime'] = int(section.get("callbutton_bouncetime", 2))
-    args['paging_duration'] = int(section.get("paging_duration", 100))
     args['page_throttle_duration'] = int(section.get("page_throttle_duration", 15))
     logger.info(f"MAIN pid is {os.getpid()}")
     run_doorclient(**args)
