@@ -115,7 +115,8 @@ Network configuraton:
 
   Connect SIP softphones like Zoiper to your asterisk server (7002, 7003, etc).
   The URL you provide to each Zoiper instance will look something like
-  "sip:7002@my.dynamic.dns:5065"
+  "sip:7002@my.dynamic.dns:5065".  The password for this account will be the
+  secret in the "/etc/asterisk/sip.conf" associated with 7002.
 
 On Internet Host
 ================
