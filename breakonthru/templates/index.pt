@@ -33,15 +33,7 @@
         min-height: 100px;
         min-width: 320px;
       }
-      #buzzer0 {
-        margin-top: 10px;
-        margin-bottom: 10px;
-      }
-      #buzzer1 {
-        margin-top: 10px;
-        margin-bottom: 10px;
-      }
-      #talk {
+      #buzzer0 #buzzer1 #talk {
         margin-top: 10px;
         margin-bottom: 10px;
       }
