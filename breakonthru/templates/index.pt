@@ -57,13 +57,13 @@
             <div class="container">
               <div class="content">
                 <div class="row">
-                  <button id="buzzer0" class="btn btn-secondary buzzer" onclick="window.buzzDoor(0)">
+                  <button id="buzzer0" class="btn btn-secondary" onclick="window.buzzDoor(0)">
                 Buzz Front Door
                   </button>
                 </div>
 
                 <div class="row">
-                  <button id="buzzer1" class="btn btn-default buzzer" onclick="window.buzzDoor(1)">
+                  <button id="buzzer1" class="btn btn-info" onclick="window.buzzDoor(1)">
                 Buzz Inside Door
                   </button>
                 </div>
