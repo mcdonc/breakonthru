@@ -186,7 +186,7 @@ class UnlockExecutor:
                 continue
 
             now = time.time()
-            self.log("unlocking door {doornum}")
+            self.log(f"unlocking door {doornum}")
             buzzer = buzzers[doornum]
             try:
                 buzzer.on()
@@ -194,7 +194,7 @@ class UnlockExecutor:
             finally:
                 buzzer.off()
                 self.relock_queue.put((now, doornum))
-                self.log("relocked door {doornum}")
+                self.log(f"relocked door {doornum}")
                 last_relock_times[doornum] = now
 
 
