@@ -33,9 +33,9 @@
         min-height: 100px;
         min-width: 320px;
       }
-      #buzzer0 #buzzer1 #talk {
-        margin-top: 10px;
-        margin-bottom: 10px;
+      #buzzer0,#buzzer1,#talk {
+        margin-top: 5px;
+        margin-bottom: 5px;
       }
       #logout {
         margin-top: 10px;
