@@ -14,6 +14,6 @@ breakonthru changes
               to actuate.
 
 -   5/3/2022: Add the ability to control the unlocking of a second door.
-              Change the default GPIO output pin for "front door" (0) to from 18
+              Change the default GPIO output pin for "front door" (0) from 18
               to 26, for no good reason.
 
