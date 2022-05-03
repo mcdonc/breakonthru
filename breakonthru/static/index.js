@@ -2,19 +2,20 @@ function logout() {
     document.location = "/logout"
 }
 
-function buzzDoor() {
+function buzzDoor(num) {
     createWebSocket()
-    unlockDoor()
+    unlockDoor(num)
 }
 
-function unlockDoor() {
+function unlockDoor(num) {
     if (window.identified === undefined) {
         setTimeout(unlockDoor, 100)
     }
     else {
         var unlockdata = JSON.stringify(
             {"type":"unlock",
-             "body":window.tokendata["user"]}
+             "body":window.tokendata["user"],
+             "doornum":num,}
         )
         if (ws.readyState === WebSocket.OPEN) {
             ws.send(unlockdata)
@@ -24,15 +25,16 @@ function unlockDoor() {
     }
 }
 
-function reenableBuzzButton() {
-    buzzbutton = document.getElementById('buzz')
+function reenableBuzzButton(num) {
+    buzzbutton = document.getElementById("buzzer"+num)
     buzzbutton.disabled = false
-    buzzbutton.textContent = "Buzz Front Door"
+    buzzbutton.textContent = buzzbutton.value
 }
 
-function disableBuzzButton() {
-    buzzbutton = document.getElementById('buzz')
+function disableBuzzButton(num) {
+    buzzbutton = document.getElementById('buzzer'+num)
     buzzbutton.disabled = true
+    buzzbutton.value = buzzbutton.textContent
     buzzbutton.textContent = "... Buzzing ..."
 }
 
@@ -50,10 +52,12 @@ function createWebSocket() {
         if (message["type"] === "ack") {
             body = message["body"]
             if (body.startsWith("enqueued unlock")) {
-                disableBuzzButton();
+                doornum = parseInt(body.charAt(body.length-1))
+                disableBuzzButton(doornum);
             }
-            if (body.startsWith("door relocked")) {
-                reenableBuzzButton();
+            if (body.startsWith("relocked")) {
+                doornum = parseInt(body.charAt(body.length-1))
+                reenableBuzzButton(doornum);
             }
         }
         printLog(message["body"])

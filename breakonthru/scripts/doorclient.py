@@ -102,7 +102,7 @@ class UnlockListener:
 
                     if awaiting_relock:
                         try:
-                            self.relock_queue.get(block=False)
+                            when, doornum = self.relock_queue.get(block=False)
                         except queue.Empty:
                             continue
                         await websocket.send(
@@ -110,7 +110,7 @@ class UnlockListener:
                                 {"type": "ack",
                                  "msgid": awaiting_relock,
                                  "final": True,
-                                 "body": "door relocked",
+                                 "body": f"relocked door {doornum}",
                                  }
                             )
                         )
@@ -125,15 +125,18 @@ class UnlockListener:
                         if msgtype == "unlock":
                             user = message["body"]
                             msgid = message["msgid"]
-                            self.log(f"enqueueing unlock request by {user}")
-                            self.unlock_queue.put(now)
+                            doornum = message["doornum"]
+                            character = f"unlock request by {user} for door {doornum}"
+                            self.log(f"enqueueing {character}")
+                            when = time.time()
+                            self.unlock_queue.put((when, doornum))
                             awaiting_relock = msgid
                             await websocket.send(
                                 json.dumps(
                                     {
                                         "type": "ack",
                                         "msgid": msgid,
-                                        "body": f"enqueued unlock request by {user}",
+                                        "body": f"enqueued {character}",
                                     }
                                 )
                             )
@@ -145,13 +148,13 @@ class UnlockExecutor:
             self,
             unlock_queue,
             relock_queue,
-            unlock_gpio_pin,
+            unlock_gpio_pins,
             door_unlocked_duration,
             logger,
     ):
         self.unlock_queue = unlock_queue
         self.relock_queue = relock_queue
-        self.unlock_gpio_pin = unlock_gpio_pin
+        self.unlock_gpio_pins = unlock_gpio_pins
         self.door_unlocked_duration = door_unlocked_duration
         self.logger = logger
 
@@ -167,29 +170,32 @@ class UnlockExecutor:
 
     def _run(self):
         self.log("starting unlock executor")
-        self.log(f"unlock gpio pin is {self.unlock_gpio_pin}")
-        last_relock_time = 0
+        self.log(f"unlock gpio pins are {self.unlock_gpio_pins}")
+        last_relock_times = {}
         # gpiozero objects cannot be defined in the main process, only in subproc
-        buzzer = gpiozero.Buzzer(self.unlock_gpio_pin)
+        buzzers = []
+        for pin in self.unlock_gpio_pins:
+            buzzers.append(gpiozero.Buzzer(pin))
         while True:
             try:
                 while True:
-                    result = self.unlock_queue.get(timeout=.5)
-                    if result > last_relock_time:
+                    when, doornum = self.unlock_queue.get(timeout=.5)
+                    if when > last_relock_times.get(doornum, 0):
                         break
             except queue.Empty:
                 continue
 
             now = time.time()
-            self.log("door unlocking")
+            self.log("unlocking door {doornum}")
+            buzzer = buzzers[doornum]
             try:
                 buzzer.on()
                 time.sleep(self.door_unlocked_duration)
             finally:
                 buzzer.off()
-                self.relock_queue.put(now)
-                self.log("door relocked")
-                last_relock_time = now
+                self.relock_queue.put((now, doornum))
+                self.log("relocked door {doornum}")
+                last_relock_times[doornum] = now
 
 
 class PageListener:
@@ -320,7 +326,7 @@ def run_doorclient(
     server,
     secret,
     logger,
-    unlock_gpio_pin,
+    unlock_gpio_pins,
     door_unlocked_duration,
     clientidentity,
     callbutton_gpio_pin,
@@ -353,7 +359,7 @@ def run_doorclient(
         target=UnlockExecutor(
             unlock_queue,
             relock_queue,
-            unlock_gpio_pin,
+            unlock_gpio_pins,
             door_unlocked_duration,
             logger,
         ).run
@@ -412,7 +418,7 @@ def enqueue_page(*arg):
 
 def enqueue_unlock(*arg):
     now = time.time()
-    unlock_queue.put(now)
+    unlock_queue.put((now, 0))
 
 
 signal.signal(signal.SIGUSR1, enqueue_unlock)
@@ -454,7 +460,9 @@ def main():
     logfile = section.get("logfile")
     logger = teelogger(logfile, loglevel)
     args['logger'] = logger
-    args['unlock_gpio_pin'] = int(section.get("unlock_gpio_pin", 18))
+    unlock_gpio_pins = args['unlock_gpio_pins'] = []
+    unlock_gpio_pins.append(int(section.get("unlock0_gpio_pin", 26)))
+    unlock_gpio_pins.append(int(section.get("unlock1_gpio_pin1", 24)))
     args['door_unlocked_duration'] = int(section.get("door_unlocked_duration", 5))
     args['clientidentity'] = section.get("clientidentity", "doorclient")
     args['callbutton_gpio_pin'] = int(section.get("callbutton_gpio_pin", 16))
