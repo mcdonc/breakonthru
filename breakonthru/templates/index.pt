@@ -33,7 +33,11 @@
         min-height: 150px;
         min-width: 320px;
       }
-      buzzer {
+      #buzzer0 {
+        margin-top: 10px;
+        margin-bottom: 10px;
+      }
+      #buzzer1 {
         margin-top: 10px;
         margin-bottom: 10px;
       }
@@ -66,8 +70,8 @@
                 </div>
 
                 <div class="row">
-                  <button id="buzzer1" class="btn btn-secondary buzzer" onclick="window.buzzDoor(1)">
-                Buzz Insde Door
+                  <button id="buzzer1" class="btn btn-default buzzer" onclick="window.buzzDoor(1)">
+                Buzz Inside Door
                   </button>
                 </div>
                 
