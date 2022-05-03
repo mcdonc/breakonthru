@@ -2,7 +2,8 @@
 server = wss://my.websocket.server/
 secret = mysecret
 logfile = /home/pi/lockit/doorclient.log
-unlock_gpio_pin = 18
+unlock0_gpio_pin = 26
+unlock1_gpio_pin = 24
 door_unlocked_duration = 5
 callbutton_gpio_pin = 16
 callbutton_bouncetime = 2

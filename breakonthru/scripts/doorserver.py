@@ -101,6 +101,7 @@ class Doorserver:
                     unlockdata = {
                         "type": "unlock",
                         "body": user,
+                        "doornum":message['doornum'],
                         "msgid": msgid,
                         "secret": self.secret,
                     }

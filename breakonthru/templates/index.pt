@@ -28,18 +28,22 @@
 
     <style>
       textarea {
-       font-family: monospace;
-       font-size: 8px;
-       min-height: 150px;
-       min-width: 320px;
-     }
-     #talk {
-       margin-top: 10px;
-       margin-bottom: 10px;
-     }
-     #logout {
-       margin-top: 10px;
-       }
+        font-family: monospace;
+        font-size: 8px;
+        min-height: 150px;
+        min-width: 320px;
+      }
+      buzzer {
+        margin-top: 10px;
+        margin-bottom: 10px;
+      }
+      #talk {
+        margin-top: 10px;
+        margin-bottom: 10px;
+      }
+      #logout {
+        margin-top: 10px;
+      }
     </style>
 
   </head>
@@ -56,8 +60,14 @@
             <div class="container">
               <div class="content">
                 <div class="row">
-                  <button id="buzz" class="btn btn-secondary" onclick="window.buzzDoor()">
+                  <button id="buzzer0" class="btn btn-secondary buzzer" onclick="window.buzzDoor(0)">
                 Buzz Front Door
+                  </button>
+                </div>
+
+                <div class="row">
+                  <button id="buzzer1" class="btn btn-secondary buzzer" onclick="window.buzzDoor(1)">
+                Buzz Insde Door
                   </button>
                 </div>
                 

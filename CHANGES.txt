@@ -12,3 +12,5 @@ breakonthru changes
 - 4/25/2022: Use gpiozero instead of RPi.GPIO to skirt around issues where
              power fluctuations to pi would cause the call bell indicator
              to actuate.
+
+-  5/3/2022: Add the ability to control the unlocking of a second door.

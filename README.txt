@@ -170,7 +170,7 @@ What happens if you have Wifi calling on on your phone?  No clue.
 Why stun and ice in pjsua.conf? Seems to make off-LAN *inbound* calling work better,
 but it's lightly tested and may be unneccessary.
 
-Does the person who presses the front door button hear a phone dialing?  Yes.
+Does the person who presses the call button hear a phone dialing?  Yes.
 
 What happens if somebody spams the callbutton?  Pages are throttled to one
 every 15 seconds (configurable in client.ini via page_throttle_duration).
@@ -184,7 +184,11 @@ of 120 seconds if you just copy it out of breakonthru/config (it's --duration 12
 Calls will ring for at most 30 seconds if no one answers when the button is pressed.
 You can change this in asterisk's extensions.conf (in each Dial directive).
 
-Door will stay unlocked for 5 seconds when an unlock request is successful.  This
+Two doors are supported, represented by unlock0_gpio_pin and unlock1_gpio_pin in
+the configuration file.  You may need to change the ``index.pt`` HTML if you have
+fewer doors.
+
+Doors will stay unlocked for 5 seconds when an unlock request is successful.  This
 is configurable via the door_unlocked_duration value in the client.ini config file.
 
 You might play around with pjsua.conf --ec-tail and related options to try to
