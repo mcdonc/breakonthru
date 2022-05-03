@@ -127,7 +127,6 @@ class UnlockListener:
                             msgid = message["msgid"]
                             doornum = message["doornum"]
                             character = f"unlock request by {user} for door {doornum}"
-                            self.log(f"enqueueing {character}")
                             when = time.time()
                             self.unlock_queue.put((when, doornum))
                             self.log(f"enqueued {character}")
