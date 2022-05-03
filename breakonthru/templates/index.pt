@@ -32,6 +32,7 @@
         font-size: 8px;
         min-height: 100px;
         min-width: 320px;
+        margin-top: 5px;
       }
       #buzzer0,#buzzer1,#talk {
         margin-top: 5px;
