@@ -51,7 +51,7 @@ function createWebSocket() {
         var message = JSON.parse(event.data)
         if (message["type"] === "ack") {
             body = message["body"]
-            if (body.startsWith("enqueued unlock")) {
+            if (body.startsWith("unlock")) {
                 doornum = parseInt(body.charAt(body.length-1))
                 disableBuzzButton(doornum);
             }

@@ -130,13 +130,14 @@ class UnlockListener:
                             self.log(f"enqueueing {character}")
                             when = time.time()
                             self.unlock_queue.put((when, doornum))
+                            self.log(f"enqueued {character}")
                             awaiting_relock = msgid
                             await websocket.send(
                                 json.dumps(
                                     {
                                         "type": "ack",
                                         "msgid": msgid,
-                                        "body": f"enqueued {character}",
+                                        "body": character,
                                     }
                                 )
                             )
