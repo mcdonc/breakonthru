@@ -12,3 +12,5 @@
 --use-ice
 --no-tcp
 --auto-conf
+--capture-dev 0 # default ALSA
+--playback-dev 0 # default ALSA
