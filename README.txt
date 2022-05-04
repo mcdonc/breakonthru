@@ -149,9 +149,10 @@ $HOME/lockit/server.ini and change as necessary.
 sudo service supervisor restart
 
 Note that you will have to set up Apache/NGINX with SSL proxying to both the
-doorserver port and the webapp port for everything to work properly.  See
-breakonthru/configs/internethost/apache for sample configurations.  It is easiest
-(and cheapest, ironically) to use LetsEncrypt for this.
+doorserver port (e.g. "wss://lockitws.mydomain.org/") and the webapp port
+(e.g. "https://lockit.mydomain.org/") for everything to work properly.  See
+breakonthru/configs/internethost/apache for sample configurations.  It is
+easiest (and cheapest, ironically) to use LetsEncrypt for this.
 
 Q&A
 ===
