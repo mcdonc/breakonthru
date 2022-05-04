@@ -1,5 +1,5 @@
 [doorclient]
-server = wss://my.websocket.server/
+server = wss://lockitws.mydomain.org/
 secret = mysecret
 logfile = /home/pi/lockit/doorclient.log
 unlock0_gpio_pin = 26
