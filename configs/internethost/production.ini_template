@@ -14,7 +14,7 @@ pyramid.default_locale_name = en
 
 password_file = /home/chrism/lockit/passwords
 secret = mysecret
-websocket_url = wss://lockit.mydomain.org/
+websocket_url = wss://my.websocket.server/
 doorsip = sip:7001
 
 ###
