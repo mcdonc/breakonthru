@@ -27,7 +27,7 @@ Install pjsua and configure it:
 
      ./configure; make dep; make
 
-     copy the pjsua.conf_template file from the breakonthru/configs directory into
+     copy the pjsua.conf_template file from the breakonthru/configs/pi directory into
      /home/pi/lockit/pjsua.conf and change as necessary.
 
 Configure audio:
@@ -61,7 +61,7 @@ Configure audio:
 
   Reboot to take effect.
 
-  Use alsamixer to set mic and speaker levels (about 3/4 way up works for me for
+  Use alsamixer to set mic and speaker levels (about 2/3 way up works for me for
   both speaker and mic).
 
   After you set the levels with alsa mixer use "sudo alsactl store" to store the
@@ -85,10 +85,10 @@ Install supervisor and configure it:
 
   sudo apt install supervisor
 
-  copy the "client.conf" from the breakonthru/configs/supervisor directory into
-  /etc/supervisor/conf.d/client.conf and change as necessary.
+  copy the breakonthru/configs/pi/supervisor/lockit.conf file into
+  /etc/supervisor/conf.d/lockit.conf and change as necessary.
 
-  copy the "client.ini_template" from the breakonthru/configs directory into
+  copy the breakonthru/configs/pi/client.ini_template directory into
   /home/pi/lockit/client.ini and change as necessary.
 
   sudo service supervisor restart
@@ -97,7 +97,7 @@ Install asterisk and configure it:
 
   sudo apt install asterisk
 
-  copy the .conf files from the breakonthru/configs/asterisk directory into
+  copy the .conf files from the breakonthru/configs/pi/asterisk directory into
   /etc/asterisk (it will overwrite some, make backups first if you care), and
   change as necessary.
 
@@ -134,23 +134,24 @@ cd into "breakonthru"
 
 sudo apt install supervisor
 
-copy the "server.conf" from the breakonthru/configs/supervisor directory into
+copy the breakonthru/configs/internethost/supervisor/lockit.conf file into
 /etc/supervisor/conf.d and change as necessary.
 
-copy the production.ini_template into $HOME/lockit/production.ini and change as
-necessary.
+copy the breakonthru/configs/internethost/production.ini_template into
+$HOME/lockit/production.ini and change as necessary.
 
-copy the passwords_template into $HOME/lockit/passwords and change as necessary (see
-file for info).
+copy the breakonthru/configs/internethost/passwords_template into
+$HOME/lockit/passwords and change as necessary (see file for info).
 
-copy the server.ini_template into $HOME/lockit/server.ini and change as necessary.
+copy the breakonthru/configs/internethost/server.ini_template into
+$HOME/lockit/server.ini and change as necessary.
 
 sudo service supervisor restart
 
 Note that you will have to set up Apache/NGINX with SSL proxying to both the
 doorserver port and the webapp port for everything to work properly.  See
-breakonthru/configs/apache for sample configurations.  It is easiest (and
-cheapest, ironically) to use LetsEncrypt for this.
+breakonthru/configs/internethost/apache for sample configurations.  It is easiest
+(and cheapest, ironically) to use LetsEncrypt for this.
 
 Q&A
 ===
@@ -185,7 +186,7 @@ Calls will ring for at most 30 seconds if no one answers when the button is pres
 You can change this in asterisk's extensions.conf (in each Dial directive).
 
 Two doors are supported, represented by unlock0_gpio_pin and unlock1_gpio_pin
-in the "client.ini" configuration file.  You may need to change the
+in the "client.ini" configuration file on the pi.  You may need to change the
 "index.pt" HTML in breakonthru/templates if you have fewer doors (just delete
 one of the buttons).  You may need to change both the "index.pt" (add more
 buttons) and the "breakonthru/scripts/doorclient.py" file (to accept more
