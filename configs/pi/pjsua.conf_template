@@ -2,7 +2,7 @@
 --registrar sip:127.0.0.1:5065
 --realm *
 --username 7001
---password mypassword
+--password password1
 --local-port 6061  # by default it's 5060, see above
 --app-log-level 3
 --auto-answer 200
