@@ -16,7 +16,7 @@ pyramid.includes =
 
 password_file = /home/chrism/doorpasswords
 secret = mysecret
-websocket_url = wss://my.websocket.server/
+websocket_url = wss://lockitws.mydomain.org/
 doorsip = sip:7001
 
 # By default, the toolbar only appears for clients from IP addresses

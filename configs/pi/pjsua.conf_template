@@ -2,7 +2,7 @@
 --registrar sip:127.0.0.1:5065
 --realm *
 --username 7001
---password mypassword
+--password password1
 --local-port 6061  # by default it's 5060, see above
 --app-log-level 3
 --auto-answer 200
@@ -12,3 +12,8 @@
 --use-ice
 --no-tcp
 --auto-conf
+# comment --capture-dev and --playback-dev if you are testing without a sound card
+# (note that in both cases, "0" means ALSA default)
+--capture-dev 0
+--playback-dev 0
+#--null-audio # uncomment if you are testing without a sound card
