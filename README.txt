@@ -111,11 +111,11 @@ Network configuraton:
   
   Add a ddns service to your router configuration which gives it a stable
   hostname.  I use duckdns.org for this.  Let's pretend this hostname is
-  "lockit.mydomain.org" for docs purposes.
+  "lockit.duckdns.org" for docs purposes.
 
   Connect SIP softphones like Zoiper to your asterisk server (7002, 7003, etc).
   The URL you provide to each Zoiper instance will look something like
-  "sip:7002@lockit.mydomain.org:5065".  The password for this account will be the
+  "sip:7002@lockit.duckdns.org:5065".  The password for this account will be the
   secret in the "/etc/asterisk/sip.conf" associated with 7002.
 
 On Internet Host
