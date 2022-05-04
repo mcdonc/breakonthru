@@ -51,7 +51,7 @@
       <div class="container">
         <div class="row">
           <div class="col-md-2">
-            <img class="logo img-responsive" src="${request.static_url('breakonthru:static/door.png')}" width="217" height="167" alt="Door App">
+            <img class="logo img-responsive" src="${request.static_url('breakonthru:static/door.png')}" width="167" height="128" alt="Door App">
           </div>
           <div class="col-md-10">
             <div class="container">
