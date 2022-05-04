@@ -12,5 +12,8 @@
 --use-ice
 --no-tcp
 --auto-conf
---capture-dev 0 # default ALSA
---playback-dev 0 # default ALSA
+# comment --capture-dev and --playback-dev if you are testing without a sound card
+# (note that in both cases, "0" means ALSA default)
+--capture-dev 0
+--playback-dev 0
+#--null-audio # uncomment if you are testing without a sound card
