@@ -43,7 +43,8 @@ Install pjsua and configure it
 Configure audio
 ---------------
 
-- Find your USB sound card with::
+- The audio input and output uses raw ALSA (not PulseAudio or anything else).
+  Find your ALSA USB sound card with::
 
     cat /proc/asound/cards
 
