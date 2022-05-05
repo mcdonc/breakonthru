@@ -270,8 +270,8 @@ class PageExecutor:
     def _run(self):
         self.log("starting page executor")
 
-        while True:
-            self.log("pjsua attempting to register with asterisk")
+        for i in range(0, 9):
+            self.log(f"pjsua attempting to register with asterisk, try number {i}")
             try:
                 cmd = f'{self.pjsua_bin} --config-file {self.pjsua_config_file}'
                 self.log(f"executing {cmd}")
@@ -284,6 +284,8 @@ class PageExecutor:
                 self.log("pjsua registration failure, retrying")
                 self.child.terminate()
                 continue
+        else:  # nobreak
+            raise AssertionError("could not register with SIP provider")
 
         last_page_time = 0
 
