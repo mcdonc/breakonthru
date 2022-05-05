@@ -302,10 +302,8 @@ class PageExecutor:
             except queue.Empty:
                 continue
 
-            now = time.time()
-
             if request > (last_page_time + self.page_throttle_duration):
-                last_page_time = now
+                last_page_time = time.time()
                 self.log("Paging")
                 self.page()
             else:
