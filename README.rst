@@ -148,7 +148,9 @@ Network configuraton
 On Internet Host
 ================
 
-- Create a directory inside your home directory named ``lockit``.
+- Create a directory inside your home directory named ``lockit``::
+
+    mkdir $HOME/lockit
 
 - Check this software (breakonthru) out into it::
 
@@ -158,6 +160,7 @@ On Internet Host
 - While still in ``$HOME/lockit``, create a Python virtual environment and install
   ``breakonthru`` into it::
 
+    cd $HOME/lockit
     python3 -m venv env
     cd breakonthru
     ../env/bin/pip install --upgrade pip setuptools
