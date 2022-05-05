@@ -33,8 +33,7 @@ Install pjsua and configure it
   - Build pjproject::
 
 
-      sudo apt install build-essential asterisk libbcg729-0 libbcg729-dev ffmpeg \
-              libasound2-dev
+      sudo apt install build-essential libbcg729-0 libbcg729-dev ffmpeg libasound2-dev
       ./configure; make dep; make
 
   - Copy the ``pjsua.conf_template`` file from the ``breakonthru/configs/pi``
