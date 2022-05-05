@@ -83,6 +83,7 @@ Create a Python virtualenv and install breakonthru into it
 
 - While in ``/home/pi/lockit``, create a Python virtual environment::
 
+    cd /home/pi/lockit
     python3 -m venv env
 
 - Check this software (breakonthru) out into ``/home/pi/lockit`` and install it into
