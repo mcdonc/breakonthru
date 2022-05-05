@@ -15,7 +15,7 @@ On Pi
 Install pjsua and configure it
 ------------------------------
 
-  - Check out https://github.com/pjsip/pjproject into /home/pi/lockit and
+  - Check out https://github.com/pjsip/pjproject into ``/home/pi/lockit`` and
     configure it (no Debian package AFAICT)::
 
       sudo apt install build-essential asterisk libbcg729-0 libbcg729-dev ffmpeg \
