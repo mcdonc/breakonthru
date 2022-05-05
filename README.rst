@@ -162,6 +162,7 @@ On Internet Host
 
     cd $HOME/lockit
     python3 -m venv env
+    git clone git@github.com:mcdonc/breakonthru.git
     cd breakonthru
     ../env/bin/pip install --upgrade pip setuptools
     ../env/bin/pip install -e .
