@@ -266,4 +266,5 @@ actual callbutton switch I'm using for testing is close to 2 milliseconds.
 
 Why use ``supervisor`` instead of a systemd unit to keep the various services
 running when they crash?  I'm too lazy to look up the docs for the systemd unit
-config file, and I am the author of ``supervisor``.  Patches accepted.
+config file, and I am the author of ``supervisor``.  Patches accepted.  Do
+note the logging output requirements, though.
