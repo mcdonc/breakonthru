@@ -215,9 +215,10 @@ Calls between the front door and humans are limited via ``pjsua.conf`` to a
 total duration of 120 seconds if you just copy it out of ``breakonthru/config``
 (it's ``--duration 120``).
 
-Calls will ring for at most 30 seconds if no one answers when the button is
-pressed.  You can change this in asterisk's ``extensions.conf`` (in each
-``Dial`` directive).
+Calls from the front door extension during a page event will ring for at most
+30 seconds if no one on the paging list answers when the button is pressed.
+You can change this in asterisk's ``extensions.conf`` (in each ``Dial``
+directive).
 
 Two doors are supported, represented by ``unlock0_gpio_pin`` and ``unlock1_gpio_pin``
 in the ``client.ini`` configuration file on the pi.  You may need to change the
