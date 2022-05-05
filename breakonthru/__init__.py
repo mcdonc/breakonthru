@@ -13,16 +13,6 @@ from breakonthru.authentication import (
 fiveyears = 5 * 365 * 24 * 60 * 60
 
 
-class PathConstantCacheBuster:
-    def __init__(self, token):
-        self.token = token
-
-    def __call__(self, request, subpath, kw):
-        base_subpath, ext = posixpath.splitext(subpath)
-        new_subpath = base_subpath + self.token + ext
-        return new_subpath, kw
-
-
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
     """
@@ -36,7 +26,7 @@ def main(global_config, **settings):
         config.add_static_view('static', 'static', cache_max_age=3600)
         config.add_cache_buster(
             'static',
-            PathConstantCacheBuster(str(int(time.time())))
+            QueryStringConstantCacheBuster(str(int(time.time())))
         )
         config.add_route('login', '/login')
         config.add_route('logout', '/logout')
