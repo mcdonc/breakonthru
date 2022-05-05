@@ -188,7 +188,7 @@ What happens when you call the front door and it's already on a call?  It seems 
 a poor man's conference call. Both can hear the front door mic.  Both can speak to
 the front door speaker.  But clients can't hear each other directly, although they 
 can hear each other through the front door speaker feeding back into the front door mic.
-I had thought maybe pjsua's --auto-conf option would change this behavior, but
+I had thought maybe pjsua's ``--auto-conf`` option would change this behavior, but
 it doesn't seem to (with limited testing).
 
 What happens if you have Wifi calling on on your phone?  No clue.
@@ -199,32 +199,33 @@ but it's lightly tested and may be unneccessary.
 Does the person who presses the call button hear a phone dialing?  Yes.
 
 What happens if somebody spams the callbutton?  Pages are throttled to one
-every 15 seconds (configurable in client.ini via page_throttle_duration).
+every 15 seconds (configurable in client.ini via ``page_throttle_duration``).
 
 There is no "not answering" message played or voicemail box set up in Asterisk to
 handle never-answered calls from the front door.  It's possible to do, I just didn't.
 
 Calls between the front door and humans are limited via pjsua.conf to a total duration
-of 120 seconds if you just copy it out of breakonthru/config (it's --duration 120).
+of 120 seconds if you just copy it out of breakonthru/config (it's ``--duration 120``).
 
 Calls will ring for at most 30 seconds if no one answers when the button is pressed.
-You can change this in asterisk's extensions.conf (in each Dial directive).
+You can change this in asterisk's extensions.conf (in each ``Dial`` directive).
 
-Two doors are supported, represented by unlock0_gpio_pin and unlock1_gpio_pin
-in the "client.ini" configuration file on the pi.  You may need to change the
-"index.pt" HTML in breakonthru/templates if you have fewer doors (just delete
-one of the buttons).  You may need to change both the "index.pt" (add more
-buttons) and the "breakonthru/scripts/doorclient.py" file (to accept more
-unlockX_gpio_pin configuration values) if you have more doors.
+Two doors are supported, represented by ``unlock0_gpio_pin`` and ``unlock1_gpio_pin``
+in the ``client.ini`` configuration file on the pi.  You may need to change the
+``index.pt`` HTML in breakonthru/templates if you have fewer doors (just delete
+one of the buttons).  You may need to change both the ``index.pt`` (add more
+buttons) and the ``breakonthru/scripts/doorclient.py`` file (to accept more
+``unlockX_gpio_pin`` configuration values) if you have more doors.
 
-Doors will stay unlocked for 5 seconds when an unlock request is successful.  This
-is configurable via the door_unlocked_duration value in the client.ini config file.
+Doors will stay unlocked for 5 seconds when an unlock request is successful.
+This is configurable via the ``door_unlocked_duration`` value in the
+``client.ini`` config file.
 
-You might play around with pjsua.conf --ec-tail and related options to try to
+You might play around with ``pjsua.conf`` ``--ec-tail`` and related options to try to
 get some echo cancellation wrt front door speaker feeding back into front door
 mic.  My limited attempts at this were not successful.
 
-Why do I use gpiozero instead of raw RPi.GPIO?  I used the latter initially,
+Why do I use`` gpiozero`` instead of raw ``RPi.GPIO``?  I used the latter initially,
 but I had problems where sending volage to the output pin (for the door unlock)
 would trigger the input pin (for the callbutton detector).  It would also
 sometimes trigger with AC power fluctuations (hilariously the call button would
@@ -232,26 +233,27 @@ trigger when I turned my soldering iron or box fan on or off). I tore my hair
 out for days trying to understand why I was getting crosstalk between input and
 output pins, and hair-trigger response to power fluctuations.  It would be
 interesting to know why, but I've not had time to figure it out.  Although I
-didn't get to the bottom of this, switching to gpiozero made the problem go
+didn't get to the bottom of this, switching to ``gpiozero`` made the problem go
 away.
 
-Why is RPi.GPIO required by the breakonthru package's setup.py, if, as you say,
-RPi.GPIO was doing poorly for you?  I'm sure the problem was how I was *using*
-the RPi.GPIO package, not how it works.  If RPi.GPIO is installed, gpiozero
-will use it to do pin detection.  If RPi.GPIO is *not* installed, gpiozero uses
-experimental native pin detection.  Experimental native pin detection misses
-most button presses in my testing (only maybe 1 in 5 are detected), so it is
-not really viable.  But somehow gpiozero uses RPi.GPIO properly, whereas I did
-not while I used it raw.  ¯\_(ツ)_/¯
+Why is ``RPi.GPIO`` required by the breakonthru package's setup.py, if, as you
+say, ``RPi.GPIO`` was doing poorly for you?  I'm sure the problem was how I was
+*using* the ``RPi.GPIO`` package, not how it works.  If ``RPi.GPIO`` is
+installed, ``gpiozero`` will use it to do pin detection.  If ``RPi.GPIO`` is
+*not* installed, ``gpiozero`` uses experimental native pin detection.
+Experimental native pin detection misses most button presses in my testing
+(only maybe 1 in 5 are detected), so it is not really viable.  But somehow
+``gpiozero`` uses ``RPi.GPIO`` properly, whereas I did not while I used it raw.
+¯\_(ツ)_/¯
 
-But even with RPi.GPIO installed, callbutton press detection via gpiozero is
-not perfect in my setup.  Some totally legitimate button presses are missed.
-This is not due to bad debouncing, or due to the button or the relay.  The
-button and the relay are doing their jobs fine, I verified this independently.
-Anyway, the upshot is that only maybe 80% of button presses are detected
-correctly.  It's irritating but I have no clue why yet.
+But even with ``RPi.GPIO`` installed, callbutton press detection via
+``gpiozero`` is not perfect in my setup.  Some totally legitimate button
+presses are missed.  This is not due to bad debouncing, or due to the button or
+the relay.  The button and the relay are doing their jobs fine, I verified this
+independently.  Anyway, the upshot is that only maybe 80% of button presses are
+detected correctly.  It's irritating but I have no clue why yet.
 
-Why is the callbutton bouncetime "2"?  2 means 2 milliseconds.  In my
+Why is the ``callbutton_bouncetime`` "2"?  2 means 2 milliseconds.  In my
 configuration, the callbutton itself is hooked up to a relay, so it's the relay's
 mechanical switch that is being measured by the bounce time, not the actual
 call button's mechanical switch.  The relay has a very low bouncetime of about
