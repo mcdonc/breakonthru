@@ -29,7 +29,7 @@ Install pjsua and configure it
       #define PJMEDIA_AUDIO_DEV_HAS_PORTAUDIO 0
       #define PJMEDIA_HAS_VIDEO  0
 
-  - Build pjproject.
+  - Build pjproject::
 
       ./configure; make dep; make
 
