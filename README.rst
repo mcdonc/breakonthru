@@ -186,12 +186,13 @@ You can call the front door by dialing its extension (7001 if you kept default
 config).  ``pjsua`` will autoanswer due to ``--auto-answer 200`` in
 ``pjsua.conf``.
 
-What happens when you call the front door and it's already on a call?  It seems like 
-a poor man's conference call. Both can hear the front door mic.  Both can speak to
-the front door speaker.  But clients can't hear each other directly, although they 
-can hear each other through the front door speaker feeding back into the front door mic.
-I had thought maybe pjsua's ``--auto-conf`` option would change this behavior, but
-it doesn't seem to (with limited testing).
+What happens when you call the front door and it's already on a call?  It seems
+like a poor man's conference call. Both can hear the front door mic.  Both can
+speak to the front door speaker.  But clients can't hear each other directly,
+although they can hear each other through the front door speaker feeding back
+into the front door mic.  I had thought maybe the ``--auto-conf`` option in
+``pjsua.conf`` would change this behavior, but it doesn't seem to (with limited
+testing).
 
 Why stun and ice in ``pjsua.conf``? Seems to make off-LAN *inbound* calling
 work better, but it's lightly tested and may be unneccessary.
