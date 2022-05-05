@@ -68,11 +68,11 @@ Configure audio
 
 - Reboot to take effect.
 
-- Use alsamixer to set mic and speaker levels (about 2/3 way up works for me for
+- Use ``alsamixer`` to set mic and speaker levels (about 2/3 way up works for me for
   both speaker and mic).
 
-- After you set the levels with alsa mixer use "sudo alsactl store" to store the
-  settings persistently so they'll work across reboots.
+- After you set the levels with ``alsamixer`` use ``sudo alsactl store`` to store
+  the settings persistently so they'll work across reboots.
 
 Create a Python virtualenv and install breakonthru into it
 ----------------------------------------------------------
