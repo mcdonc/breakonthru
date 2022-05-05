@@ -59,8 +59,8 @@ Configure audio
     3 [vc4hdmi1       ]: vc4-hdmi - vc4-hdmi-1
                             vc4-hdmi-1
 
-  And then create /etc/asound.conf with following to make the USB sound card the
-  default device::
+  And then create ``/etc/asound.conf`` with following content to make the USB
+  sound card the default device::
 
     defaults.pcm.card <cardno>
     defaults.ctl.card <cardno>
