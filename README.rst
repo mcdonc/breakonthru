@@ -200,17 +200,18 @@ work better, but it's lightly tested and may be unneccessary.
 Does the person who presses the call button hear a phone dialing?  Yes.
 
 What happens if somebody spams the callbutton?  Pages are throttled to one
-every 15 seconds (configurable in client.ini via ``page_throttle_duration``).
+every 15 seconds (configurable in ``client.ini`` via ``page_throttle_duration``).
 
 There is no "not answering" message played or voicemail box set up in Asterisk to
 handle never-answered calls from the front door.  It's possible to do, I just didn't.
 
 Calls between the front door and humans are limited via ``pjsua.conf`` to a
-total duration of 120 seconds if you just copy it out of breakonthru/config
+total duration of 120 seconds if you just copy it out of ``breakonthru/config``
 (it's ``--duration 120``).
 
-Calls will ring for at most 30 seconds if no one answers when the button is pressed.
-You can change this in asterisk's extensions.conf (in each ``Dial`` directive).
+Calls will ring for at most 30 seconds if no one answers when the button is
+pressed.  You can change this in asterisk's ``extensions.conf`` (in each
+``Dial`` directive).
 
 Two doors are supported, represented by ``unlock0_gpio_pin`` and ``unlock1_gpio_pin``
 in the ``client.ini`` configuration file on the pi.  You may need to change the
@@ -223,11 +224,11 @@ Doors will stay unlocked for 5 seconds when an unlock request is successful.
 This is configurable via the ``door_unlocked_duration`` value in the
 ``client.ini`` config file.
 
-You might play around with ``pjsua.conf`` ``--ec-tail`` and related options to try to
-get some echo cancellation wrt front door speaker feeding back into front door
-mic.  My limited attempts at this were not successful.
+You might play around with the ``pjsua.conf`` option ``--ec-tail`` and related
+options to try to get some echo cancellation wrt front door speaker feeding
+back into front door mic.  My limited attempts at this were not successful.
 
-Why do I use`` gpiozero`` instead of raw ``RPi.GPIO``?  I used the latter initially,
+Why do I use ``gpiozero`` instead of raw ``RPi.GPIO``?  I used the latter initially,
 but I had problems where sending volage to the output pin (for the door unlock)
 would trigger the input pin (for the callbutton detector).  It would also
 sometimes trigger with AC power fluctuations (hilariously the call button would
