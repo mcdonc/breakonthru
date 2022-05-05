@@ -135,11 +135,12 @@ Network configuraton
   look something like ``7002@lockit.duckdns.org:5065``, although each has their
   own way of asking you (sometimes separately) for the username and the
   hostname/port.  The password for this account will be the secret in the
-  ``/etc/asterisk/sip.conf`` associated with 7002.  MizuDroid is totally free and
-  very good, but is only available on Android, AFAICT.  Zoiper's nagware and
-  feature-limited edition is also free and is available for Android, Windows,
-  Linux, and iOS.  Its "premium" edition that adds the missing features and
-  stops nagging is like ten bucks or something.
+  ``/etc/asterisk/sip.conf`` associated with 7002.  MizuDroid is totally free
+  and very good, but is only available on Android, AFAICT.  Zoiper, which is
+  irritating nagware unless you purchase it, has a free feature-limited
+  edition.  It is available for Android, Windows, Linux, and iOS.  Its
+  "premium" edition that adds the missing features and stops nagging is like
+  ten bucks or something.
 
 On Internet Host
 ================
