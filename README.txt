@@ -113,10 +113,15 @@ Network configuraton:
   hostname.  I use duckdns.org for this.  Let's pretend this hostname is
   "lockit.duckdns.org" for docs purposes.
 
-  Connect SIP softphones like Zoiper to your asterisk server (7002, 7003, etc).
-  The URL you provide to each Zoiper instance will look something like
-  "sip:7002@lockit.duckdns.org:5065".  The password for this account will be the
-  secret in the "/etc/asterisk/sip.conf" associated with 7002.
+  Connect SIP softphones like MizuDroid or Zoiper to your asterisk server
+  (7002, 7003, etc).  The domain you provide to each softphone instance will
+  look something like "7002@lockit.duckdns.org:5065", although each has their
+  own way of asking you (sometimes separately) for the username and the
+  hostname/port.  The password for this account will be the secret in the
+  "/etc/asterisk/sip.conf" associated with 7002.  MizuDroid is totally free and
+  very good, but is only available on Android, AFAICT.  Zoiper's nagware and
+  feature-limited edition is also free.  Its "premium" edition that adds the
+  missing features and stops nagging is like ten bucks or something.
 
 On Internet Host
 ================
