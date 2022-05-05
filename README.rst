@@ -193,8 +193,6 @@ can hear each other through the front door speaker feeding back into the front d
 I had thought maybe pjsua's ``--auto-conf`` option would change this behavior, but
 it doesn't seem to (with limited testing).
 
-What happens if you have Wifi calling on on your phone?  No clue.
-
 Why stun and ice in ``pjsua.conf``? Seems to make off-LAN *inbound* calling
 work better, but it's lightly tested and may be unneccessary.
 
