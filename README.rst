@@ -118,6 +118,8 @@ Install asterisk and configure it
   directory into ``/etc/asterisk`` (it will overwrite some, make backups first
   if you care), and change as necessary.
 
+- ``sudo service asterisk restart``
+
 Network configuraton
 --------------------
 
