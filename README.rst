@@ -229,7 +229,7 @@ buttons) and the ``breakonthru/scripts/doorclient.py`` file (to accept more
 
 Doors will stay unlocked for 5 seconds when an unlock request is successful.
 This is configurable via the ``door_unlocked_duration`` value in the
-``client.ini`` config file.
+``client.ini`` config file.  This is currently not configurable per door.
 
 You might play around with the ``pjsua.conf`` option ``--ec-tail`` and related
 options to try to get some echo cancellation wrt front door speaker feeding
