@@ -183,7 +183,8 @@ Q&A
 ===
 
 You can call the front door by dialing its extension (7001 if you kept default
-config).  pjsua will autoanswer.
+config).  ``pjsua`` will autoanswer due to ``--auto-answer 200`` in
+``pjsua.conf``.
 
 What happens when you call the front door and it's already on a call?  It seems like 
 a poor man's conference call. Both can hear the front door mic.  Both can speak to
