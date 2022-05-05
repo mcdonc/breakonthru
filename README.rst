@@ -263,3 +263,7 @@ call button's mechanical switch.  The relay has a very low bouncetime of about
 may need to change this if you use some other method of relaying the call button
 into the Pi or if your relay is somehow terrible.  FWIW, the bouncetime of the
 actual callbutton switch I'm using for testing is close to 2 milliseconds.
+
+Why use ``supervisor`` instead of a systemd unit to keep the various services
+running when they crash?  I'm too lazy to look up the docs for the systemd unit
+config file, and I am the author of ``supervisor``.  Patches accepted.
