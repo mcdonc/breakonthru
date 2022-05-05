@@ -181,8 +181,9 @@ On Internet Host
 - Note that you will have to set up Apache/NGINX with SSL proxying to both the
   doorserver port (e.g. "wss://lockitws.mydomain.org/") and the webapp port
   (e.g. "https://lockit.mydomain.org/") for everything to work properly.  See
-  breakonthru/configs/internethost/apache for sample configurations.  It is
-  easiest (and cheapest, ironically) to use LetsEncrypt for this.
+  the various files in ``breakonthru/configs/internethost/apache`` for sample
+  configurations.  It is easiest (and cheapest, ironically) to use LetsEncrypt
+  for this.
 
 Q&A
 ===
