@@ -15,11 +15,10 @@ On Pi
 Install pjsua and configure it
 ------------------------------
 
-  - Check out https://github.com/pjsip/pjproject into ``/home/pi/lockit`` and
-    configure it (no Debian package AFAICT)::
+  - While inside ``/home/pi/lockit``, checkout the
+    https://github.com/pjsip/pjproject Git repository::
 
-      sudo apt install build-essential asterisk libbcg729-0 libbcg729-dev ffmpeg \
-              libasound2-dev
+      cd /home/pi/lockit
       git clone git@github.com:pjsip/pjproject.git
       
   - Add the file ``pjproject/pjlib/include/pj/config_site.h``; it should have
@@ -31,6 +30,9 @@ Install pjsua and configure it
 
   - Build pjproject::
 
+
+      sudo apt install build-essential asterisk libbcg729-0 libbcg729-dev ffmpeg \
+              libasound2-dev
       ./configure; make dep; make
 
   - Copy the ``pjsua.conf_template`` file from the ``breakonthru/configs/pi``
