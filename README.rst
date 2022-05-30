@@ -13,34 +13,33 @@ On Pi
 Make the main working directory
 -------------------------------
 
-  - Create a directory inside the pi user's home directory named "lockit"::
+- Create a directory inside the pi user's home directory named "lockit"::
 
-      mkdir /home/pi/lockit
+    mkdir /home/pi/lockit
 
 Install pjsua and configure it
 ------------------------------
 
-  - While inside ``/home/pi/lockit``, checkout the
-    https://github.com/pjsip/pjproject Git repository::
+- While inside ``/home/pi/lockit``, checkout the
+  https://github.com/pjsip/pjproject Git repository::
 
-      cd /home/pi/lockit
-      git clone git@github.com:pjsip/pjproject.git
+    cd /home/pi/lockit
+    git clone git@github.com:pjsip/pjproject.git
       
-  - Add the file ``pjproject/pjlib/include/pj/config_site.h``; it should have
-    this content::
+- Add the file ``pjproject/pjlib/include/pj/config_site.h``; it should have
+  this content::
 
-      #define PJMEDIA_AUDIO_DEV_HAS_ALSA      1
-      #define PJMEDIA_AUDIO_DEV_HAS_PORTAUDIO 0
-      #define PJMEDIA_HAS_VIDEO  0
+    #define PJMEDIA_AUDIO_DEV_HAS_ALSA      1
+    #define PJMEDIA_AUDIO_DEV_HAS_PORTAUDIO 0
+    #define PJMEDIA_HAS_VIDEO  0
 
-  - Build pjproject::
+- Build pjproject::
 
+    sudo apt install build-essential libbcg729-0 libbcg729-dev ffmpeg libasound2-dev
+    ./configure; make dep; make
 
-      sudo apt install build-essential libbcg729-0 libbcg729-dev ffmpeg libasound2-dev
-      ./configure; make dep; make
-
-  - Copy the ``pjsua.conf_template`` file from the ``breakonthru/configs/pi``
-    directory into ``/home/pi/lockit/pjsua.conf`` and change as necessary.
+- Copy the ``pjsua.conf_template`` file from the ``breakonthru/configs/pi``
+  directory into ``/home/pi/lockit/pjsua.conf`` and change as necessary.
 
 Configure audio
 ---------------
