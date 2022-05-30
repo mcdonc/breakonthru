@@ -70,7 +70,7 @@ class UnlockListener:
                 )
             )
             lasttime = 0
-            awaiting_relock = False
+            awaiting_relock = {}
             while True:
                 now = time.time()
                 try:
@@ -105,16 +105,18 @@ class UnlockListener:
                             when, doornum = self.relock_queue.get(block=False)
                         except queue.Empty:
                             continue
+                        relock_msgid = awaiting_relock.pop(doornum, None)
+                        if relock_msgid is None:
+                            continue
                         await websocket.send(
                             json.dumps(
                                 {"type": "ack",
-                                 "msgid": awaiting_relock,
+                                 "msgid": relock_msgid,
                                  "final": True,
                                  "body": f"relocked door {doornum}",
                                  }
                             )
                         )
-                        awaiting_relock = False
 
                 else:
                     self.log("got websocket message")
@@ -130,7 +132,7 @@ class UnlockListener:
                             when = time.time()
                             self.unlock_queue.put((when, doornum))
                             self.log(f"enqueued {character}")
-                            awaiting_relock = msgid
+                            awaiting_relock[doornum] = msgid
                             await websocket.send(
                                 json.dumps(
                                     {
