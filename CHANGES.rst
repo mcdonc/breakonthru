@@ -17,3 +17,6 @@ breakonthru changes
               Change the default GPIO output pin for "front door" (0) from 18
               to 26, for no good reason.
 
+-  5/30/2022: Correctly show relock status when multiple doors are being unlocked
+              simultaneously.
+
