@@ -10,9 +10,12 @@ to try.
 On Pi
 =====
 
-- Create a directory inside the pi user's home directory named "lockit"::
+Make the main working directory
+-------------------------------
 
-    mkdir /home/pi/lockit
+  - Create a directory inside the pi user's home directory named "lockit"::
+
+      mkdir /home/pi/lockit
 
 Install pjsua and configure it
 ------------------------------
