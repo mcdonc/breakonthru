@@ -2,9 +2,7 @@ from cryptacular.bcrypt import BCRYPTPasswordManager
 
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.security import remember, forget
-from pyramid.view import view_config
-from pyramid.view import forbidden_view_config
-from pyramid.view import notfound_view_config
+from pyramid.view import view_config, forbidden_view_config, notfound_view_config
 
 from breakonthru.authentication import refresh_token
 
