@@ -24,9 +24,15 @@ def main(global_config, **settings):
         config.registry.settings['passwords'] = passwords
         config.include('pyramid_chameleon')
         config.add_static_view('static', 'static', cache_max_age=3600)
+        config.add_static_view('js', 'js', cache_max_age=0)
+        now = str(int(time.time()))
         config.add_cache_buster(
             'static',
-            QueryStringConstantCacheBuster(str(int(time.time())))
+            QueryStringConstantCacheBuster(now)
+        )
+        config.add_cache_buster(
+            'js',
+            QueryStringConstantCacheBuster(now)
         )
         config.add_route('login', '/login')
         config.add_route('logout', '/logout')
