@@ -32,8 +32,9 @@ def login_view(request):
     password = request.params.get('password')
     if username is not None:
         username = username.lower()
-    storedhash = request.registry.settings['passwords'].get(username)
-    if not (None in (storedhash, username, password)):
+    userdata = request.registry.settings['passwords'].get(username)
+    if userdata is not None:
+        storedhash = userdata["password"]
         manager = BCRYPTPasswordManager()
         if manager.check(storedhash, password):
             headers = remember(request, username)
@@ -55,9 +56,19 @@ def logout_view(request):
     permission='view'
 )
 def index_view(request):
+    username = request.authenticated_userid
+    userdata = request.registry.settings['passwords'].get(username)
+    allowed_doors = userdata["doors"]
+    all_doors = request.registry.settings['doors']
+    doors = []
+    for n, door in enumerate(all_doors):
+        if n in allowed_doors:
+            doors.append(door)
     return {
         "websocket_url": request.registry.settings['websocket_url'],
         "doorsip": request.registry.settings['doorsip'],
+        "allowed_doors": allowed_doors,
+        "doors":doors,
     }
 
 

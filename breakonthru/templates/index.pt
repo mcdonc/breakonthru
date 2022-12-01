@@ -47,60 +47,52 @@
 
   <body>
 
-    <div class="starter-template">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-2">
-            <img class="logo img-responsive" src="${request.static_url('breakonthru:static/door.png')}" width="167" height="128" alt="Door App">
-          </div>
-          <div class="col-md-10">
-            <div class="container">
-              <div class="content">
-                <div class="row">
-                  <button id="buzzer0" class="btn btn-secondary btn-block" onclick="window.buzzDoor(0)">
-                Buzz Front Door
-                  </button>
-                </div>
+      <div class="starter-template">
+          <div class="container">
+              <div class="row">
+                  <div class="col-md-2">
+                      <img class="logo img-responsive" src="${request.static_url('breakonthru:static/door.png')}" width="167" height="128" alt="Door App">
+                  </div>
+                  <div class="col-md-10">
+                      <div class="container">
+                          <div class="content">
+                              <div class="row" tal:repeat="doorname doors">
+                                  <button id="buzzer${repeat.item.index}" class="btn ${repeat.item.even and 'btn-secondary' or 'btn-info'} btn-block" onclick="window.buzzDoor(${repeat.item.index})">
+                                      Buzz ${doorname}
+                                  </button>
+                              </div>
 
-                <div class="row">
-                  <button id="buzzer1" class="btn btn-info btn-block" onclick="window.buzzDoor(1)">
-                Buzz Inside Door
-                  </button>
-                </div>
-                
-                <div class="row">
-                  <button id="talk" class="btn btn-primary btn-block" onclick="window.location.href='${doorsip}'">
-          Talk to Front Door
-                  </button>
-                </div>
+                              <div class="row">
+                                  <button id="talk" class="btn btn-primary btn-block" onclick="window.location.href='${doorsip}'">
+                                      Talk to Front Door
+                                  </button>
+                              </div>
 
-	        <div>              
-                  <textarea class="" id="log" readonly="true"></textarea>
-                </div>
-                <div class="row">
-                  <button id="logout" class="btn btn-danger btn-block" onclick="window.logout()">
-          Log Out
-                  </button>
-                </div>
-
-                
+	                      <div>
+                                  <textarea class="" id="log" readonly="true"></textarea>
+                              </div>
+                              <div class="row">
+                                  <button id="logout" class="btn btn-danger btn-block" onclick="window.logout()">
+                                      Log Out
+                                  </button>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
               </div>
-            </div>
           </div>
-        </div>
       </div>
-    </div>
-    
+
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="//code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
-    <script src="${request.static_url('breakonthru:js/index.js')}"></script>
-    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script>
-      createWebSocket();
-    </script>
+      <script src="//code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+      <script src="${request.static_url('breakonthru:js/index.js')}"></script>
+      <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+      <script>
+       createWebSocket();
+      </script>
   </body>
 </html>
 

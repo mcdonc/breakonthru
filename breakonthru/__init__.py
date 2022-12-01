@@ -7,7 +7,8 @@ from pyramid.static import QueryStringConstantCacheBuster
 
 from breakonthru.authentication import (
     SessionSecurityPolicy,
-    parse_passwords
+    parse_passwords,
+    parse_doors,
     )
 
 fiveyears = 5 * 365 * 24 * 60 * 60
@@ -17,11 +18,15 @@ def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
     """
     password_file = settings["password_file"]
+    doors_file = settings["doors_file"]
     with open(password_file, "r") as f:
         passwords_text = f.read()
+    with open(doors_file, "r") as f:
+        doors_text = f.read()
     passwords = parse_passwords(passwords_text)
     with Configurator(settings=settings) as config:
         config.registry.settings['passwords'] = passwords
+        config.registry.settings['doors'] = parse_doors(doors_text)
         config.include('pyramid_chameleon')
         config.add_static_view('static', 'static', cache_max_age=3600)
         config.add_static_view('js', 'js', cache_max_age=0)

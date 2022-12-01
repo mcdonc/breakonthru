@@ -50,9 +50,26 @@ def parse_passwords(text):
         name, value = line.split("=", 1)
         name = name.strip()
         value = value.strip()
-        passwords[name] = value
+        try:
+            password, doors = [x.strip() for x in value.split(":",1) ]
+            doors = [ int(x) for x in doors ]
+        except ValueError:
+            password = value.strip()
+            doors = list(range(100)) # all doors
+        passwords[name] = {"password":password, "doors":doors}
     return passwords
 
+def parse_doors(text):
+    doors = []
+    entries = text.splitlines()
+    for line in entries:
+        line = line.strip()
+        if not line:
+            continue
+        if line.startswith("#"):
+            continue
+        doors.append(line)
+    return doors
 
 def timeslice(period, currtime):
     low = int(math.floor(currtime)) - period + 1

@@ -85,13 +85,15 @@ class Doorserver:
                 if ident == "webclient":
                     user = message["user"]
                     token = message["token"]
-                    password = self.passwords.get(user)
-                    if password is not None:
-                        expectedtoken = make_token(self.secret, password)
-                        if expectedtoken == token:
-                            identification = ident
-                            self.log("identification is %s" % ident)
-                            continue
+                    userdata = self.passwords.get(user)
+                    if userdata is not None:
+                        password = userdata.get("password")
+                        if password is not None:
+                            expectedtoken = make_token(self.secret, password)
+                            if expectedtoken == token:
+                                identification = ident
+                                self.log("identification is %s" % ident)
+                                continue
                     self.log("bad identification for %s (%s)" % (ident, user))
 
             if identification == "webclient":
