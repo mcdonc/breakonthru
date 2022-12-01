@@ -57,7 +57,7 @@
                       <div class="container">
                           <div class="content">
                               <div class="row" tal:repeat="doorname doors">
-                                  <button id="buzzer${repeat.item.index}" class="btn ${repeat.item.even and 'btn-secondary' or 'btn-info'} btn-block" onclick="window.buzzDoor(${repeat.item.index})">
+                                  <button id="buzzer${repeat.doorname.item.index}" class="btn ${repeat.doorname.item.even and 'btn-secondary' or 'btn-info'} btn-block" onclick="window.buzzDoor(${repeat.doorname.item.index})">
                                       Buzz ${doorname}
                                   </button>
                               </div>
