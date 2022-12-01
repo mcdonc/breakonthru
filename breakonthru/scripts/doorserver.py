@@ -10,7 +10,7 @@ import uuid
 import websockets
 import websockets.exceptions
 
-from breakonthru.authentication import parse_passwords, parse_doors, make_token
+from breakonthru.authentication import parse_passwords, make_token
 from breakonthru.util import teelogger
 
 
@@ -21,10 +21,7 @@ class Doorserver:
         self.secret = secret
         with open(password_file, "r") as f:
             passwords = f.read()
-        with open(doors_file, "r") as f:
-            doors = f.read()
         self.passwords = parse_passwords(passwords)
-        self.doors = parse_doors(doors)
         self.logger = logger
         self.acks = {}
         self.pending_acks = {}
