@@ -13,6 +13,7 @@ pyramid.debug_routematch = false
 pyramid.default_locale_name = en
 
 password_file = /home/chrism/lockit/passwords
+doors_file = /home/chrism/lockit/doors
 secret = mysecret
 websocket_url = wss://lockitws.mydomain.org/
 doorsip = sip:7001
