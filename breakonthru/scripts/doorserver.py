@@ -10,18 +10,21 @@ import uuid
 import websockets
 import websockets.exceptions
 
-from breakonthru.authentication import parse_passwords, make_token
+from breakonthru.authentication import parse_passwords, parse_doors, make_token
 from breakonthru.util import teelogger
 
 
 class Doorserver:
     unlockdata = None
 
-    def __init__(self, secret, password_file, logger):
+    def __init__(self, secret, password_file, doors_file, logger):
         self.secret = secret
         with open(password_file, "r") as f:
             passwords = f.read()
+        with open(doors_file, "r") as f:
+            doors = f.read()
         self.passwords = parse_passwords(passwords)
+        self.doors = parse_doors(doors)
         self.logger = logger
         self.acks = {}
         self.pending_acks = {}
@@ -102,15 +105,25 @@ class Doorserver:
                     # we must send the secret to the doorclient
                     user = message["body"]
                     msgid = uuid.uuid4().hex
-                    unlockdata = {
-                        "type": "unlock",
-                        "body": user,
-                        "doornum":message['doornum'],
-                        "msgid": msgid,
-                        "secret": self.secret,
-                    }
-                    self.unlockdata = json.dumps(unlockdata)
-                    self.pending_acks[msgid] = wsid
+                    userdata = self.passwords.get(user)
+                    doornum = message["doornum"]
+                    if userdata is not None:
+                        if int(doornum) in userdata["doors"]:
+                            unlockdata = {
+                                "type": "unlock",
+                                "body": user,
+                                "doornum":doornum,
+                                "msgid": msgid,
+                                "secret": self.secret,
+                            }
+                            self.unlockdata = json.dumps(unlockdata)
+                            self.pending_acks[msgid] = wsid
+                        else:
+                            self.log(
+                                f"unauthorized doornum {doornum} unlock requested "
+                                f"by {user}"
+                            )
+
             if identification == "doorclient":
                 if msgtype == "ack":
                     msgid = message["msgid"]
@@ -151,6 +164,11 @@ def main():
     if password_file is None:
         raise AssertionError('password_file must be supplied')
     args["password_file"] = password_file
+
+    doors_file = section.get("doors_file")
+    if doors_file is None:
+        raise AssertionError('doors_file must be supplied')
+    args["doors_file"] = doors_file
 
     secret = section.get("secret")
     if secret is None:
