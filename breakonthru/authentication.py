@@ -94,7 +94,8 @@ def make_token(secret, password, valid_secs=token_valid_secs):
 
 
 def refresh_token(request, username, valid_secs=token_valid_secs):
-    storedhash = request.registry.settings['passwords'].get(username.lower())
+    userdata = request.registry.settings['passwords'].get(username.lower())
+    storedhash = userdata["password"]
     oldtoken = request.session.get("token")
     secret = request.registry.settings["secret"]
     newtoken = make_token(secret, storedhash, valid_secs)
