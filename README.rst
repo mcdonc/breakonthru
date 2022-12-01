@@ -234,10 +234,10 @@ directive).
 
 Two doors are supported, represented by ``unlock0_gpio_pin`` and ``unlock1_gpio_pin``
 in the ``client.ini`` configuration file on the pi.  You may need to change the
-``index.pt`` HTML in breakonthru/templates if you have fewer doors (just delete
-one of the buttons).  You may need to change both the ``index.pt`` (add more
-buttons) and the ``breakonthru/scripts/doorclient.py`` file (to accept more
-``unlockX_gpio_pin`` configuration values) if you have more doors.
+``doors`` file if you have fewer doors (just delete one of the lines).  You may need
+to change both the ``doors`` file (add more buttons) and the
+``breakonthru/scripts/doorclient.py`` file (to accept more ``unlockX_gpio_pin``
+configuration values) if you have more doors.
 
 Doors will stay unlocked for 5 seconds when an unlock request is successful.
 This is configurable via the ``door_unlocked_duration`` value in the

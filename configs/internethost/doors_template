@@ -1,4 +1,5 @@
 Front Door
+Inner Door
 # Add additional doors here, they will show up when the index page is rendered.
 # Each door listed here represents its line index (0, 1, 2, 3, etc) when an
-# unlock request is issued.
+# unlock request is issued.  The line index represents the GPIO unlock pin index.
