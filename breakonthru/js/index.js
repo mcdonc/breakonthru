@@ -9,7 +9,7 @@ function buzzDoor(num) {
 
 function unlockDoor(num) {
     if (window.identified === undefined) {
-        setTimeout(unlockDoor, 100)
+        setTimeout(unlockDoor, 100, num)
     }
     else {
         var unlockdata = JSON.stringify(
