@@ -413,11 +413,6 @@ def run_doorclient(
 
 
 # for testing
-def enqueue_page(*arg):
-    now = time.time()
-    page_queue.put(now)
-
-
 def enqueue_unlock_front(*arg):
     now = time.time()
     unlock_queue.put((now, 0))
