@@ -192,6 +192,7 @@ class UnlockExecutor:
             buzzer = buzzers[doornum]
             try:
                 buzzer.on()
+                self.log(f"waiting {self.door_unlocked_duration} before relocking")
                 time.sleep(self.door_unlocked_duration)
             finally:
                 buzzer.off()
