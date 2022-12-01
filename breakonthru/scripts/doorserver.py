@@ -3,6 +3,7 @@ import asyncio
 import configparser
 import json
 import os
+import pprint
 import sys
 import time
 import uuid
@@ -95,6 +96,7 @@ class Doorserver:
 
             if identification == "webclient":
                 if msgtype == "unlock":
+                    self.log(f"unlock request received from webclient {pprint.pformat(message)}")
                     # we must send the secret to the doorclient
                     user = message["body"]
                     msgid = uuid.uuid4().hex
