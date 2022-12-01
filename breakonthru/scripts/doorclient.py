@@ -418,14 +418,21 @@ def enqueue_page(*arg):
     page_queue.put(now)
 
 
-def enqueue_unlock(*arg):
+def enqueue_unlock_front(*arg):
     now = time.time()
     unlock_queue.put((now, 0))
 
+def enqueue_unlock_inner(*arg):
+    now = time.time()
+    unlock_queue.put((now, 1))
 
-signal.signal(signal.SIGUSR1, enqueue_unlock)
-signal.signal(signal.SIGUSR2, enqueue_page)
+def enqueue_page(*arg):
+    now = time.time()
+    page_queue.put(now)
 
+signal.signal(signal.SIGUSR1, enqueue_unlock_front)
+signal.signal(signal.SIGUSR2, enqueue_unlock_inner)
+signal.signal(signal.SIGALRM, enqueue_page)
 
 def main():
     args = {}
