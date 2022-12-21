@@ -1,4 +1,4 @@
-from cryptacular.bcrypt import BCRYPTPasswordManager
+import bcrypt
 
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.security import remember, forget
@@ -34,9 +34,9 @@ def login_view(request):
         username = username.lower()
     userdata = request.registry.settings['passwords'].get(username)
     if userdata is not None:
-        storedhash = userdata["password"]
-        manager = BCRYPTPasswordManager()
-        if manager.check(storedhash, password):
+        storedhashbytes = userdata["password"].encode('utf-8')
+        passbytes = password.encode('utf-8')
+        if bcrypt.checkpw(passbytes, storedhashbytes):
             headers = remember(request, username)
     return HTTPSeeOther(location='/', headers=headers)
 

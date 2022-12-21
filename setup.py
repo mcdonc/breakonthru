@@ -1,4 +1,5 @@
 import os
+import platform
 from setuptools import setup, find_packages
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -12,13 +13,15 @@ requires = [
     'pyramid',
     'pyramid_chameleon',
     'waitress',
-    'cryptacular',
+    'bcrypt',
     'websockets',
     'gpiozero',
-    'RPi.GPIO',
     'pexpect',
     'setproctitle',
     ]
+
+if platform.machine() == 'aarch64':
+    requires.append("RPi.GPIO")
 
 tests_require = [
     'WebTest',

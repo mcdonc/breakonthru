@@ -20,3 +20,7 @@ breakonthru changes
 -  5/30/2022: Correctly show relock status when multiple doors are being unlocked
               simultaneously.
 
+-  12/1/2022: Make it possible for users to unlock only certain doors.
+
+- 12/21/2022: Abandon cryptacular (which couldn't be built reliably) in favor
+              of raw bcrypt.
