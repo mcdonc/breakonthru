@@ -86,6 +86,7 @@ def token_view(request):
     token = refresh_token(request, user)
     return {"token": token, "user": user}
 
+
 @view_config(route_name='unlock')
 def unlock_view(request):
     reqdata = {}
