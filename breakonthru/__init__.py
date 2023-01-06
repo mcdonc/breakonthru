@@ -43,6 +43,7 @@ def main(global_config, **settings):
         config.add_route('logout', '/logout')
         config.add_route('token', '/token')
         config.add_route('home', '/')
+        config.add_route('unlock', '/unlock')
         policy = SessionSecurityPolicy()
         config.set_security_policy(policy)
         factory = SignedCookieSessionFactory(
