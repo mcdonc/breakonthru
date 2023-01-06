@@ -96,7 +96,7 @@ def directunlock_view(request):
     reqdata['password'] = request.params['password']
     doornum = int(request.params['doornum'])
     login_url = request.host_url + '/login'
-    token_url = request.host_utl + '/token'
+    token_url = request.host_url + '/token'
     session = requests.Session()
     with session:
         session.post(login_url, data=reqdata)
