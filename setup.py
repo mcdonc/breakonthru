@@ -19,6 +19,8 @@ requires = [
     'gpiozero',
     'pexpect',
     'setproctitle',
+    'requests',
+    'websocket-client',
     ]
 
 if platform.machine() == 'aarch64':

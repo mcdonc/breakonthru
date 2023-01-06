@@ -1,4 +1,8 @@
 import bcrypt
+import json
+import requests
+
+from websocket import create_connection
 
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.security import remember, forget
@@ -81,3 +85,37 @@ def token_view(request):
     user = request.authenticated_userid
     token = refresh_token(request, user)
     return {"token": token, "user": user}
+
+@view_config(route_name='unlock')
+def unlock_view(request):
+    reqdata = {}
+    reqdata['username'] = request.params['username']
+    reqdata['password'] = request.params['password']
+    doornum = int(request.params['doornum'])
+    login_url = request.host_url + '/login'
+    token_url = request.host_utl + '/token'
+    session = requests.Session()
+    with session:
+        session.post(login_url, data=reqdata)
+        r = session.get(token_url)
+        tokendata = json.loads(r.content)
+    identificationdata = {
+        "type":"identification",
+        "body":"webclient",
+        "user":tokendata["user"],
+        "token":tokendata["token"],
+        }
+    unlockdata = {
+        "type": "unlock",
+        "body": tokendata['user'],
+        "doornum":doornum,
+    }
+    websocket_url = request.registry.settings['websocket_url']
+    ws = create_connection(websocket_url)
+    ws.send(json.dumps(identificationdata))
+    #time.sleep(1)
+    ws.send(json.dumps(unlockdata))
+    response = request.response
+    response.body = 'OK'
+    response.content_type = 'text/plain'
+    return response
