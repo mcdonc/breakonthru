@@ -39,7 +39,7 @@ def main(global_config, **settings):
             'js',
             QueryStringConstantCacheBuster(now)
         )
-        config.add_route('unlock', '/unlock')
+        config.add_route('directunlock', '/directunlock')
         config.add_route('login', '/login')
         config.add_route('logout', '/logout')
         config.add_route('token', '/token')

@@ -87,8 +87,10 @@ def token_view(request):
     return {"token": token, "user": user}
 
 
-@view_config(route_name='unlock')
-def unlock_view(request):
+@view_config(
+    route_name='directunlock'
+)
+def directunlock_view(request):
     reqdata = {}
     reqdata['username'] = request.params['username']
     reqdata['password'] = request.params['password']
@@ -114,7 +116,6 @@ def unlock_view(request):
     websocket_url = request.registry.settings['websocket_url']
     ws = create_connection(websocket_url)
     ws.send(json.dumps(identificationdata))
-    #time.sleep(1)
     ws.send(json.dumps(unlockdata))
     response = request.response
     response.body = 'OK'
