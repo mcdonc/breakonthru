@@ -118,6 +118,6 @@ def directunlock_view(request):
     ws.send(json.dumps(identificationdata))
     ws.send(json.dumps(unlockdata))
     response = request.response
-    response.body = 'OK'
+    response.text = 'OK'
     response.content_type = 'text/plain'
     return response
