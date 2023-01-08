@@ -1,4 +1,3 @@
-import posixpath
 import time
 
 from pyramid.config import Configurator
