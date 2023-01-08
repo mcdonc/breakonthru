@@ -124,6 +124,6 @@ def directunlock_view(request):
             opened = door
             break
     response = request.response
-    response.text = 'OK, opened door %s' % opened
+    response.text = 'OK, opened %s' % opened
     response.content_type = 'text/plain'
     return response
