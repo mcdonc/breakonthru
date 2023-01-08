@@ -118,9 +118,12 @@ def directunlock_view(request):
     ws.send(json.dumps(identificationdata))
     ws.send(json.dumps(unlockdata))
     all_doors = request.registry.settings['doors']
+    opened = 'None'
     for n, door in enumerate(all_doors):
-        print((n, door))
+        if n == doornum:
+            opened = door
+            break
     response = request.response
-    response.text = 'OK'
+    response.text = 'OK, opened door %s' % opened
     response.content_type = 'text/plain'
     return response
