@@ -117,6 +117,9 @@ def directunlock_view(request):
     ws = create_connection(websocket_url)
     ws.send(json.dumps(identificationdata))
     ws.send(json.dumps(unlockdata))
+    all_doors = request.registry.settings['doors']
+    for n, door in enumerate(all_doors):
+        print((n, door))
     response = request.response
     response.text = 'OK'
     response.content_type = 'text/plain'
