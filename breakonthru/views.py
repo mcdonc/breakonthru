@@ -95,6 +95,17 @@ def directunlock_view(request):
     reqdata['username'] = request.params['username']
     reqdata['password'] = request.params['password']
     doornum = int(request.params['doornum'])
+    all_doors = request.registry.settings['doors']
+    opened = None
+    for n, door in enumerate(all_doors):
+        if n == doornum:
+            opened = door
+            break
+    else: # nobreak
+        response = request.response
+        response.text = 'No such door %s' % doornum
+        response.content_type = 'text/plain'
+        return response
     login_url = request.host_url + '/login'
     token_url = request.host_url + '/token'
     session = requests.Session()
@@ -117,12 +128,6 @@ def directunlock_view(request):
     ws = create_connection(websocket_url)
     ws.send(json.dumps(identificationdata))
     ws.send(json.dumps(unlockdata))
-    all_doors = request.registry.settings['doors']
-    opened = 'None'
-    for n, door in enumerate(all_doors):
-        if n == doornum:
-            opened = door
-            break
     response = request.response
     response.text = 'OK, opened %s' % opened
     response.content_type = 'text/plain'
