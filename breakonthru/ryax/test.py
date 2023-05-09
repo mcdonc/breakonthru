@@ -1,10 +1,14 @@
 import ryax
 import time
 
-rx = ryax.receiver()
-tx = ryax.transmitter()
+def test_transmitter():
+    tx = ryax.transmitter()
+    while True:
+        tx.sendmsg(1, "BUZZ802")
+        time.sleep(1)
 
-while True:
-    tx.sendmsg(1, "BUZZ802")
-    time.sleep(1)
-    print(rx.receive())
+def test_receiver():
+    rx = ryax.receiver()
+    while True:
+        if rx.uart.any():
+            print(rx.receive())
