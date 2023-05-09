@@ -12,3 +12,4 @@ def test_receiver():
     while True:
         if rx.uart.any():
             print(rx.receive())
+        time.sleep_ms(100)
