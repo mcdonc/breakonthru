@@ -1,6 +1,7 @@
 import machine
 import time
 
+
 class Ryax:
     def __init__(self, uartid=0, baudrate=115200, tx_pin=0, rx_pin=1):
         tx_pin = machine.Pin(tx_pin)
@@ -38,8 +39,15 @@ class Ryax:
 
 
 def receiver():
-    rx = Ryax(uartid=1, tx_pin=4, rx_pin=5)
-    rx.atcommand('AT', '') # get rid of stray bytes hanging around
+    while True:
+        try:
+            rx = Ryax(uartid=1, tx_pin=4, rx_pin=5)
+            rx.atcommand('AT', '') # get rid of stray bytes hanging around
+        except UnicodeError: # first time failure
+            continue
+        else:
+            break
+
     rx.atcommand('AT') # test
     rx.atcommand('AT+BAND=915000000') # mhz band
     rx.atcommand('AT+NETWORKID=18') # network number, shared by door/apt
@@ -50,8 +58,14 @@ def receiver():
 
 
 def transmitter():
-    tx = Ryax()
-    tx.atcommand('AT', '') # get rid of stray bytes hanging around
+    while True:
+        try:
+            tx = Ryax()
+            tx.atcommand('AT', '') # get rid of stray bytes hanging around
+        except UnicodeError: # first time failure
+            continue
+        else:
+            break
     tx.atcommand('AT') # test
     tx.atcommand('AT+BAND=915000000') # mhz band
     tx.atcommand('AT+NETWORKID=18') # network number, shared by door/apt
