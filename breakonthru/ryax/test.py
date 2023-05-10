@@ -4,8 +4,8 @@ import time
 def test_transmitter():
     tx = ryax.transmitter()
     while True:
-        tx.sendmsg(1, "BUZZ802")
-        time.sleep(1)
+        tx.sendmsg(1, "BUZZ")
+        time.sleep(5)
 
 def test_receiver():
     rx = ryax.receiver()

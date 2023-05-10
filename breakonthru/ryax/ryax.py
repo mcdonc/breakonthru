@@ -8,9 +8,9 @@ class Ryax:
         rx_pin = machine.Pin(rx_pin)
         self.uart = machine.UART(uartid, baudrate, tx=tx_pin, rx=rx_pin)
 
-    def sendmsg(self, networkid, msg):
+    def sendmsg(self, address, msg):
         msglen = len(msg)
-        return self.atcommand(f'AT+SEND={networkid},{msglen},{msg}')
+        return self.atcommand(f'AT+SEND={address},{msglen},{msg}')
 
     def receive(self, numbytes=-1):
         if numbytes==-1:
