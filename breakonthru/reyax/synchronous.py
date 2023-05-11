@@ -2,7 +2,7 @@ import machine
 import time
 
 
-class Ryax:
+class Reyax:
     def __init__(self, uartid=0, baudrate=115200, tx_pin=0, rx_pin=1):
         tx_pin = machine.Pin(tx_pin)
         rx_pin = machine.Pin(rx_pin)
@@ -41,7 +41,7 @@ class Ryax:
 def receiver():
     while True:
         try:
-            rx = Ryax(uartid=1, tx_pin=4, rx_pin=5)
+            rx = Reyax(uartid=1, tx_pin=4, rx_pin=5)
             rx.atcommand('AT', '') # get rid of stray bytes hanging around
         except UnicodeError: # first time failure
             continue
@@ -60,7 +60,7 @@ def receiver():
 def transmitter():
     while True:
         try:
-            tx = Ryax()
+            tx = Reyax()
             tx.atcommand('AT', '') # get rid of stray bytes hanging around
         except UnicodeError: # first time failure
             continue

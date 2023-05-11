@@ -1,13 +1,13 @@
 from machine import Pin
 import time
-import ryax
+from .synchronous import receiver
 
 def test_receiver():
     relay = Pin(16, Pin.OUT, Pin.PULL_UP)
     led=Pin("LED", Pin.OUT)
     relay.value(0)
     led.value(0)
-    rx = ryax.receiver()
+    rx = receiver()
     while True:
         if rx.uart.any():
             data = rx.receive()
