@@ -138,13 +138,14 @@ class PiPicoDoorTransmitter(UartHandler):
 if __name__ == "__main__":
     OK = "+OK"
     commands = [
-        ('AT', ''),
+        ('AT', ''), # flush any old data pending CRLF
         ('AT+BAND=915000000', OK), # mhz band
         ('AT+NETWORKID=18', OK), # network number, shared by door/apt
         ('AT+IPR=115200', '+IPR=115200'), # baud rate
         ]
     if sys.platform == 'rp2':
         commands.append(('AT+ADDRESS=1', OK)), # network address (1: door, 2: apt)
+        commands.append(('AT+MODE=2,3000,3000', OK)), # smart receive mode
         unlocker = PiPicoDoorReceiver(commands, uartid=1, tx_pin=4, rx_pin=5)
     else:
         commands.append(('AT+ADDRESS=2', OK)), # network address (1: door, 2: apt)
