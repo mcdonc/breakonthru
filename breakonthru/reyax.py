@@ -30,6 +30,9 @@ class UartHandler:
             logger = get_default_logger()
         self.logger = logger
 
+    def log(self, msg):
+        self.logger.info(msg)
+
     def handle_message(self, address, message, rssi, snr):
         raise NotImplementedError
 
@@ -42,7 +45,7 @@ class UartHandler:
             self.handle_inputs()
             if self.commands and cmd is None:
                 cmd, expect = self.commands.pop(0)
-                self.logger.info(cmd)
+                self.log(cmd)
                 self.uart.write(cmd.encode('ascii')+CRLF)
             result = self.poller.poll(1000) # ms
             for obj, flag in result:
@@ -56,7 +59,7 @@ class UartHandler:
                         line, self.buffer = self.buffer.split(LF, 1)
                         line.strip(CR)
                         resp = line.decode('ascii', 'replace')
-                        self.logger.info(resp)
+                        self.log(resp)
                         if resp.startswith('+RCV='):
                             # parse e.g. "+RCV=50,5,HELLO,-99,40"
                             address, length, rest = resp[5:].split(',', 2)
@@ -113,7 +116,7 @@ class LinuxDoorReceiver(UartHandler):
 
     def handle_message(self, address, message, rssi, snr):
         # this is a message to unlock the door
-        self.logger.info(f"RECEIVED {message} from {address}")
+        self.log(f"RECEIVED {message} from {address}")
 
 class LinuxDoorTransmitter(UartHandler):
     def __init__(self, commands=(), device="/dev/ttyUSB0", baudrate=115200):
@@ -123,16 +126,16 @@ class LinuxDoorTransmitter(UartHandler):
 
     def handle_message(self, address, message, rssi, snr):
         # this is a message that the door was relocked
-        self.logger.info(f"RECEIVED {message} from {address}")
+        self.log(f"RECEIVED {message} from {address}")
         if message == "79F":
-            self.logger.info("Received door relocked confirmation")
+            self.log("Received door relocked confirmation")
 
     def handle_inputs(self):
         now = time.time()
         if now > self.last_send + 10:
             cmd = "AT+SEND=1,3,80F"
-            self.logger.info("Asking for door lock")
-            self.logger.info(f"sending {cmd}")
+            self.log("Asking for door lock")
+            self.log(f"sending {cmd}")
             self.commands.append((cmd, ''))
             self.last_send = now
 
@@ -148,18 +151,18 @@ class PiPicoDoorReceiver(UartHandler):
         UartHandler.__init__(self, uart, commands)
 
     def handle_message(self, address, message, rssi, snr):
-        self.logger.info(f"RECEIVED {message} from {address}")
+        self.log(f"RECEIVED {message} from {address}")
         if message == "80F" and address == self.authorized_sender:
             # this is a message to unlock the door
             self.unlock()
 
     def unlock(self):
-        self.logger.info(f"Receiver unlocking using pin {self.unlock_pin}")
+        self.log(f"Receiver unlocking using pin {self.unlock_pin}")
         self.unlocked = time.time()
         self.unlock_pin.value(1)
 
     def relock(self):
-        self.logger.info(f"Receiver relocking using pin {self.unlock_pin}")
+        self.log(f"Receiver relocking using pin {self.unlock_pin}")
         self.unlock_pin.value(0)
         self.unlocked = None
         # 79F indicates the door has relocked
@@ -178,7 +181,7 @@ class PiPicoDoorTransmitter(UartHandler):
 
     def handle_message(self, address, message, rssi, snr):
         # this is a message that the door was relocked
-        self.logger.info(f"RECEIVED {message} from {address}")
+        self.log(f"RECEIVED {message} from {address}")
 
 if __name__ == "__main__":
     OK = "+OK"

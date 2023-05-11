@@ -345,8 +345,11 @@ class DoorTransmitter(reyax.UartHandler):
         uart = reyax.get_linux_uart(device, baudrate)
         reyax.UartHandler.__init__(self, uart, commands, logger)
 
+    def log(self, msg):
+        self.logger.info(f"REYXTR {msg}")
+
     def handle_message(self, address, message, rssi, snr):
-        self.logger.info(f"RECEIVED {message} from {address}")
+        self.log(f"RECEIVED {message} from {address}")
 
     def handle_inputs(self):
         try:
@@ -354,7 +357,7 @@ class DoorTransmitter(reyax.UartHandler):
         except queue.Empty:
             return
         cmd = f"AT+SEND={address},3,80F"
-        self.logger.info(f"sending {cmd} to {address}")
+        self.log(f"sending {cmd} to {address}")
         self.commands.append((cmd, ''))
 
 
@@ -365,7 +368,7 @@ class ReyaxTransmissionHandler:
         self.logger = logger
 
     def log(self, msg):
-        self.logger.info(f"REYXT {msg}")
+        self.logger.info(f"REYXTH {msg}")
 
     def run(self):
         setproctitle.setproctitle("reyax-transmission-handler")
