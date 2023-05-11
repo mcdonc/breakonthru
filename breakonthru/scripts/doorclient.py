@@ -190,12 +190,11 @@ class UnlockExecutor:
         # gpiozero objects cannot be defined in the main process, only in subproc
         buzzers = []
         for pin in self.unlock_gpio_pins:
-            if type(pin) is int:
-                buzzers.append(gpiozero.Buzzer(pin))
-            if type(pin) is str:
-                if pin.startswith("reyax:"):
-                    address = int(pin[len("reyax:"):])
-                    buzzers.append(ReyaxBuzzer(address, self.reyax_queue))
+            if pin.startswith("reyax:"):
+                address = int(pin[len("reyax:"):])
+                buzzers.append(ReyaxBuzzer(address, self.reyax_queue))
+            else:
+                buzzers.append(gpiozero.Buzzer(int(pin)))
         while True:
             try:
                 while True:
@@ -560,12 +559,8 @@ def main():
     default_pins = ["26", "24", None]
     for x in range(0, 2):
         val = section.get("unlock{x}_gpio_pin", default_pins[x])
-        if val is None:
-            pass
-        elif val.startswith("reyax:"):
+        if val is not None:
             unlock_gpio_pins.append(val)
-        else:
-            unlock_gpio_pins.append(int(val))
     args['door_unlocked_duration'] = int(section.get("door_unlocked_duration", 5))
     args['clientidentity'] = section.get("clientidentity", "doorclient")
     args['callbutton_gpio_pin'] = int(section.get("callbutton_gpio_pin", 16))
