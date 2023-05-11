@@ -109,7 +109,7 @@ class LinuxDoorTransmitter(UartHandler):
 
     def handle_inputs(self):
         now = time.time()
-        if now > self.last_send + 5:
+        if now > self.last_send + 10:
             cmd = "AT+SEND=1,3,80F"
             print(f"sending {cmd}")
             self.commands.append((cmd, ''))
@@ -119,12 +119,28 @@ class PiPicoDoorReceiver(UartHandler):
     def __init__(self, commands=(), uartid=0, baudrate=115200, tx_pin=0, rx_pin=1):
         uart = get_pipico_uart(uartid, baudrate, tx_pin, rx_pin)
         UartHandler.__init__(self, uart, commands)
+        self.unlocked = None
 
     def handle_message(self, address, message, rssi, snr):
         # this is a message to unlock the door
         print(f"RECEIVED {message} from {address}")
         if message == "80F":
-            self.commands.append(("AT+SEND=2,3,79F", ""))
+            self.unlock()
+
+    def unlock(self):
+        print("unlocking")
+        self.unlocked = time.time()
+
+    def relock(self):
+        print("relocking")
+        self.unlocked = None
+        self.commands.append(("AT+SEND=2,3,79F", ""))
+
+    def handle_inputs(self):
+        now = time.time()
+        if self.unlocked:
+            if now > self.unlocked + 5:
+                self.relock()
 
 class PiPicoDoorTransmitter(UartHandler):
     def __init__(self, commands=(), uartid=0, baudrate=115200, tx_pin=0, rx_pin=1):
