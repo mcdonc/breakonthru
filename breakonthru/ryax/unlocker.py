@@ -43,12 +43,15 @@ class UartHandler:
                         line.strip(CR)
                         resp = line.decode('ascii', 'replace')
                         print(resp)
-                        #samplerecv = "+RCV=50,5,HELLO,-99,40"
                         if resp.startswith('+RCV='):
+                            # parse e.g. "+RCV=50,5,HELLO,-99,40"
                             address, length, rest = resp[5:].split(',', 2)
+                            # address will be "50", length will be "5"
+                            # "rest" will be "HELLO,-99,40"
                             address = int(address)
                             datalen = int(length)
                             message = rest[:datalen]
+                            # message will be "HELLO"
                             rssi, snr = map(int, rest[datalen+1:].split(',', 1))
                             self.handle_message(address, message, rssi, snr)
                         if resp and expect:
@@ -111,6 +114,7 @@ class LinuxDoorTransmitter(UartHandler):
         now = time.time()
         if now > self.last_send + 10:
             cmd = "AT+SEND=1,3,80F"
+            print("Asking for door lock")
             print(f"sending {cmd}")
             self.commands.append((cmd, ''))
             self.last_send = now
