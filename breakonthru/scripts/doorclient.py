@@ -340,11 +340,10 @@ class DoorTransmitter(reyax.UartHandler):
             self, logger, reyax_queue, commands=(), device="/dev/ttyUSB0",
             baudrate=115200
     ):
-        self.logger = logger
         self.reyax_queue = reyax_queue
         self.last_send = 0
         uart = reyax.get_linux_uart(device, baudrate)
-        reyax.UartHandler.__init__(self, uart, commands)
+        reyax.UartHandler.__init__(self, uart, commands, logger)
 
     def handle_message(self, address, message, rssi, snr):
         self.logger.info(f"RECEIVED {message} from {address}")
@@ -475,16 +474,19 @@ def run_doorclient(
     )
     procs.append(page_executor)
 
-    reyax_handler = Process(
-        name='reyax_handler',
-        daemon=True,
-        target=ReyaxTransmissionHandler(
-            reyax_config,
-            reyax_queue,
-            logger,
-        ).run
-    )
-    procs.append(reyax_handler)
+    for pin in unlock_gpio_pins:
+        if pin.startswith('reyax:'):
+            reyax_handler = Process(
+                name='reyax_handler',
+                daemon=True,
+                target=ReyaxTransmissionHandler(
+                    reyax_config,
+                    reyax_queue,
+                    logger,
+                ).run
+            )
+            procs.append(reyax_handler)
+            break
 
     for proc in procs:
         proc.start()
@@ -556,7 +558,7 @@ def main():
     logger = teelogger(logfile, loglevel)
     args['logger'] = logger
     unlock_gpio_pins = args['unlock_gpio_pins'] = []
-    default_pins = ["26", "24", "27"]
+    default_pins = ["26", "24", "21"]
     for x in range(0, 3):
         val = section.get(f"unlock{x}_gpio_pin", default_pins[x])
         unlock_gpio_pins.append(val)
