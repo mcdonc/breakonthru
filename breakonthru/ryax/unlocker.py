@@ -1,9 +1,8 @@
 import select
 import os
 import io
-import termios
-import tty
 import time
+import sys
 
 LF = b'\n'
 CR = b'\r'
@@ -20,9 +19,13 @@ class UartHandler:
     def handle_message(self, address, message, rssi, snr):
         raise NotImplementedError
 
+    def handle_inputs(self):
+        pass
+
     def runforever(self):
         cmd = None
         while True:
+            self.handle_inputs()
             if self.commands and cmd is None:
                 cmd, expect = self.commands.pop(0)
                 print(cmd)
@@ -51,8 +54,11 @@ class UartHandler:
                         if resp and expect:
                             assert resp==expect, f"expected {expect}, got {resp}"
                         cmd = None
+                        expect = None
 
 def get_linux_uart():
+    import termios
+    import tty
     fd = os.open('/dev/ttyUSB0', os.O_NOCTTY|os.O_RDWR|os.O_NONBLOCK)
     tty.setraw(fd)
     iflag, oflag, cflag, lflag, ispeed, ospeed, cc = termios.tcgetattr(
@@ -69,7 +75,7 @@ def get_linux_uart():
     uart.read()
     return uart
 
-def get_pipico_uart(self, uartid=0, baudrate=115200, tx_pin=0, rx_pin=1):
+def get_pipico_uart(uartid=0, baudrate=115200, tx_pin=0, rx_pin=1):
     import machine
     tx_pin = machine.Pin(tx_pin)
     rx_pin = machine.Pin(rx_pin)
@@ -91,25 +97,38 @@ class LinuxDoorReceiver(UartHandler):
 
 class LinuxDoorTransmitter(UartHandler):
     def __init__(self, commands=()):
+        self.last_send = 0
         uart = get_linux_uart()
         UartHandler.__init__(self, uart, commands)
 
     def handle_message(self, address, message, rssi, snr):
         # this is a message that the door was relocked
         print(f"RECEIVED {message} from {address}")
+        if message == "79F":
+            print("Door relocked")
+
+    def handle_inputs(self):
+        now = time.time()
+        if now > self.last_send + 5:
+            cmd = "AT+SEND=1,3,80F"
+            print(f"sending {cmd}")
+            self.commands.append((cmd, ''))
+            self.last_send = now
 
 class PiPicoDoorReceiver(UartHandler):
     def __init__(self, commands=(), uartid=0, baudrate=115200, tx_pin=0, rx_pin=1):
-        uart = self.get_pipico_uart(uartid, baudrate, tx_pin, rx_pin)
+        uart = get_pipico_uart(uartid, baudrate, tx_pin, rx_pin)
         UartHandler.__init__(self, uart, commands)
 
     def handle_message(self, address, message, rssi, snr):
         # this is a message to unlock the door
         print(f"RECEIVED {message} from {address}")
+        if message == "80F":
+            self.commands.append(("AT+SEND=2,3,79F", ""))
 
 class PiPicoDoorTransmitter(UartHandler):
     def __init__(self, commands=(), uartid=0, baudrate=115200, tx_pin=0, rx_pin=1):
-        uart = self.get_pipico_uart(uartid, baudrate, tx_pin, rx_pin)
+        uart = get_pipico_uart(uartid, baudrate, tx_pin, rx_pin)
         UartHandler.__init__(self, uart, commands)
 
     def handle_message(self, address, message, rssi, snr):
@@ -122,8 +141,12 @@ if __name__ == "__main__":
         ('AT', ''),
         ('AT+BAND=915000000', OK), # mhz band
         ('AT+NETWORKID=18', OK), # network number, shared by door/apt
-        ('AT+ADDRESS=2', OK), # network address (1: door, 2: apt)
         ('AT+IPR=115200', '+IPR=115200'), # baud rate
         ]
-    unlocker = LinuxDoorTransmitter(commands)
+    if sys.platform == 'rp2':
+        commands.append(('AT+ADDRESS=1', OK)), # network address (1: door, 2: apt)
+        unlocker = PiPicoDoorReceiver(commands, uartid=1, tx_pin=4, rx_pin=5)
+    else:
+        commands.append(('AT+ADDRESS=2', OK)), # network address (1: door, 2: apt)
+        unlocker = LinuxDoorTransmitter(commands)
     unlocker.runforever()
