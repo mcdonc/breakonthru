@@ -122,9 +122,9 @@ class PiPicoDoorReceiver(UartHandler):
         self.unlocked = None
 
     def handle_message(self, address, message, rssi, snr):
-        # this is a message to unlock the door
         print(f"RECEIVED {message} from {address}")
-        if message == "80F":
+        if message == "80F" and address == 2:
+            # this is a message to unlock the door
             self.unlock()
 
     def unlock(self):
@@ -134,6 +134,7 @@ class PiPicoDoorReceiver(UartHandler):
     def relock(self):
         print("relocking")
         self.unlocked = None
+        # 79F indicates the door has relocked
         self.commands.append(("AT+SEND=2,3,79F", ""))
 
     def handle_inputs(self):
