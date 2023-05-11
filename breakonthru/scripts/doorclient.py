@@ -558,7 +558,7 @@ def main():
     unlock_gpio_pins = args['unlock_gpio_pins'] = []
     default_pins = ["26", "24", "27"]
     for x in range(0, 3):
-        val = section.get("unlock{x}_gpio_pin", default_pins[x])
+        val = section.get(f"unlock{x}_gpio_pin", default_pins[x])
         unlock_gpio_pins.append(val)
     args['door_unlocked_duration'] = int(section.get("door_unlocked_duration", 5))
     args['clientidentity'] = section.get("clientidentity", "doorclient")
