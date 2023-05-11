@@ -558,7 +558,7 @@ def main():
     logger = teelogger(logfile, loglevel)
     args['logger'] = logger
     unlock_gpio_pins = args['unlock_gpio_pins'] = []
-    default_pins = ["26", "24", "21"]
+    default_pins = ["26", "24", "16"]
     for x in range(0, 3):
         val = section.get(f"unlock{x}_gpio_pin", default_pins[x])
         unlock_gpio_pins.append(val)

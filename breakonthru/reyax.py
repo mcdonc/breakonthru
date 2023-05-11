@@ -154,12 +154,12 @@ class PiPicoDoorReceiver(UartHandler):
             self.unlock()
 
     def unlock(self):
-        self.logger.info("Receiver unlocking")
+        self.logger.info(f"Receiver unlocking using pin {self.unlock_pin}")
         self.unlocked = time.time()
         self.unlock_pin.value(1)
 
     def relock(self):
-        self.logger.info("Receiver relocking")
+        self.logger.info(f"Receiver relocking using pin {self.unlock_pin}")
         self.unlock_pin.value(0)
         self.unlocked = None
         # 79F indicates the door has relocked
@@ -196,7 +196,7 @@ if __name__ == "__main__":
             uartid=1,
             tx_pin=4,
             rx_pin=5,
-            unlock_pin=21,
+            unlock_pin=16,
             unlocked_duration=5,
             authorized_sender=2,
         )
