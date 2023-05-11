@@ -556,11 +556,10 @@ def main():
     logger = teelogger(logfile, loglevel)
     args['logger'] = logger
     unlock_gpio_pins = args['unlock_gpio_pins'] = []
-    default_pins = ["26", "24", None]
-    for x in range(0, 2):
+    default_pins = ["26", "24", "27"]
+    for x in range(0, 3):
         val = section.get("unlock{x}_gpio_pin", default_pins[x])
-        if val is not None:
-            unlock_gpio_pins.append(val)
+        unlock_gpio_pins.append(val)
     args['door_unlocked_duration'] = int(section.get("door_unlocked_duration", 5))
     args['clientidentity'] = section.get("clientidentity", "doorclient")
     args['callbutton_gpio_pin'] = int(section.get("callbutton_gpio_pin", 16))
