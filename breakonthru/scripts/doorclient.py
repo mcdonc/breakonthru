@@ -557,10 +557,12 @@ def main():
     logger = teelogger(logfile, loglevel)
     args['logger'] = logger
     unlock_gpio_pins = args['unlock_gpio_pins'] = []
-    default_pins = ["26", "24", "reyax:1"]
+    default_pins = ["26", "24", None]
     for x in range(0, 2):
         val = section.get("unlock{x}_gpio_pin", default_pins[x])
-        if val.startswith("reyax:"):
+        if val is None:
+            pass
+        elif val.startswith("reyax:"):
             unlock_gpio_pins.append(val)
         else:
             unlock_gpio_pins.append(int(val))
@@ -572,8 +574,8 @@ def main():
     args['reyax_config'] = reyax = {}
     reyax['networkid'] = int(section.get('reyax_networkid', 18))
     reyax['address'] = int(section.get('reyax_address', 2))
-    reyax['band'] = int(section.get('reyax_address', 915000000))
-    reyax['baudrate'] = int(section.get('reyax_address', 115200))
-    reyax['tty'] = section.get('reyax_address', "/dev/ttyUSB0")
+    reyax['band'] = int(section.get('reyax_band', 915000000))
+    reyax['baudrate'] = int(section.get('reyax_baudrate', 115200))
+    reyax['tty'] = section.get('reyax_tty', "/dev/ttyUSB0")
     logger.info(f"MAIN pid is {os.getpid()}")
     run_doorclient(**args)
