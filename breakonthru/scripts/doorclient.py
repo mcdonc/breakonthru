@@ -16,7 +16,7 @@ import websockets.exceptions
 from multiprocessing import Process, Queue
 
 from breakonthru.util import teelogger
-
+from breakonthru import reyax
 
 class UnlockListener:
     def __init__(
@@ -144,18 +144,31 @@ class UnlockListener:
                             )
                             self.log("sent ack")
 
+class ReyaxBuzzer:
+    def __init__(self, address, reyax_queue):
+        self.address = address
+        self.reyax_queue = reyax_queue
+
+    def on(self):
+        self.reyax_queue.put(self.address)
+
+    def off(self):
+        pass
+
 
 class UnlockExecutor:
     def __init__(
             self,
             unlock_queue,
             relock_queue,
+            reyax_queue,
             unlock_gpio_pins,
             door_unlocked_duration,
             logger,
     ):
         self.unlock_queue = unlock_queue
         self.relock_queue = relock_queue
+        self.reyax_queue = reyax_queue
         self.unlock_gpio_pins = unlock_gpio_pins
         self.door_unlocked_duration = door_unlocked_duration
         self.logger = logger
@@ -177,7 +190,12 @@ class UnlockExecutor:
         # gpiozero objects cannot be defined in the main process, only in subproc
         buzzers = []
         for pin in self.unlock_gpio_pins:
-            buzzers.append(gpiozero.Buzzer(pin))
+            if type(pin) is int:
+                buzzers.append(gpiozero.Buzzer(pin))
+            if type(pin) is str:
+                if pin.startswith("reyax:"):
+                    address = int(pin[len("reyax:"):])
+                    buzzers.append(ReyaxBuzzer(address, self.reyax_queue))
         while True:
             try:
                 while True:
@@ -199,7 +217,6 @@ class UnlockExecutor:
                 self.relock_queue.put((now, doornum))
                 self.log(f"relocked door {doornum}")
                 last_relock_times[doornum] = now
-
 
 class PageListener:
 
@@ -319,11 +336,67 @@ class PageExecutor:
         self.child.sendline(self.pagingsip)
 
 
+class DoorTransmitter(reyax.UartHandler):
+    def __init__(
+            self, logger, reyax_queue, commands=(), device="/dev/ttyUSB0",
+            baudrate=115200
+    ):
+        self.logger = logger
+        self.reyax_queue = reyax_queue
+        self.last_send = 0
+        uart = reyax.get_linux_uart(device, baudrate)
+        reyax.UartHandler.__init__(self, uart, commands)
+
+    def handle_message(self, address, message):
+        self.logger.info(f"RECEIVED {message} from {address}")
+
+    def handle_inputs(self):
+        try:
+            address = self.reyax_queue.get(block=False)
+        except queue.Empty:
+            return
+        cmd = f"AT+SEND={address},3,80F"
+        self.logger.info(f"sending {cmd} to {address}")
+        self.commands.append((cmd, ''))
+
+
+class ReyaxTransmissionHandler:
+    def __init__(self, reyax_config, reyax_queue, logger):
+        self.reyax_config = reyax_config
+        self.reyax_queue = reyax_queue
+        self.logger = logger
+
+    def log(self, msg):
+        self.logger.info(f"REYXT {msg}")
+
+    def run(self):
+        setproctitle.setproctitle("reyax-transmission-handler")
+        try:
+            self._run()
+        except KeyboardInterrupt:
+            return
+
+    def _run(self):
+        self.log("starting reyax transmitter")
+        cfg = self.reyax_config
+        OK = "+OK"
+        commands = [
+            ('AT', ''), # flush any old data pending CRLF
+            (f'AT+BAND={cfg["band"]}', OK), # mhz band
+            (f'AT+NETWORKID={cfg["networkid"]}', OK), # network number, shared
+            (f'AT+IPR={cfg["baudrate"]}', f'+IPR={cfg["baudrate"]}'), # baud rate
+            (f'AT+ADDRESS={cfg["address"]}', OK)
+        ]
+        tx = DoorTransmitter(
+            self.logger, self.reyax_queue, commands, cfg['tty'], cfg['baudrate']
+        )
+        tx.runforever()
+
 unlock_queue = Queue()
 relock_queue = Queue()
 page_queue = Queue()
 broadcast_queue = Queue()
-
+reyax_queue = Queue()
 
 def run_doorclient(
     server,
@@ -338,6 +411,7 @@ def run_doorclient(
     pjsua_config_file,
     paging_sip,
     page_throttle_duration,
+    reyax_config,
 ):
     procs = []
 
@@ -362,6 +436,7 @@ def run_doorclient(
         target=UnlockExecutor(
             unlock_queue,
             relock_queue,
+            reyax_queue,
             unlock_gpio_pins,
             door_unlocked_duration,
             logger,
@@ -395,6 +470,17 @@ def run_doorclient(
         ).run,
     )
     procs.append(page_executor)
+
+    reyax_handler = Process(
+        name='reyax_handler',
+        daemon=True,
+        target=ReyaxTransmissionHandler(
+            reyax_config,
+            reyax_queue,
+            logger,
+        ).run
+    )
+    procs.append(reyax_handler)
 
     for proc in procs:
         proc.start()
@@ -466,12 +552,23 @@ def main():
     logger = teelogger(logfile, loglevel)
     args['logger'] = logger
     unlock_gpio_pins = args['unlock_gpio_pins'] = []
-    unlock_gpio_pins.append(int(section.get("unlock0_gpio_pin", 26)))
-    unlock_gpio_pins.append(int(section.get("unlock1_gpio_pin1", 24)))
+    default_pins = ["26", "24", "reyax:1"]
+    for x in range(0, 2):
+        val = section.get("unlock{x}_gpio_pin", default_pins[x])
+        if val.startswith("reyax:"):
+            unlock_gpio_pins.append(val)
+        else:
+            unlock_gpio_pins.append(int(val))
     args['door_unlocked_duration'] = int(section.get("door_unlocked_duration", 5))
     args['clientidentity'] = section.get("clientidentity", "doorclient")
     args['callbutton_gpio_pin'] = int(section.get("callbutton_gpio_pin", 16))
     args['callbutton_bouncetime'] = int(section.get("callbutton_bouncetime", 2))
     args['page_throttle_duration'] = int(section.get("page_throttle_duration", 15))
+    args['reyax_config'] = reyax = {}
+    reyax['networkid'] = int(section.get('reyax_networkid', 18))
+    reyax['address'] = int(section.get('reyax_address', 2))
+    reyax['band'] = int(section.get('reyax_address', 915000000))
+    reyax['baudrate'] = int(section.get('reyax_address', 115200))
+    reyax['tty'] = section.get('reyax_address', "/dev/ttyUSB0")
     logger.info(f"MAIN pid is {os.getpid()}")
     run_doorclient(**args)

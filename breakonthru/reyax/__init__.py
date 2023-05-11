@@ -59,14 +59,17 @@ class UartHandler:
                         cmd = None
                         expect = None
 
-def get_linux_uart():
+def get_linux_uart(device, baudrate):
     import termios
     import tty
-    fd = os.open('/dev/ttyUSB0', os.O_NOCTTY|os.O_RDWR|os.O_NONBLOCK)
+    BAUD_MAP = {
+        115200: termios.B115200,
+    }
+    fd = os.open(device, os.O_NOCTTY|os.O_RDWR|os.O_NONBLOCK)
     tty.setraw(fd)
     iflag, oflag, cflag, lflag, ispeed, ospeed, cc = termios.tcgetattr(
         fd)
-    baudrate = termios.B115200
+    baudrate = BAUD_MAP[baudrate]
     termios.tcsetattr(fd, termios.TCSANOW,
                       [iflag, oflag, cflag, lflag, baudrate, baudrate, cc])
 
@@ -99,9 +102,9 @@ class LinuxDoorReceiver(UartHandler):
         print(f"RECEIVED {message} from {address}")
 
 class LinuxDoorTransmitter(UartHandler):
-    def __init__(self, commands=()):
+    def __init__(self, commands=(), device="/dev/ttyUSB0", baudrate=115200):
         self.last_send = 0
-        uart = get_linux_uart()
+        uart = get_linux_uart(device, baudrate)
         UartHandler.__init__(self, uart, commands)
 
     def handle_message(self, address, message, rssi, snr):
