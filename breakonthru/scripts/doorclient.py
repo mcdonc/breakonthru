@@ -346,7 +346,7 @@ class DoorTransmitter(reyax.UartHandler):
         uart = reyax.get_linux_uart(device, baudrate)
         reyax.UartHandler.__init__(self, uart, commands)
 
-    def handle_message(self, address, message):
+    def handle_message(self, address, message, rssi, snr):
         self.logger.info(f"RECEIVED {message} from {address}")
 
     def handle_inputs(self):
