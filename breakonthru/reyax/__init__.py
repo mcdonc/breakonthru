@@ -93,8 +93,8 @@ def get_pipico_uart(uartid=0, baudrate=115200, tx_pin=0, rx_pin=1):
     return uart
 
 class LinuxDoorReceiver(UartHandler):
-    def __init__(self, commands=()):
-        uart = get_linux_uart()
+    def __init__(self, commands=(), device="/dev/ttyUSB0", baudrate=115200):
+        uart = get_linux_uart(device, baudrate)
         UartHandler.__init__(self, uart, commands)
 
     def handle_message(self, address, message, rssi, snr):

@@ -379,6 +379,7 @@ class ReyaxTransmissionHandler:
     def _run(self):
         self.log("starting reyax transmitter")
         cfg = self.reyax_config
+        self.log(f"reyax config is {cfg}")
         OK = "+OK"
         commands = [
             ('AT', ''), # flush any old data pending CRLF
@@ -388,7 +389,11 @@ class ReyaxTransmissionHandler:
             (f'AT+ADDRESS={cfg["address"]}', OK)
         ]
         tx = DoorTransmitter(
-            self.logger, self.reyax_queue, commands, cfg['tty'], cfg['baudrate']
+            self.logger,
+            self.reyax_queue,
+            commands = commands,
+            device = cfg['tty'],
+            baudrate = cfg['baudrate'],
         )
         tx.runforever()
 
