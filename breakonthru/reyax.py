@@ -183,7 +183,7 @@ class PiPicoDoorTransmitter(UartHandler):
         # this is a message that the door was relocked
         self.log(f"RECEIVED {message} from {address}")
 
-if __name__ == "__main__":
+def main():
     OK = "+OK"
     commands = [
         ('AT', ''), # flush any old data pending CRLF
@@ -207,3 +207,6 @@ if __name__ == "__main__":
         commands.append(('AT+ADDRESS=2', OK)), # network address (1: door, 2: apt)
         unlocker = LinuxDoorTransmitter(commands)
     unlocker.runforever()
+
+if __name__ == "__main__":
+    main()
