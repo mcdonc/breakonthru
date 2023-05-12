@@ -194,6 +194,13 @@ def main():
         ('AT+IPR=115200', '+IPR=115200'), # baud rate
         ]
     if sys.platform == 'rp2':
+        import machine
+        led = machine.Pin("LED")
+        def turnoff(t):
+            led.value(0)
+        led.value(1)
+        t = machine.Timer()
+        t.init(mode=machine.Timer.ONE_SHOT, period=5000, callback=turnoff)
         commands.append(('AT+ADDRESS=1', OK)), # network address (1: door, 2: apt)
         #commands.append(('AT+MODE=2,3000,3000', OK)), # smart receive mode
         unlocker = PiPicoDoorReceiver(
