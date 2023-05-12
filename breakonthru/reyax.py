@@ -186,7 +186,8 @@ class PiPicoDoorReceiver(UartHandler):
         if self.unlocked:
             if now >= self.unlocked + self.unlocked_duration:
                 self.relock()
-        if now >= self.last_blink + 10:
+        if not self.unlocked and (now >= self.last_blink + 10):
+            # status blink, but don't do it during unlocking
             self.blink(200)
             self.last_blink = now
 
