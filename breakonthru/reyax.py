@@ -139,6 +139,7 @@ class LinuxDoorTransmitter(UartHandler):
             self.last_send = now
 
 class PiPicoDoorReceiver(UartHandler):
+    last_blink = 0
     def __init__(self, commands=(), uartid=0, baudrate=115200, tx_pin=0, rx_pin=1,
                  unlock_pin=16, unlocked_duration=5, authorized_sender=2):
         import machine
@@ -175,6 +176,9 @@ class PiPicoDoorReceiver(UartHandler):
         if self.unlocked:
             if now >= self.unlocked + self.unlocked_duration:
                 self.relock()
+        if now >= self.last_blink + 10:
+            blink(200)
+            self.last_blink = now
 
 class PiPicoDoorTransmitter(UartHandler):
     def __init__(self, commands=(), uartid=0, baudrate=115200, tx_pin=0, rx_pin=1):
@@ -185,6 +189,15 @@ class PiPicoDoorTransmitter(UartHandler):
         # this is a message that the door was relocked
         self.log(f"RECEIVED {message} from {address}")
 
+def blink(period):
+    import machine
+    led = machine.Pin("LED")
+    def turnoff(t):
+        led.value(0)
+    led.value(1)
+    t = machine.Timer()
+    t.init(mode=machine.Timer.ONE_SHOT, period=period, callback=turnoff)
+
 def main():
     OK = "+OK"
     commands = [
@@ -194,13 +207,7 @@ def main():
         ('AT+IPR=115200', '+IPR=115200'), # baud rate
         ]
     if sys.platform == 'rp2':
-        import machine
-        led = machine.Pin("LED")
-        def turnoff(t):
-            led.value(0)
-        led.value(1)
-        t = machine.Timer()
-        t.init(mode=machine.Timer.ONE_SHOT, period=5000, callback=turnoff)
+        blink(5000)
         commands.append(('AT+ADDRESS=1', OK)), # network address (1: door, 2: apt)
         unlocker = PiPicoDoorReceiver(
             commands,
