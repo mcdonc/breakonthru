@@ -4,6 +4,11 @@ import io
 import time
 import sys
 
+try:
+    import machine
+except ImportError:
+    machine = None
+
 LF = b'\n'
 CR = b'\r'
 CRLF = CR+LF
@@ -98,7 +103,6 @@ def get_linux_uart(device, baudrate):
     return uart
 
 def get_pipico_uart(uartid=0, baudrate=115200, tx_pin=0, rx_pin=1):
-    import machine
     tx_pin = machine.Pin(tx_pin)
     rx_pin = machine.Pin(rx_pin)
     uart = machine.UART(uartid, baudrate, tx=tx_pin, rx=rx_pin)
@@ -142,7 +146,6 @@ class PiPicoDoorReceiver(UartHandler):
     last_blink = 0
     def __init__(self, commands=(), uartid=0, baudrate=115200, tx_pin=0, rx_pin=1,
                  unlock_pin=16, unlocked_duration=5, authorized_sender=2):
-        import machine
         self.unlocked_duration = unlocked_duration
         self.authorized_sender = authorized_sender
         self.unlocked = None
@@ -171,13 +174,20 @@ class PiPicoDoorReceiver(UartHandler):
         # 79F indicates the door has relocked
         self.commands.append(("AT+SEND=2,3,79F", ""))
 
+    def blink(self, period):
+        def turnoff(t):
+            self.onboard_led.value(0)
+        self.onboard_led.value(1)
+        t = machine.Timer()
+        t.init(mode=machine.Timer.ONE_SHOT, period=period, callback=turnoff)
+
     def handle_inputs(self):
         now = time.time()
         if self.unlocked:
             if now >= self.unlocked + self.unlocked_duration:
                 self.relock()
         if now >= self.last_blink + 10:
-            blink(200)
+            self.blink(200)
             self.last_blink = now
 
 class PiPicoDoorTransmitter(UartHandler):
@@ -189,15 +199,6 @@ class PiPicoDoorTransmitter(UartHandler):
         # this is a message that the door was relocked
         self.log(f"RECEIVED {message} from {address}")
 
-def blink(period):
-    import machine
-    led = machine.Pin("LED")
-    def turnoff(t):
-        led.value(0)
-    led.value(1)
-    t = machine.Timer()
-    t.init(mode=machine.Timer.ONE_SHOT, period=period, callback=turnoff)
-
 def main():
     OK = "+OK"
     commands = [
@@ -207,7 +208,6 @@ def main():
         ('AT+IPR=115200', '+IPR=115200'), # baud rate
         ]
     if sys.platform == 'rp2':
-        blink(5000)
         commands.append(('AT+ADDRESS=1', OK)), # network address (1: door, 2: apt)
         unlocker = PiPicoDoorReceiver(
             commands,
