@@ -91,7 +91,6 @@ def get_linux_uart(device, baudrate):
                       [iflag, oflag, cflag, lflag, baudrate, baudrate, cc])
 
     uart = io.FileIO(fd, "r+")
-    #uart = io.TextIOWrapper(uart)
     uart.write(b'AT'+CRLF)
     uart.flush()
     time.sleep(1)
@@ -141,12 +140,13 @@ class LinuxDoorTransmitter(UartHandler):
 
 class PiPicoDoorReceiver(UartHandler):
     def __init__(self, commands=(), uartid=0, baudrate=115200, tx_pin=0, rx_pin=1,
-                 unlock_pin=21, unlocked_duration=5, authorized_sender=2):
+                 unlock_pin=16, unlocked_duration=5, authorized_sender=2):
         import machine
         self.unlocked_duration = unlocked_duration
         self.authorized_sender = authorized_sender
         self.unlocked = None
         self.unlock_pin = machine.Pin(unlock_pin)
+        self.onboard_led = machine.Pin("LED")
         uart = get_pipico_uart(uartid, baudrate, tx_pin, rx_pin)
         UartHandler.__init__(self, uart, commands)
 
@@ -160,10 +160,12 @@ class PiPicoDoorReceiver(UartHandler):
         self.log(f"Receiver unlocking using pin {self.unlock_pin}")
         self.unlocked = time.time()
         self.unlock_pin.value(1)
+        self.onboard_led.value(1)
 
     def relock(self):
         self.log(f"Receiver relocking using pin {self.unlock_pin}")
         self.unlock_pin.value(0)
+        self.onboard_led.value(0)
         self.unlocked = None
         # 79F indicates the door has relocked
         self.commands.append(("AT+SEND=2,3,79F", ""))
