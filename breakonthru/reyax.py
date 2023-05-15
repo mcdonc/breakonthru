@@ -1,37 +1,21 @@
 import select
 import time
 
-try:
-    # only works on Pi Pico, but this module is imported by testreyax.py
-    import machine
-except ImportError:
-    machine = None
-
 LF = b'\n'
 CR = b'\r'
 CRLF = CR+LF
 
-def get_default_logger():
-    try:
-        import logging
-        logger = logging.getLogger()
-    except ImportError:
-        # doesn't work on Pi Pico
-        class DumbLogger:
-            def info(self, msg):
-                print(msg)
-        logger = DumbLogger()
-    return logger
+class DumbLogger:
+    def info(self, msg):
+        print(msg)
 
 class UartHandler:
-    def __init__(self, uart, commands=(), logger=None):
+    def __init__(self, uart, logger, commands=()):
         self.commands = list(commands)
         self.poller = select.poll()
         self.poller.register(uart, select.POLLIN)
         self.buffer = bytearray()
         self.uart = uart
-        if logger is None:
-            logger = get_default_logger()
         self.logger = logger
 
     def log(self, msg):
@@ -81,6 +65,9 @@ class UartHandler:
                         expect = None
 
 def get_pipico_uart(uartid=0, baudrate=115200, tx_pin=0, rx_pin=1):
+    # import machine only works on Pi Pico, but this module is imported by
+    # testreyax.py
+    import machine
     tx_pin = machine.Pin(tx_pin)
     rx_pin = machine.Pin(rx_pin)
     uart = machine.UART(uartid, baudrate, tx=tx_pin, rx=rx_pin)
@@ -95,13 +82,18 @@ class PiPicoDoorReceiver(UartHandler):
     last_blink = 0
     def __init__(self, commands=(), uartid=0, baudrate=115200, tx_pin=0, rx_pin=1,
                  unlock_pin=16, unlocked_duration=5, authorized_sender=2):
+        # import machine only works on Pi Pico, but this module is imported by
+        # testreyax.py, and we only want to import it once
+        import machine
+        self.machine = machine
         self.unlocked_duration = unlocked_duration
         self.authorized_sender = authorized_sender
         self.unlocked = None
         self.unlock_pin = machine.Pin(unlock_pin)
         self.onboard_led = machine.Pin("LED")
         uart = get_pipico_uart(uartid, baudrate, tx_pin, rx_pin)
-        UartHandler.__init__(self, uart, commands)
+        logger = DumbLogger()
+        UartHandler.__init__(self, uart, logger, commands)
 
     def handle_message(self, address, message, rssi, snr):
         self.log(f"RECEIVED {message} from {address}")
@@ -127,8 +119,10 @@ class PiPicoDoorReceiver(UartHandler):
         def turnoff(t):
             self.onboard_led.value(0)
         self.onboard_led.value(1)
-        t = machine.Timer()
-        t.init(mode=machine.Timer.ONE_SHOT, period=period, callback=turnoff)
+        t = self.machine.Timer()
+        t.init(
+            mode=self.machine.Timer.ONE_SHOT, period=period, callback=turnoff
+        )
 
     def handle_inputs(self):
         now = time.time()
@@ -143,7 +137,8 @@ class PiPicoDoorReceiver(UartHandler):
 class PiPicoDoorTransmitter(UartHandler):
     def __init__(self, commands=(), uartid=0, baudrate=115200, tx_pin=0, rx_pin=1):
         uart = get_pipico_uart(uartid, baudrate, tx_pin, rx_pin)
-        UartHandler.__init__(self, uart, commands)
+        logger = DumbLogger()
+        UartHandler.__init__(self, uart, logger, commands)
 
     def handle_message(self, address, message, rssi, snr):
         # this is a message that the door was relocked

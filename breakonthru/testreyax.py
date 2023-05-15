@@ -3,13 +3,11 @@ import os
 import termios
 import time
 import tty
+import logging
 
-from reyax import UartHandler
+from reyax import UartHandler, CRLF
 
-LF = b'\n'
-CR = b'\r'
-CRLF = CR+LF
-
+logger = logging.getLogger()
 
 def get_linux_uart(device, baudrate):
     BAUD_MAP = {
@@ -24,9 +22,9 @@ def get_linux_uart(device, baudrate):
                       [iflag, oflag, cflag, lflag, baudrate, baudrate, cc])
 
     uart = io.FileIO(fd, "r+")
-    uart.write(b'AT'+CRLF)
     # send an AT command and read any bytes in the OS buffers before returning
     # to avoid any state left over since the last time we used the uart
+    uart.write(b'AT'+CRLF)
     uart.flush()
     uart.read()
     return uart
@@ -35,7 +33,7 @@ def get_linux_uart(device, baudrate):
 class LinuxDoorReceiver(UartHandler):
     def __init__(self, commands=(), device="/dev/ttyUSB0", baudrate=115200):
         uart = get_linux_uart(device, baudrate)
-        UartHandler.__init__(self, uart, commands)
+        UartHandler.__init__(self, uart, logger, commands)
 
     def handle_message(self, address, message, rssi, snr):
         # this is a message to unlock the door
@@ -45,7 +43,7 @@ class LinuxDoorTransmitter(UartHandler):
     def __init__(self, commands=(), device="/dev/ttyUSB0", baudrate=115200):
         self.last_send = 0
         uart = get_linux_uart(device, baudrate)
-        UartHandler.__init__(self, uart, commands)
+        UartHandler.__init__(self, uart, logger, commands)
 
     def handle_message(self, address, message, rssi, snr):
         # this is a message that the door was relocked
