@@ -1,24 +1,53 @@
 import logging
 import time
+import os
+import io
+import tty
+import termios
 
-from reyax import UartHandler
+from reyaxpico import UartHandler, CRLF
 
 logger = logging.getLogger()
 
-class LinuxDoorReceiver(UartHandler):
+class LinuxUartHandler(UartHandler):
     def __init__(self, commands=(), device="/dev/ttyUSB0", baudrate=115200):
-        uart = self.get_linux_uart(device, baudrate)
+        uart = self.get_uart(device, baudrate)
         UartHandler.__init__(self, uart, logger, commands)
+
+    def get_uart(self, device, baudrate):
+        # none of these imports work on Pi Pico, so we import at method scope
+        BAUD_MAP = {
+            115200: termios.B115200,
+        }
+        fd = os.open(device, os.O_NOCTTY|os.O_RDWR|os.O_NONBLOCK)
+        tty.setraw(fd)
+        iflag, oflag, cflag, lflag, ispeed, ospeed, cc = termios.tcgetattr(
+            fd)
+        baudrate = BAUD_MAP[baudrate]
+        termios.tcsetattr(fd, termios.TCSANOW,
+                          [iflag, oflag, cflag, lflag, baudrate, baudrate, cc])
+
+        uart = io.FileIO(fd, "r+")
+        # send an AT command and read any bytes in the OS buffers before returning
+        # to avoid any state left over since the last time we used the uart
+        uart.write(b'AT'+CRLF)
+        uart.flush()
+        uart.read()
+        return uart
+
+
+class LinuxDoorReceiver(LinuxUartHandler):
+    def __init__(self, commands=(), device="/dev/ttyUSB0", baudrate=115200):
+        LinuxUartHandler.__init__(self, logger, commands, device, baudrate)
 
     def handle_message(self, address, message, rssi, snr):
         # this is a message to unlock the door
         self.log(f"RECEIVED {message} from {address}")
 
-class LinuxDoorTransmitter(UartHandler):
+class LinuxDoorTransmitter(LinuxUartHandler):
+    last_send = 0
     def __init__(self, commands=(), device="/dev/ttyUSB0", baudrate=115200):
-        self.last_send = 0
-        uart = self.get_linux_uart(device, baudrate)
-        UartHandler.__init__(self, uart, logger, commands)
+        LinuxUartHandler.__init__(self, logger, commands, device, baudrate)
 
     def handle_message(self, address, message, rssi, snr):
         # this is a message that the door was relocked

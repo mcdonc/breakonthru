@@ -16,7 +16,7 @@ import websockets.exceptions
 from multiprocessing import Process, Queue
 
 from breakonthru.util import teelogger
-from breakonthru import reyax
+from breakonthru import reyaxlinux
 
 class UnlockListener:
     def __init__(
@@ -335,15 +335,14 @@ class PageExecutor:
         self.child.sendline(self.pagingsip)
 
 
-class DoorTransmitter(reyax.UartHandler):
+class DoorTransmitter(reyaxlinux.LinuxUartHandler):
     def __init__(
             self, logger, reyax_queue, commands=(), device="/dev/ttyUSB0",
             baudrate=115200
     ):
         self.reyax_queue = reyax_queue
         self.last_send = 0
-        uart = self.get_linux_uart(device, baudrate)
-        reyax.UartHandler.__init__(self, uart, logger, commands)
+        reyaxlinux.LinuxUartHandler.__init__(self, logger, commands, device, baudrate)
 
     def log(self, msg):
         self.logger.info(f"REYXTR {msg}")
