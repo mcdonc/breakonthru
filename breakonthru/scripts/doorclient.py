@@ -191,7 +191,7 @@ class UnlockExecutor:
         buzzers = []
         for pin in self.unlock_gpio_pins:
             if pin.startswith("reyax:"):
-                address = int(pin[len("reyax:"):])
+                address = int(pin[6:])
                 buzzers.append(ReyaxBuzzer(address, self.reyax_queue))
             else:
                 buzzers.append(gpiozero.Buzzer(int(pin)))
