@@ -342,7 +342,7 @@ class DoorTransmitter(reyax.UartHandler):
     ):
         self.reyax_queue = reyax_queue
         self.last_send = 0
-        uart = reyax.get_linux_uart(device, baudrate)
+        uart = self.reyax.get_linux_uart(device, baudrate)
         reyax.UartHandler.__init__(self, uart, commands, logger)
 
     def log(self, msg):
