@@ -118,9 +118,9 @@ class PiPicoDoorReceiver:
 OK = "+OK"
 commands = [
     ('AT', ''), # flush any old data pending CRLF
+    ('AT+IPR=115200', '+IPR=115200'), # baud rate
     ('AT+BAND=915000000', OK), # mhz band
     ('AT+NETWORKID=18', OK), # network number, shared by door
-    ('AT+IPR=115200', '+IPR=115200'), # baud rate
     ('AT+ADDRESS=1', OK), # network address (1: door, 2: sender)
     ]
 unlocker = PiPicoDoorReceiver(
