@@ -1,7 +1,7 @@
 # This module is actually imported by reyaxlinux, so it imports some
-# Micropython-only modules at method scope.  This is for ease of development,
-# as this is the only code that needs to get pasted into Thonny for the
-# MicroPython main loop.
+# Micropython-only modules at method scope instead of module scope.  This is
+# not great style but it eases development, as this is the only code that needs
+# to get pasted into Thonny for the MicroPython main loop.
 
 import select
 import time
@@ -32,9 +32,11 @@ class UartHandler:
         self.logger.info(msg)
 
     def handle_message(self, address, message, rssi, snr):
-        raise NotImplementedError
+        # override in subclasses
+        pass
 
     def handle_inputs(self):
+        # override in subclasses
         pass
 
     def runforever(self):
@@ -78,7 +80,8 @@ class UartHandler:
 class PiPicoUartHandler(UartHandler):
     def __init__(self, commands, uartid=0, baudrate=1152000, tx_pin=0, rx_pin=1):
         # import machine only works on Pi Pico, but this module is imported by
-        # reyaxlinux.py
+        # reyaxlinux.py (which is for Linux machines), so we import machine at
+        # module scope so this code is not seen when running under Linux
         import machine
         tx_pin = machine.Pin(tx_pin)
         rx_pin = machine.Pin(rx_pin)
@@ -129,6 +132,8 @@ class PiPicoDoorReceiver(PiPicoUartHandler):
         self.commands.append(("AT+SEND=2,3,79F", ""))
 
     def blink(self, period):
+        # this turns on the led, then registers a callback to be called 10 seconds
+        # in the future to turn it off
         def turnoff(t):
             self.onboard_led.value(0)
         self.onboard_led.value(1)
