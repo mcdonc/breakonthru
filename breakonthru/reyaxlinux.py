@@ -10,12 +10,7 @@ from reyaxpico import UartHandler, CRLF
 logger = logging.getLogger()
 
 class LinuxUartHandler(UartHandler):
-    def __init__(self, commands=(), device="/dev/ttyUSB0", baudrate=115200):
-        uart = self.get_uart(device, baudrate)
-        UartHandler.__init__(self, uart, logger, commands)
-
-    def get_uart(self, device, baudrate):
-        # none of these imports work on Pi Pico, so we import at method scope
+    def __init__(self, logger, commands=(), device="/dev/ttyUSB0", baudrate=115200):
         BAUD_MAP = {
             115200: termios.B115200,
         }
@@ -33,8 +28,7 @@ class LinuxUartHandler(UartHandler):
         uart.write(b'AT'+CRLF)
         uart.flush()
         uart.read()
-        return uart
-
+        UartHandler.__init__(self, uart, logger, commands)
 
 class LinuxDoorReceiver(LinuxUartHandler):
     def __init__(self, commands=(), device="/dev/ttyUSB0", baudrate=115200):

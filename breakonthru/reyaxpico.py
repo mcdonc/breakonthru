@@ -14,12 +14,12 @@ class DumbLogger:
 
 class UartHandler:
     def __init__(self, uart, logger, commands=()):
+        self.uart = uart
+        self.logger = logger
         self.commands = list(commands)
         self.poller = select.poll()
         self.poller.register(uart, select.POLLIN)
         self.buffer = bytearray()
-        self.uart = uart
-        self.logger = logger
 
     def log(self, msg):
         self.logger.info(msg)
@@ -65,14 +65,11 @@ class UartHandler:
                         if resp and expect:
                             assert resp==expect, f"expected {expect}, got {resp}"
                         cmd = None
+
                         expect = None
 
 class PiPicoUartHandler(UartHandler):
     def __init__(self, logger, commands, uartid=0, baudrate=1152000, tx_pin=0, rx_pin=1):
-        uart = self.get_uart(uartid, baudrate, tx_pin, rx_pin)
-        UartHandler.__init__(uart, logger, commands)
-
-    def get_uart(self, uartid, baudrate, tx_pin, rx_pin):
         # import machine only works on Pi Pico, but this module is imported by
         # reyaxlinux.py
         import machine
@@ -84,7 +81,8 @@ class PiPicoUartHandler(UartHandler):
         uart.write(b'AT'+CRLF)
         uart.flush()
         uart.read()
-        return uart
+        print(uart)
+        UartHandler.__init__(self, uart, logger, commands)
 
 
 class PiPicoDoorReceiver(PiPicoUartHandler):
