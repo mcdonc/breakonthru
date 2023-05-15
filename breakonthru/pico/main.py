@@ -110,8 +110,8 @@ class PiPicoDoorReceiver:
                             self.handle_message(address, message, rssi, snr)
                         if resp and expect:
                             assert resp==expect, f"expected {expect}, got {resp}"
-                        cmd = None
 
+                        cmd = None
                         expect = None
 
 
