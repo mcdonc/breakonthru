@@ -1,6 +1,6 @@
 # This module is actually imported by reyaxlinux, so it imports some
 # Micropython-only modules at method scope.  This is for ease of development,
-# as this is the only code that needs gets pasted into Thonny for the
+# as this is the only code that needs to get pasted into Thonny for the
 # MicroPython main loop.
 
 import select
