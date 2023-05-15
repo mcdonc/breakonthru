@@ -1,7 +1,8 @@
-# This module is actually imported by reyaxlinux, so it imports some
-# Micropython-only modules at method scope instead of module scope.  This is
-# not great style but it eases development, as this is the only code that needs
-# to get pasted into Thonny for the MicroPython main loop.
+# This module is actually imported by code that runs on Linux in other places,
+# so it must do some Micropython-only module imports at method scope instead of
+# at module scope.  This is not great style but it eases development, as this
+# is the only code that needs to get pasted into Thonny for the MicroPython
+# main loop.
 
 import select
 import time
