@@ -5,7 +5,7 @@ import io
 import tty
 import termios
 
-from reyaxpico import UartHandler, CRLF
+from .reyaxpico import UartHandler, CRLF
 
 logger = logging.getLogger()
 
