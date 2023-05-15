@@ -21,6 +21,46 @@ class UartHandler:
     def log(self, msg):
         self.logger.info(msg)
 
+    def get_pipico_uart(self, uartid=0, baudrate=115200, tx_pin=0, rx_pin=1):
+        # import machine only works on Pi Pico, but this module is imported by
+        # testreyax.py on Linux
+        import machine
+        tx_pin = machine.Pin(tx_pin)
+        rx_pin = machine.Pin(rx_pin)
+        uart = machine.UART(uartid, baudrate, tx=tx_pin, rx=rx_pin)
+        # send an AT command and read any bytes in the OS buffers before returning
+        # to avoid any state left over since the last time we used the uart
+        uart.write(b'AT'+CRLF)
+        uart.flush()
+        uart.read()
+        return uart
+
+    def get_linux_uart(self, device, baudrate):
+        # none of these imports work on Pi Pico, so we import at method scope
+        import os
+        import io
+        import tty
+        import termios
+        BAUD_MAP = {
+            115200: termios.B115200,
+        }
+        fd = os.open(device, os.O_NOCTTY|os.O_RDWR|os.O_NONBLOCK)
+        tty.setraw(fd)
+        iflag, oflag, cflag, lflag, ispeed, ospeed, cc = termios.tcgetattr(
+            fd)
+        baudrate = BAUD_MAP[baudrate]
+        termios.tcsetattr(fd, termios.TCSANOW,
+                          [iflag, oflag, cflag, lflag, baudrate, baudrate, cc])
+
+        uart = io.FileIO(fd, "r+")
+        # send an AT command and read any bytes in the OS buffers before returning
+        # to avoid any state left over since the last time we used the uart
+        uart.write(b'AT'+CRLF)
+        uart.flush()
+        uart.read()
+        return uart
+
+
     def handle_message(self, address, message, rssi, snr):
         raise NotImplementedError
 
@@ -64,20 +104,6 @@ class UartHandler:
                         cmd = None
                         expect = None
 
-def get_pipico_uart(uartid=0, baudrate=115200, tx_pin=0, rx_pin=1):
-    # import machine only works on Pi Pico, but this module is imported by
-    # testreyax.py
-    import machine
-    tx_pin = machine.Pin(tx_pin)
-    rx_pin = machine.Pin(rx_pin)
-    uart = machine.UART(uartid, baudrate, tx=tx_pin, rx=rx_pin)
-    # send an AT command and read any bytes in the OS buffers before returning
-    # to avoid any state left over since the last time we used the uart
-    uart.write(b'AT'+CRLF)
-    uart.flush()
-    uart.read()
-    return uart
-
 class PiPicoDoorReceiver(UartHandler):
     last_blink = 0
     def __init__(self, commands=(), uartid=0, baudrate=115200, tx_pin=0, rx_pin=1,
@@ -91,7 +117,7 @@ class PiPicoDoorReceiver(UartHandler):
         self.unlocked = None
         self.unlock_pin = machine.Pin(unlock_pin)
         self.onboard_led = machine.Pin("LED")
-        uart = get_pipico_uart(uartid, baudrate, tx_pin, rx_pin)
+        uart = self.get_pipico_uart(uartid, baudrate, tx_pin, rx_pin)
         logger = DumbLogger()
         UartHandler.__init__(self, uart, logger, commands)
 
@@ -136,7 +162,7 @@ class PiPicoDoorReceiver(UartHandler):
 
 class PiPicoDoorTransmitter(UartHandler):
     def __init__(self, commands=(), uartid=0, baudrate=115200, tx_pin=0, rx_pin=1):
-        uart = get_pipico_uart(uartid, baudrate, tx_pin, rx_pin)
+        uart = self.get_pipico_uart(uartid, baudrate, tx_pin, rx_pin)
         logger = DumbLogger()
         UartHandler.__init__(self, uart, logger, commands)
 

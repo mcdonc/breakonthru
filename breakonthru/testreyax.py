@@ -1,38 +1,13 @@
-import io
-import os
-import termios
-import time
-import tty
 import logging
+import time
 
-from reyax import UartHandler, CRLF
+from reyax import UartHandler
 
 logger = logging.getLogger()
 
-def get_linux_uart(device, baudrate):
-    BAUD_MAP = {
-        115200: termios.B115200,
-    }
-    fd = os.open(device, os.O_NOCTTY|os.O_RDWR|os.O_NONBLOCK)
-    tty.setraw(fd)
-    iflag, oflag, cflag, lflag, ispeed, ospeed, cc = termios.tcgetattr(
-        fd)
-    baudrate = BAUD_MAP[baudrate]
-    termios.tcsetattr(fd, termios.TCSANOW,
-                      [iflag, oflag, cflag, lflag, baudrate, baudrate, cc])
-
-    uart = io.FileIO(fd, "r+")
-    # send an AT command and read any bytes in the OS buffers before returning
-    # to avoid any state left over since the last time we used the uart
-    uart.write(b'AT'+CRLF)
-    uart.flush()
-    uart.read()
-    return uart
-
-
 class LinuxDoorReceiver(UartHandler):
     def __init__(self, commands=(), device="/dev/ttyUSB0", baudrate=115200):
-        uart = get_linux_uart(device, baudrate)
+        uart = self.get_linux_uart(device, baudrate)
         UartHandler.__init__(self, uart, logger, commands)
 
     def handle_message(self, address, message, rssi, snr):
@@ -42,7 +17,7 @@ class LinuxDoorReceiver(UartHandler):
 class LinuxDoorTransmitter(UartHandler):
     def __init__(self, commands=(), device="/dev/ttyUSB0", baudrate=115200):
         self.last_send = 0
-        uart = get_linux_uart(device, baudrate)
+        uart = self.get_linux_uart(device, baudrate)
         UartHandler.__init__(self, uart, logger, commands)
 
     def handle_message(self, address, message, rssi, snr):
