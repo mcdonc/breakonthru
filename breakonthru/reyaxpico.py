@@ -92,7 +92,6 @@ class PiPicoUartHandler(UartHandler):
         uart.write(b'AT'+CRLF)
         uart.flush()
         uart.read()
-        print(uart)
         UartHandler.__init__(self, uart, dumb_logger, commands)
 
 
