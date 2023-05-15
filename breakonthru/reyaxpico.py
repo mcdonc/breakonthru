@@ -69,7 +69,9 @@ class UartHandler:
                         expect = None
 
 class PiPicoUartHandler(UartHandler):
-    def __init__(self, logger, commands, uartid=0, baudrate=1152000, tx_pin=0, rx_pin=1):
+    def __init__(
+            self, logger, commands, uartid=0, baudrate=1152000, tx_pin=0, rx_pin=1
+    ):
         # import machine only works on Pi Pico, but this module is imported by
         # reyaxlinux.py
         import machine
@@ -99,7 +101,9 @@ class PiPicoDoorReceiver(PiPicoUartHandler):
         self.unlock_pin = machine.Pin(unlock_pin)
         self.onboard_led = machine.Pin("LED")
         logger = DumbLogger()
-        PiPicoUartHandler.__init__(self, logger, commands, uartid, baudrate, tx_pin, rx_pin)
+        PiPicoUartHandler.__init__(
+            self, logger, commands, uartid, baudrate, tx_pin, rx_pin
+        )
 
     def handle_message(self, address, message, rssi, snr):
         self.log(f"RECEIVED {message} from {address}")
@@ -143,7 +147,9 @@ class PiPicoDoorReceiver(PiPicoUartHandler):
 class PiPicoDoorTransmitter(PiPicoUartHandler):
     def __init__(self, commands=(), uartid=0, baudrate=115200, tx_pin=0, rx_pin=1):
         logger = DumbLogger()
-        PiPicoUartHandler.__init__(self, logger, commands, uartid, baudrate, tx_pin, rx_pin)
+        PiPicoUartHandler.__init__(
+            self, logger, commands, uartid, baudrate, tx_pin, rx_pin
+        )
 
     def handle_message(self, address, message, rssi, snr):
         # this is a message that the door was relocked
