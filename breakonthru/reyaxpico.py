@@ -108,7 +108,7 @@ class PiPicoDoorReceiver(PiPicoUartHandler):
         self.unlocked_duration = unlocked_duration
         self.authorized_sender = authorized_sender
         self.unlocked = None
-        self.unlock_pin = machine.Pin(unlock_pin)
+        self.unlock_pin = machine.Pin(unlock_pin, machine.Pin.OUT)
         self.onboard_led = machine.Pin("LED")
         PiPicoUartHandler.__init__(self, commands, uartid, baudrate, tx_pin, rx_pin)
 

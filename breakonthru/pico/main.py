@@ -25,7 +25,7 @@ class PiPicoDoorReceiver:
         self.unlocked_duration = unlocked_duration
         self.authorized_sender = authorized_sender
         self.unlocked = None
-        self.unlock_pin = machine.Pin(unlock_pin)
+        self.unlock_pin = machine.Pin(unlock_pin, machine.Pin.OUT)
         self.onboard_led = machine.Pin("LED")
 
         self.commands = list(commands)
