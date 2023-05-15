@@ -115,25 +115,21 @@ class PiPicoDoorReceiver:
                         expect = None
 
 
-def main():
-    OK = "+OK"
-    commands = [
-        ('AT', ''), # flush any old data pending CRLF
-        ('AT+BAND=915000000', OK), # mhz band
-        ('AT+NETWORKID=18', OK), # network number, shared by door
-        ('AT+IPR=115200', '+IPR=115200'), # baud rate
-        ('AT+ADDRESS=1', OK), # network address (1: door, 2: sender)
-        ]
-    unlocker = PiPicoDoorReceiver(
-        commands,
-        uartid=1,
-        tx_pin=4,
-        rx_pin=5,
-        unlock_pin=16,
-        unlocked_duration=5,
-        authorized_sender=2,
-    )
-    unlocker.runforever()
-
-if __name__ == "__main__":
-    main()
+OK = "+OK"
+commands = [
+    ('AT', ''), # flush any old data pending CRLF
+    ('AT+BAND=915000000', OK), # mhz band
+    ('AT+NETWORKID=18', OK), # network number, shared by door
+    ('AT+IPR=115200', '+IPR=115200'), # baud rate
+    ('AT+ADDRESS=1', OK), # network address (1: door, 2: sender)
+    ]
+unlocker = PiPicoDoorReceiver(
+    commands,
+    uartid=1,
+    tx_pin=4,
+    rx_pin=5,
+    unlock_pin=16,
+    unlocked_duration=5,
+    authorized_sender=2,
+)
+unlocker.runforever()
