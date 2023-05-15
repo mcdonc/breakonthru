@@ -1,10 +1,8 @@
 import select
-import os
-import io
 import time
-import sys
 
 try:
+    # only works on Pi Pico, but this module is imported by testreyax.py
     import machine
 except ImportError:
     machine = None
@@ -18,6 +16,7 @@ def get_default_logger():
         import logging
         logger = logging.getLogger()
     except ImportError:
+        # doesn't work on Pi Pico
         class DumbLogger:
             def info(self, msg):
                 print(msg)
@@ -81,66 +80,16 @@ class UartHandler:
                         cmd = None
                         expect = None
 
-def get_linux_uart(device, baudrate):
-    import termios
-    import tty
-    BAUD_MAP = {
-        115200: termios.B115200,
-    }
-    fd = os.open(device, os.O_NOCTTY|os.O_RDWR|os.O_NONBLOCK)
-    tty.setraw(fd)
-    iflag, oflag, cflag, lflag, ispeed, ospeed, cc = termios.tcgetattr(
-        fd)
-    baudrate = BAUD_MAP[baudrate]
-    termios.tcsetattr(fd, termios.TCSANOW,
-                      [iflag, oflag, cflag, lflag, baudrate, baudrate, cc])
-
-    uart = io.FileIO(fd, "r+")
-    uart.write(b'AT'+CRLF)
-    uart.flush()
-    time.sleep(1)
-    uart.read()
-    return uart
-
 def get_pipico_uart(uartid=0, baudrate=115200, tx_pin=0, rx_pin=1):
     tx_pin = machine.Pin(tx_pin)
     rx_pin = machine.Pin(rx_pin)
     uart = machine.UART(uartid, baudrate, tx=tx_pin, rx=rx_pin)
+    # send an AT command and read any bytes in the OS buffers before returning
+    # to avoid any state left over since the last time we used the uart
     uart.write(b'AT'+CRLF)
     uart.flush()
-    time.sleep(1)
     uart.read()
     return uart
-
-class LinuxDoorReceiver(UartHandler):
-    def __init__(self, commands=(), device="/dev/ttyUSB0", baudrate=115200):
-        uart = get_linux_uart(device, baudrate)
-        UartHandler.__init__(self, uart, commands)
-
-    def handle_message(self, address, message, rssi, snr):
-        # this is a message to unlock the door
-        self.log(f"RECEIVED {message} from {address}")
-
-class LinuxDoorTransmitter(UartHandler):
-    def __init__(self, commands=(), device="/dev/ttyUSB0", baudrate=115200):
-        self.last_send = 0
-        uart = get_linux_uart(device, baudrate)
-        UartHandler.__init__(self, uart, commands)
-
-    def handle_message(self, address, message, rssi, snr):
-        # this is a message that the door was relocked
-        self.log(f"RECEIVED {message} from {address}")
-        if message == "79F":
-            self.log("Received door relocked confirmation")
-
-    def handle_inputs(self):
-        now = time.time()
-        if now > self.last_send + 10:
-            cmd = "AT+SEND=1,3,80F"
-            self.log("Asking for door lock")
-            self.log(f"sending {cmd}")
-            self.commands.append((cmd, ''))
-            self.last_send = now
 
 class PiPicoDoorReceiver(UartHandler):
     last_blink = 0
@@ -207,21 +156,17 @@ def main():
         ('AT+BAND=915000000', OK), # mhz band
         ('AT+NETWORKID=18', OK), # network number, shared by door/apt
         ('AT+IPR=115200', '+IPR=115200'), # baud rate
+        ('AT+ADDRESS=1', OK), # network address (1: door, 2: apt)
         ]
-    if sys.platform == 'rp2':
-        commands.append(('AT+ADDRESS=1', OK)), # network address (1: door, 2: apt)
-        unlocker = PiPicoDoorReceiver(
-            commands,
-            uartid=1,
-            tx_pin=4,
-            rx_pin=5,
-            unlock_pin=16,
-            unlocked_duration=5,
-            authorized_sender=2,
-        )
-    else:
-        commands.append(('AT+ADDRESS=2', OK)), # network address (1: door, 2: apt)
-        unlocker = LinuxDoorTransmitter(commands)
+    unlocker = PiPicoDoorReceiver(
+        commands,
+        uartid=1,
+        tx_pin=4,
+        rx_pin=5,
+        unlock_pin=16,
+        unlocked_duration=5,
+        authorized_sender=2,
+    )
     unlocker.runforever()
 
 if __name__ == "__main__":
