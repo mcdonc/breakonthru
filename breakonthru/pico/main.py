@@ -56,7 +56,10 @@ class PicoDoorReceiver:
 
     def blink(self):
         # This turns on the onboard LED, then registers a callback to be called
-        # 200 milliseconds in the future to turn it off.
+        # 200 milliseconds in the future to turn it off.  We could blink the LED
+        # more efficiently using a periodic timer, but the point is to be able
+        # to know that the software is still running by looking for blinks of
+        # the LED.
         self.onboard_led.on()
         self.last_blink = self.now
 
@@ -111,14 +114,12 @@ class PicoDoorReceiver:
 
             for obj, flag in result:
                 if flag & select.POLLIN:
-
-                    # there is data available to be read on our UART
+                    # There is data available to be read on our UART.
+                    # Continually add any data read from the UART to our buffer
                     data = self.uart.read()
-
-                    # continually add any data read from the UART to our
-                    # buffer
                     self.buffer = self.buffer + data
 
+                    # process whatever's in the buffer
                     while LF in self.buffer:
                         # We consider any data between two linefeeds to be a
                         # response
