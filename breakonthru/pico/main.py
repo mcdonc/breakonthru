@@ -10,8 +10,10 @@ CRLF = CR+LF
 watchdog = machine.WDT(timeout=5000)
 
 class PicoDoorReceiver:
-    def __init__(self, commands=(), uartid=1, baudrate=115200, tx_pin=4, rx_pin=5,
-                 unlock_pin=16, unlocked_duration=5, authorized_sender=2):
+    def __init__(
+            self, commands=(), uartid=1, baudrate=115200, tx_pin=4, rx_pin=5,
+            unlock_pin=16, unlocked_duration=5, authorized_sender=2
+    ):
         uart = machine.UART(uartid)
         uart.init(
             baudrate=baudrate, tx=machine.Pin(tx_pin), rx=machine.Pin(rx_pin)
