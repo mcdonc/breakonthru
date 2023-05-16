@@ -6,6 +6,9 @@ LF = b"\n"
 CR = b"\r"
 CRLF = CR+LF
 
+# reboot the board if we dont feed the dog every 5 seconds
+watchdog = machine.WDT(timeout=5000)
+
 class PicoDoorReceiver:
     def __init__(self, commands=(), uartid=1, baudrate=115200, tx_pin=4, rx_pin=5,
                  unlock_pin=16, unlocked_duration=5, authorized_sender=2):
@@ -67,6 +70,8 @@ class PicoDoorReceiver:
     def manage_state(self):
         # This method is called continually by runforever (during normal
         # operations, every second or so).
+
+        watchdog.feed() # feed the watchdog timer to avoid board reboot
 
         self.now = time.time()
 
