@@ -6,13 +6,11 @@ LF = b"\n"
 CR = b"\r"
 CRLF = CR+LF
 
-# reboot the board if we dont feed the dog every 5 seconds
-watchdog = machine.WDT(timeout=5000)
-
 class PicoDoorReceiver:
     def __init__(
             self, commands=(), uartid=1, baudrate=115200, tx_pin=4, rx_pin=5,
-            unlock_pin=16, unlocked_duration=5, authorized_sender=2
+            unlock_pin=16, unlocked_duration=5, authorized_sender=2,
+            watchdog=None,
     ):
         uart = machine.UART(uartid)
         uart.init(
@@ -28,6 +26,7 @@ class PicoDoorReceiver:
         self.unlocked_duration = unlocked_duration
         self.onboard_led = machine.Pin("LED")
         self.authorized_sender = authorized_sender
+        self.watchdog = watchdog
         self.unlock_pin = machine.Pin(unlock_pin, machine.Pin.OUT)
         self.buffer = bytearray()
         self.commands = list(commands) # make a copy, dont mutate the original
@@ -73,7 +72,7 @@ class PicoDoorReceiver:
         # This method is called continually by runforever (during normal
         # operations, every second or so).
 
-        watchdog.feed() # feed the watchdog timer to avoid board reboot
+        self.watchdog.feed() # feed the watchdog timer to avoid board reboot
 
         self.now = time.time()
 
@@ -167,10 +166,16 @@ commands = [
     ("AT+NETWORKID=18", OK), # network number, shared by door
     ("AT+ADDRESS=1", OK), # network address (1: door, 2: sender)
     ]
+
+# reboot the board if we dont feed the dog every 5 seconds
+watchdog = machine.WDT(timeout=5000)
+
 unlocker = PicoDoorReceiver(
     commands,
     unlock_pin=16,
     unlocked_duration=5,
     authorized_sender=2,
+    watchdog=watchdog,
 )
+
 unlocker.runforever()
