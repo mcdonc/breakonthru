@@ -135,7 +135,7 @@ class PicoDoorReceiver:
                         # We consider any data between two linefeeds to be a
                         # response
                         line, self.buffer = self.buffer.split(LF, 1)
-                        line = line.strip(CR) # strip carriage returns
+                        line = line.strip(CR) # strip any trailing carriage rtn
                         resp = line.decode("ascii", "replace") # bytes to text
                         self.log(resp)
 
@@ -147,7 +147,7 @@ class PicoDoorReceiver:
                             # (although in practice this is probably a door
                             # unlock request, and the message would not be
                             # "HELLO")
-                            
+
                             address, length, rest = resp[5:].split(",", 2)
 
                             # address will be "50", length will be "5"
