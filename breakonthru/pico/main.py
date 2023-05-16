@@ -81,7 +81,7 @@ class PicoDoorReceiver:
         # self.now is used in other methods that this one calls. Note that
         # note that its value is max 1-second precision, unlike "normal"
         # Python, which has a float component.
-        self.now = time.time() # 
+        self.now = time.time()
 
         if self.unlocked:
             # the door is currently unlocked
