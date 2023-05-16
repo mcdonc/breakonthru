@@ -78,7 +78,7 @@ class PicoDoorReceiver:
 
         self.watchdog.feed() # feed the watchdog timer to avoid board reboot
 
-        self.now = time.time()
+        self.now = time.time() # note that this is max 1-second precision
 
         if self.unlocked:
             # the door is currently unlocked
