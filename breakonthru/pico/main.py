@@ -7,8 +7,6 @@ LF = b'\n'
 CR = b'\r'
 CRLF = CR+LF
 
-
-
 class PicoDoorReceiver:
     last_blink = 0
     def __init__(self, commands=(), uartid=0, baudrate=115200, tx_pin=0, rx_pin=1,
