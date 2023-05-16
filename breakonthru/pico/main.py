@@ -8,9 +8,9 @@ CR = b'\r'
 CRLF = CR+LF
 
 class PicoDoorReceiver:
-    last_blink = 0
     def __init__(self, commands=(), uartid=0, baudrate=115200, tx_pin=0, rx_pin=1,
                  unlock_pin=16, unlocked_duration=5, authorized_sender=2):
+        self.last_blink = 0 # used by blink method
         tx_pin = machine.Pin(tx_pin)
         rx_pin = machine.Pin(rx_pin)
         uart = machine.UART(uartid, baudrate, tx=tx_pin, rx=rx_pin)
