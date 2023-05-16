@@ -18,11 +18,11 @@ class PicoDoorReceiver:
         # left over since the last time we used the uart
         uart.read()
 
-        self.last_blink = 0 # used by blink method
         self.uart = uart
+        self.last_blink = 0 # used by blink method
+        self.unlocked = None # used by unlock and relock methods
         self.unlocked_duration = unlocked_duration
         self.authorized_sender = authorized_sender
-        self.unlocked = None
         self.unlock_pin = machine.Pin(unlock_pin, machine.Pin.OUT)
         self.onboard_led = machine.Pin("LED")
         self.commands = list(commands)
