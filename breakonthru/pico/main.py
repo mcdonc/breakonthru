@@ -18,17 +18,17 @@ class PicoDoorReceiver:
         # pop any bytes in the OS buffers before returning to avoid any state
         # left over since the last time we used the uart
         uart.read()
+
         self.uart = uart
         self.unlocked_duration = unlocked_duration
         self.authorized_sender = authorized_sender
         self.unlocked = None
         self.unlock_pin = machine.Pin(unlock_pin, machine.Pin.OUT)
         self.onboard_led = machine.Pin("LED")
-
         self.commands = list(commands)
+        self.buffer = bytearray()
         self.poller = select.poll()
         self.poller.register(uart, select.POLLIN)
-        self.buffer = bytearray()
         
     def handle_message(self, address, message, rssi, snr):
         self.log(f"RECEIVED {message} from {address}")
