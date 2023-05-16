@@ -28,7 +28,6 @@ class PicoDoorReceiver:
         self.buffer = bytearray()
         self.commands = list(commands)
         self.poller = select.poll()
-        print(self.poller)
         self.poller.register(uart, select.POLLIN)
         
     def handle_message(self, address, message, rssi, snr):
