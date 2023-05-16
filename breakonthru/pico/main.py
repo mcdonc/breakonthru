@@ -104,24 +104,26 @@ class PicoDoorReceiver:
 
     def runforever(self):
         # initialize some variables we use later
-        cmd = None
+        current_cmd = None
         expect = None
 
         while True:
             # continually call manage_state to maybe relock and maybe blink led
             self.manage_state()
 
-            if self.pending_commands and cmd is None:
+            if self.pending_commands and current_cmd is None:
                 # if there are any commands in our command list and we aren't
                 # already processing a command, pop the first command
                 # from the command list and send it to the Reyax
-                cmd, expect = self.pending_commands.pop(0)
-                self.log(cmd)
-                self.uart.write(cmd.encode("ascii")+CRLF)
+                current_cmd, expect = self.pending_commands.pop(0)
+                self.log(current_cmd)
+                # current_cmd is a string, but the UART expects bytes, so
+                # we need to encode it to a bytes object
+                current_cmd_bytes = current_cmd.encode()
+                self.uart.write(current_cmd_bytes+CRLF)
 
-            result = self.poller.poll(1000) # wait 1 sec for any data (1000ms)
-
-            for obj, flag in result:
+            events = self.poller.poll(1000) # wait 1 sec for any data (1000ms)
+            for obj, flag in events:
                 if flag & select.POLLIN:
                     # There is data available to be read on our UART.
                     # Continually add any data read from the UART to our buffer
@@ -164,7 +166,7 @@ class PicoDoorReceiver:
                                 raise AssertionError(msg)
 
                         # we have finished processing a command
-                        cmd = None
+                        current_cmd = None
                         expect = None
 
 
