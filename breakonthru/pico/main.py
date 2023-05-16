@@ -10,7 +10,6 @@ CRLF = CR+LF
 class PicoDoorReceiver:
     def __init__(self, commands=(), uartid=1, baudrate=115200, tx_pin=4, rx_pin=5,
                  unlock_pin=16, unlocked_duration=5, authorized_sender=2):
-        self.last_blink = 0 # used by blink method
         uart = machine.UART(uartid)
         uart.init(
             baudrate=baudrate, tx=machine.Pin(tx_pin), rx=machine.Pin(rx_pin)
@@ -19,6 +18,7 @@ class PicoDoorReceiver:
         # left over since the last time we used the uart
         uart.read()
 
+        self.last_blink = 0 # used by blink method
         self.uart = uart
         self.unlocked_duration = unlocked_duration
         self.authorized_sender = authorized_sender
