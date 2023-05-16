@@ -11,9 +11,9 @@ class PicoDoorReceiver:
     def __init__(self, commands=(), uartid=0, baudrate=115200, tx_pin=0, rx_pin=1,
                  unlock_pin=16, unlocked_duration=5, authorized_sender=2):
         self.last_blink = 0 # used by blink method
-        tx_pin = machine.Pin(tx_pin)
-        rx_pin = machine.Pin(rx_pin)
-        uart = machine.UART(uartid, baudrate, tx=tx_pin, rx=rx_pin)
+        uart = machine.UART(
+            uartid, baudrate, tx=machine.Pin(tx_pin), rx=machine.Pin(rx_pin)
+        )
         self.uart = uart
         # pop any bytes in the OS buffers before returning to avoid any state
         # left over since the last time we used the uart
