@@ -9,7 +9,7 @@ CRLF = CR+LF
 
 
 
-class PiPicoDoorReceiver:
+class PicoDoorReceiver:
     last_blink = 0
     def __init__(self, commands=(), uartid=0, baudrate=115200, tx_pin=0, rx_pin=1,
                  unlock_pin=16, unlocked_duration=5, authorized_sender=2):
@@ -123,7 +123,7 @@ commands = [
     ('AT+NETWORKID=18', OK), # network number, shared by door
     ('AT+ADDRESS=1', OK), # network address (1: door, 2: sender)
     ]
-unlocker = PiPicoDoorReceiver(
+unlocker = PicoDoorReceiver(
     commands,
     uartid=1,
     tx_pin=4,
