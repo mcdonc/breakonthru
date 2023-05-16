@@ -1,4 +1,3 @@
-
 import select
 import time
 import machine
@@ -20,11 +19,11 @@ class PicoDoorReceiver:
 
         self.uart = uart
         self.last_blink = 0 # used by blink method
-        self.unlocked = None # used by unlock and relock methods
+        self.unlocked = False # used by unlock and relock methods
         self.unlocked_duration = unlocked_duration
+        self.onboard_led = machine.Pin("LED")
         self.authorized_sender = authorized_sender
         self.unlock_pin = machine.Pin(unlock_pin, machine.Pin.OUT)
-        self.onboard_led = machine.Pin("LED")
         self.buffer = bytearray()
         self.commands = list(commands) # make a copy, dont mutate the original
         self.poller = select.poll()
@@ -39,76 +38,116 @@ class PicoDoorReceiver:
     def unlock(self):
         self.log(f"Receiver unlocking using pin {self.unlock_pin}")
         self.unlocked = time.time()
-        self.unlock_pin.value(1)
-        self.onboard_led.value(1)
+        self.unlock_pin.on()
+        self.onboard_led.on()
 
     def relock(self):
         self.log(f"Receiver relocking using pin {self.unlock_pin}")
-        self.unlock_pin.value(0)
-        self.onboard_led.value(0)
-        self.unlocked = None
-        # 79F indicates the door has relocked
-        self.commands.append(("AT+SEND=2,3,79F", ""))
+        self.unlock_pin.off()
+        self.onboard_led.off()
+        self.unlocked = False
+        # send back "79F" to the sender indicating that the door has been
+        # relocked
+        self.commands.append((f"AT+SEND={self.authorized_sender},3,79F", ""))
 
-    def blink(self, period):
-        # this turns on the led, then registers a callback to be called 10 seconds
-        # in the future to turn it off
+    def blink(self):
+        # This turns on the onboard LED, then registers a callback to be called
+        # 200 milliseconds in the future to turn it off.
+        self.onboard_led.on()
+        self.last_blink = self.now
+
         def turnoff(t):
-            self.onboard_led.value(0)
-        self.onboard_led.value(1)
+            self.onboard_led.off()
+
         t = machine.Timer()
         t.init(
-            mode=machine.Timer.ONE_SHOT, period=period, callback=turnoff
+            mode=machine.Timer.ONE_SHOT, period=200, callback=turnoff
         )
 
-    def handle_inputs(self):
-        now = time.time()
+    def manage_state(self):
+        # This method is called continually by runforever (during normal
+        # operations, every second or so).
+
+        self.now = time.time()
+
         if self.unlocked:
-            if now >= self.unlocked + self.unlocked_duration:
+            # the door is currently unlocked
+            if self.now >= (self.unlocked + self.unlocked_duration):
+                # the unlock duration has passed, relock the door
                 self.relock()
-        if not self.unlocked and (now >= self.last_blink + 10):
-            # status blink, but don't do it during unlocking
-            self.blink(200)
-            self.last_blink = now
+        else:
+            # the door is not currently unlocked
+            if self.now >= (self.last_blink + 10):
+                # The last time we blinked the led was more than ten seconds
+                # ago, blink again
+                self.blink()
 
     def log(self, msg):
         print(msg)
 
     def runforever(self):
+        # initialize some variables we use later
         cmd = None
+        expect = None
+
         while True:
-            self.handle_inputs()
+            # continually call manage_state to maybe relock and maybe blink led
+            self.manage_state()
+
             if self.commands and cmd is None:
+                # if there are any commands in our command list and we aren't
+                # already processing a command
                 cmd, expect = self.commands.pop(0)
                 self.log(cmd)
                 self.uart.write(cmd.encode("ascii")+CRLF)
-            result = self.poller.poll(1000) # ms
+
+            result = self.poller.poll(1000) # wait 1 sec for any data (1000ms)
+
             for obj, flag in result:
                 if flag & select.POLLIN:
+
+                    # there is data available to be read on our UART
                     data = self.uart.read()
-                    if data is None:
-                        continue
-                    data = data.replace(CR, b"")
+
+                    # continually add any data read from the UART to our
+                    # buffer
                     self.buffer = self.buffer + data
+
                     while LF in self.buffer:
+                        # We consider any data between two linefeeds to be a
+                        # response
                         line, self.buffer = self.buffer.split(LF, 1)
-                        line.strip(CR)
-                        resp = line.decode("ascii", "replace")
+                        line = line.strip(CR) # strip carriage returns
+                        resp = line.decode("ascii", "replace") # bytes to text
                         self.log(resp)
+
                         if resp.startswith("+RCV="):
-                            # parse e.g. "+RCV=50,5,HELLO,-99,40"
+                            # this is a message from the sender e.g.
+                            # "+RCV=50,5,HELLO,-99,40"
                             address, length, rest = resp[5:].split(",", 2)
                             # address will be "50", length will be "5"
                             # "rest" will be "HELLO,-99,40"
                             address = int(address)
                             datalen = int(length)
-                            message = rest[:datalen]
-                            # message will be "HELLO"
-                            rssi, snr = map(int, rest[datalen+1:].split(",", 1))
+                            message = rest[:datalen] # message will be "HELLO"
+                            # the remaining values in the message are rssi
+                            # and snr
+                            rssi, snr = [
+                                int(x) for x in rest[datalen+1:].split(",", 1)
+                            ]
+                            # call handle_message to process the message
                             self.handle_message(address, message, rssi, snr)
-                        if resp and expect:
-                            assert resp==expect, f"expected {expect}, got {resp}"
 
+                        elif resp and expect:
+                            # if we were expecting a response to a command,
+                            # compare the response against the expected value
+                            # and raise an AssertionError if it's not the
+                            # same
+                            if resp != expect:
+                                msg = f"expect {repr(expect)},got {repr(resp)}"
+                                raise AssertionError(msg)
+
+                        # we have finished processing a command
                         cmd = None
                         expect = None
 
