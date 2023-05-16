@@ -140,14 +140,23 @@ class PicoDoorReceiver:
                         self.log(resp)
 
                         if resp.startswith("+RCV="):
-                            # this is a message from the sender e.g.
-                            # "+RCV=50,5,HELLO,-99,40"
+                            # Usually we get a response to one of our own AT
+                            # commands when we process a full line, but this is
+                            # not one of those.  Instead, it is a message from
+                            # the sender e.g.  "+RCV=50,5,HELLO,-99,40"
+                            # (although in practice this is probably a door
+                            # unlock request, and the message would not be
+                            # "HELLO")
+                            
                             address, length, rest = resp[5:].split(",", 2)
+
                             # address will be "50", length will be "5"
                             # "rest" will be "HELLO,-99,40"
+
                             address = int(address)
                             datalen = int(length)
                             message = rest[:datalen] # message will be "HELLO"
+
                             # the remaining values in the message are rssi
                             # and snr
                             rssi, snr = [
