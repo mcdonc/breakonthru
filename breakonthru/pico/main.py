@@ -109,7 +109,8 @@ class PicoDoorReceiver:
 
             if self.commands and cmd is None:
                 # if there are any commands in our command list and we aren't
-                # already processing a command
+                # already processing a command, pop the first command
+                # from the command list and send it to the Reyax
                 cmd, expect = self.commands.pop(0)
                 self.log(cmd)
                 self.uart.write(cmd.encode("ascii")+CRLF)
