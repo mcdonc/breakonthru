@@ -36,7 +36,7 @@ class PicoDoorReceiver:
         
     def handle_message(self, address, message):
         self.log(f"RECEIVED {message} from {address}")
-        if message == "80F" and address == self.authorized_sender:
+        if message == "UNLOCK" and address == self.authorized_sender:
             # this is a message to unlock the door
             self.unlock()
 
@@ -51,10 +51,12 @@ class PicoDoorReceiver:
         self.unlock_pin.off()
         self.onboard_led.off()
         self.unlocked = False
-        # send back "79F" to the sender indicating that the door has been
+        # send back "RELOCKED" to the sender indicating that the door has been
         # relocked
+        msg = "RELOCKED"
+        msglen = len(msg)
         self.pending_commands.append(
-            (f"AT+SEND={self.authorized_sender},3,79F", "")
+            (f"AT+SEND={self.authorized_sender},{msglen},{msg}", "")
         )
 
     def blink(self):
