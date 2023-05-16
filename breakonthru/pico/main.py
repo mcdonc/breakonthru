@@ -34,7 +34,7 @@ class PicoDoorReceiver:
         self.poller = select.poll()
         self.poller.register(uart, select.POLLIN)
         
-    def handle_message(self, address, message, rssi, snr):
+    def handle_message(self, address, message):
         self.log(f"RECEIVED {message} from {address}")
         if message == "80F" and address == self.authorized_sender:
             # this is a message to unlock the door
@@ -83,7 +83,7 @@ class PicoDoorReceiver:
         # Python, which has a float component.
         self.now = time.time()
 
-        self.log(f'Managing state at time {self.now}')
+        #self.log(f'Managing state at time {self.now}')
 
         self.watchdog.feed() # feed the watchdog timer to avoid board reboot
 
@@ -157,13 +157,8 @@ class PicoDoorReceiver:
                             datalen = int(length)
                             message = rest[:datalen] # message will be "HELLO"
 
-                            # the remaining values in the message are rssi
-                            # and snr
-                            rssi, snr = [
-                                int(x) for x in rest[datalen+1:].split(",", 1)
-                            ]
                             # call handle_message to process the message
-                            self.handle_message(address, message, rssi, snr)
+                            self.handle_message(address, message)
 
                         elif resp and expect:
                             # if we were expecting a response to a command,
