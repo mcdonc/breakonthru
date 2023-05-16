@@ -3,8 +3,8 @@ import select
 import time
 import machine
 
-LF = b'\n'
-CR = b'\r'
+LF = b"\n"
+CR = b"\r"
 CRLF = CR+LF
 
 class PicoDoorReceiver:
@@ -81,30 +81,30 @@ class PicoDoorReceiver:
             if self.commands and cmd is None:
                 cmd, expect = self.commands.pop(0)
                 self.log(cmd)
-                self.uart.write(cmd.encode('ascii')+CRLF)
+                self.uart.write(cmd.encode("ascii")+CRLF)
             result = self.poller.poll(1000) # ms
             for obj, flag in result:
                 if flag & select.POLLIN:
                     data = self.uart.read()
                     if data is None:
                         continue
-                    data = data.replace(CR, b'')
+                    data = data.replace(CR, b"")
                     self.buffer = self.buffer + data
                     while LF in self.buffer:
                         line, self.buffer = self.buffer.split(LF, 1)
                         line.strip(CR)
-                        resp = line.decode('ascii', 'replace')
+                        resp = line.decode("ascii", "replace")
                         self.log(resp)
-                        if resp.startswith('+RCV='):
+                        if resp.startswith("+RCV="):
                             # parse e.g. "+RCV=50,5,HELLO,-99,40"
-                            address, length, rest = resp[5:].split(',', 2)
+                            address, length, rest = resp[5:].split(",", 2)
                             # address will be "50", length will be "5"
                             # "rest" will be "HELLO,-99,40"
                             address = int(address)
                             datalen = int(length)
                             message = rest[:datalen]
                             # message will be "HELLO"
-                            rssi, snr = map(int, rest[datalen+1:].split(',', 1))
+                            rssi, snr = map(int, rest[datalen+1:].split(",", 1))
                             self.handle_message(address, message, rssi, snr)
                         if resp and expect:
                             assert resp==expect, f"expected {expect}, got {resp}"
@@ -115,11 +115,11 @@ class PicoDoorReceiver:
 
 OK = "+OK"
 commands = [
-    ('AT', ''), # flush any old data left in the UART pending CRLF
-    ('AT+IPR=115200', '+IPR=115200'), # baud rate
-    ('AT+BAND=915000000', OK), # mhz band
-    ('AT+NETWORKID=18', OK), # network number, shared by door
-    ('AT+ADDRESS=1', OK), # network address (1: door, 2: sender)
+    ("AT", ""), # flush any old data left in the UART pending CRLF
+    ("AT+IPR=115200", "+IPR=115200"), # baud rate
+    ("AT+BAND=915000000", OK), # mhz band
+    ("AT+NETWORKID=18", OK), # network number, shared by door
+    ("AT+ADDRESS=1", OK), # network address (1: door, 2: sender)
     ]
 unlocker = PicoDoorReceiver(
     commands,
