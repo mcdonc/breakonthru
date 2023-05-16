@@ -15,10 +15,8 @@ class PicoDoorReceiver:
         rx_pin = machine.Pin(rx_pin)
         uart = machine.UART(uartid, baudrate, tx=tx_pin, rx=rx_pin)
         self.uart = uart
-        # send an AT command and read any bytes in the OS buffers before returning
-        # to avoid any state left over since the last time we used the uart
-        uart.write(b'AT'+CRLF)
-        uart.flush()
+        # pop any bytes in the OS buffers before returning to avoid any state
+        # left over since the last time we used the uart
         uart.read()
         self.unlocked_duration = unlocked_duration
         self.authorized_sender = authorized_sender
