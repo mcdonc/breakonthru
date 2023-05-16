@@ -26,7 +26,7 @@ class PicoDoorReceiver:
         self.unlock_pin = machine.Pin(unlock_pin, machine.Pin.OUT)
         self.onboard_led = machine.Pin("LED")
         self.buffer = bytearray()
-        self.commands = list(commands)
+        self.commands = list(commands) # make a copy, dont mutate the original
         self.poller = select.poll()
         self.poller.register(uart, select.POLLIN)
         
