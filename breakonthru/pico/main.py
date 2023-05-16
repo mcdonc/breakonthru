@@ -83,8 +83,6 @@ class PicoDoorReceiver:
         # Python, which has a float component.
         self.now = time.time()
 
-        #self.log(f'Managing state at time {self.now}')
-
         self.watchdog.feed() # feed the watchdog timer to avoid board reboot
 
         if self.unlocked:
