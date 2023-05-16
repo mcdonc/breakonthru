@@ -15,10 +15,10 @@ class PicoDoorReceiver:
         uart.init(
             baudrate=baudrate, tx=machine.Pin(tx_pin), rx=machine.Pin(rx_pin)
         )
-        self.uart = uart
         # pop any bytes in the OS buffers before returning to avoid any state
         # left over since the last time we used the uart
         uart.read()
+        self.uart = uart
         self.unlocked_duration = unlocked_duration
         self.authorized_sender = authorized_sender
         self.unlocked = None
