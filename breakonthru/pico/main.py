@@ -30,7 +30,7 @@ class PicoDoorReceiver:
         self.watchdog = watchdog
         self.unlock_pin = machine.Pin(unlock_pin, machine.Pin.OUT)
         self.buffer = bytearray()
-        self.commands = list(commands) # make a copy, dont mutate the original
+        self.pending_commands = list(commands) # dont mutate the original
         self.poller = select.poll()
         self.poller.register(uart, select.POLLIN)
         
@@ -53,7 +53,9 @@ class PicoDoorReceiver:
         self.unlocked = False
         # send back "79F" to the sender indicating that the door has been
         # relocked
-        self.commands.append((f"AT+SEND={self.authorized_sender},3,79F", ""))
+        self.pending_commands.append(
+            (f"AT+SEND={self.authorized_sender},3,79F", "")
+        )
 
     def blink(self):
         # This turns on the onboard LED, then registers a callback to be called
@@ -109,11 +111,11 @@ class PicoDoorReceiver:
             # continually call manage_state to maybe relock and maybe blink led
             self.manage_state()
 
-            if self.commands and cmd is None:
+            if self.pending_commands and cmd is None:
                 # if there are any commands in our command list and we aren't
                 # already processing a command, pop the first command
                 # from the command list and send it to the Reyax
-                cmd, expect = self.commands.pop(0)
+                cmd, expect = self.pending_commands.pop(0)
                 self.log(cmd)
                 self.uart.write(cmd.encode("ascii")+CRLF)
 
