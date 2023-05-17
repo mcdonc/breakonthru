@@ -192,8 +192,5 @@ commands = [
     ("AT+ADDRESS=1", OK),  # network address (1: door, 2: sender)
 ]
 
-unlocker = PicoDoorReceiver(
-    commands,
-)
-
+unlocker = PicoDoorReceiver(commands)
 unlocker.runforever()
