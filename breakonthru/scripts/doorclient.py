@@ -366,10 +366,9 @@ class ReyaxDoorTransmitter:
         baudrate=115200,
         unlock_msg="UNLOCK",
     ):
-        self.commands = list(commands)
         self.logger = logger
         self.reyax_queue = reyax_queue
-        self.pending_commands = commands
+        self.pending_commands = list(commands)
         self.unlock_msg = unlock_msg
 
         BAUD_MAP = {
@@ -412,7 +411,7 @@ class ReyaxDoorTransmitter:
         msglen = len(self.unlock_msg)
         cmd = f"AT+SEND={address},{msglen},{self.unlock_msg}"
         self.log(f"sending {cmd} to {address}")
-        self.commands.append((cmd, ""))
+        self.pending_commands.append((cmd, ""))
 
     def runforever(self):
         # initialize some variables we use later
