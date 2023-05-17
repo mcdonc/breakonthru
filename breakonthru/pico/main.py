@@ -49,7 +49,6 @@ class PicoDoorReceiver:
         if watchdog:
             # set up a watchdog timer that will restart the Pico if not fed
             # at least every five seconds
-            # constructor
             self.watchdog = machine.WDT(timeout=5000) # ms
         else:
             self.watchdog = None
