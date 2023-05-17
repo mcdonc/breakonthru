@@ -3,64 +3,64 @@ import platform
 from setuptools import setup, find_packages
 
 here = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(here, 'README.rst')) as f:
+with open(os.path.join(here, "README.rst")) as f:
     README = f.read()
-with open(os.path.join(here, 'CHANGES.rst')) as f:
+with open(os.path.join(here, "CHANGES.rst")) as f:
     CHANGES = f.read()
 
 requires = [
-    'plaster_pastedeploy',
-    'pyramid',
-    'pyramid_chameleon',
-    'waitress',
-    'bcrypt',
-    'websockets',
-    'gpiozero',
-    'pexpect',
-    'setproctitle',
-    'requests',
-    'websocket-client',
-    ]
+    "plaster_pastedeploy",
+    "pyramid",
+    "pyramid_chameleon",
+    "waitress",
+    "bcrypt",
+    "websockets",
+    "gpiozero",
+    "pexpect",
+    "setproctitle",
+    "requests",
+    "websocket-client",
+]
 
-if platform.machine() == 'aarch64':
+if platform.machine() == "aarch64":
     requires.append("RPi.GPIO")
 
 tests_require = [
-    'WebTest',
-    'pytest',
-    'pytest-cov',
+    "WebTest",
+    "pytest",
+    "pytest-cov",
 ]
 
 setup(
-    name='breakonthru',
-    version='0.0',
-    description='breakonthru',
-    long_description=README + '\n\n' + CHANGES,
+    name="breakonthru",
+    version="0.0",
+    description="breakonthru",
+    long_description=README + "\n\n" + CHANGES,
     classifiers=[
-        'Programming Language :: Python',
-        'Framework :: Pyramid',
-        'Topic :: Internet :: WWW/HTTP',
-        'Topic :: Internet :: WWW/HTTP :: WSGI :: Application',
+        "Programming Language :: Python",
+        "Framework :: Pyramid",
+        "Topic :: Internet :: WWW/HTTP",
+        "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
     ],
-    author='',
-    author_email='',
-    url='',
-    keywords='web pyramid pylons',
-    packages=find_packages(exclude=['tests']),
+    author="",
+    author_email="",
+    url="",
+    keywords="web pyramid pylons",
+    packages=find_packages(exclude=["tests"]),
     include_package_data=True,
     zip_safe=False,
     extras_require={
-        'testing': tests_require,
+        "testing": tests_require,
     },
     install_requires=requires,
     entry_points={
-        'paste.app_factory': [
-            'main = breakonthru:main',
+        "paste.app_factory": [
+            "main = breakonthru:main",
         ],
-        'console_scripts': [
-            'doorserver = breakonthru.scripts.doorserver:main',
-            'doorclient = breakonthru.scripts.doorclient:main',
-            'wavplayer = breakonthru.scripts.wavplayer:main',
+        "console_scripts": [
+            "doorserver = breakonthru.scripts.doorserver:main",
+            "doorclient = breakonthru.scripts.doorclient:main",
+            "wavplayer = breakonthru.scripts.wavplayer:main",
         ],
     },
 )
