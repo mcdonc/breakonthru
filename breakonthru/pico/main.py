@@ -47,7 +47,8 @@ class PicoDoorReceiver:
     def handle_message(self, address, message):
         self.log(f"RECEIVED {message} from {address}")
         if message == self.unlock_message and address == self.authorized_sender:
-            # this is a message to unlock the door
+            # this is a message to unlock the door, and it came from
+            # the network address we deem authorized
             self.unlock()
 
     def unlock(self):
@@ -189,7 +190,7 @@ commands = [
     ("AT+IPR=115200", "+IPR=115200"),  # baud rate
     ("AT+BAND=915000000", OK),  # mhz band
     ("AT+NETWORKID=18", OK),  # network number, shared by door
-    ("AT+ADDRESS=1", OK),  # network address (1: door, 2: sender)
+    ("AT+ADDRESS=1", OK),  # network address (1: ours, 2: sender)
 ]
 
 unlocker = PicoDoorReceiver(commands)
