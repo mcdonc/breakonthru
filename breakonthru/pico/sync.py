@@ -5,7 +5,7 @@ commands = [
     b"AT",
     b"AT+IPR=115200",
     b"AT+BAND=915000000",
-    b"AT+NETWORKID=18"
+    b"AT+NETWORKID=18",
     b"AT+ADDRESS=1",
     ]
 
