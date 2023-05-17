@@ -4,13 +4,21 @@ import machine
 
 LF = b"\n"
 CR = b"\r"
-CRLF = CR+LF
+CRLF = CR + LF
+
 
 class PicoDoorReceiver:
     def __init__(
-            self, commands=(), uartid=1, baudrate=115200, tx_pin=4, rx_pin=5,
-            unlock_pin=16, unlocked_duration=5, authorized_sender=2,
-            watchdog=None,
+        self,
+        commands=(),
+        uartid=1,
+        baudrate=115200,
+        tx_pin=4,
+        rx_pin=5,
+        unlock_pin=16,
+        unlocked_duration=5,
+        authorized_sender=2,
+        watchdog=None,
     ):
         uart = machine.UART(uartid)
         uart.init(
@@ -23,18 +31,18 @@ class PicoDoorReceiver:
         uart.read()
 
         self.uart = uart
-        self.last_blink = 0 # used by blink method
-        self.unlocked = False # used by unlock and relock methods
+        self.last_blink = 0  # used by blink method
+        self.unlocked = False  # used by unlock and relock methods
         self.unlocked_duration = unlocked_duration
         self.onboard_led = machine.Pin("LED")
         self.authorized_sender = authorized_sender
         self.watchdog = watchdog
         self.unlock_pin = machine.Pin(unlock_pin, machine.Pin.OUT)
         self.buffer = bytearray()
-        self.pending_commands = list(commands) # dont mutate the original
+        self.pending_commands = list(commands)  # dont mutate the original
         self.poller = select.poll()
         self.poller.register(uart, select.POLLIN)
-        
+
     def handle_message(self, address, message):
         self.log(f"RECEIVED {message} from {address}")
         if message == "UNLOCK" and address == self.authorized_sender:
@@ -73,9 +81,7 @@ class PicoDoorReceiver:
             self.onboard_led.off()
 
         t = machine.Timer()
-        t.init(
-            mode=machine.Timer.ONE_SHOT, period=200, callback=turnoff
-        )
+        t.init(mode=machine.Timer.ONE_SHOT, period=200, callback=turnoff)
 
     def manage_state(self):
         # This method is called continually by runforever (during normal
@@ -86,10 +92,10 @@ class PicoDoorReceiver:
         # Python, which has a float component.
         self.now = time.time()
 
-        #self.log(f'Managing state at time {self.now}')
+        # self.log(f'Managing state at time {self.now}')
 
         if self.watchdog is not None:
-            self.watchdog.feed() # feed the watchdog timer to avoid board reboot
+            self.watchdog.feed()  # feed the watchdog timer to avoid board reboot
 
         if self.unlocked:
             # the door is currently unlocked
@@ -124,9 +130,9 @@ class PicoDoorReceiver:
                 # current_cmd is a string, but the UART expects bytes, so
                 # we need to encode it to a bytes object
                 current_cmd_bytes = current_cmd.encode()
-                self.uart.write(current_cmd_bytes+CRLF)
+                self.uart.write(current_cmd_bytes + CRLF)
 
-            events = self.poller.poll(1000) # wait 1 sec for any data (1000ms)
+            events = self.poller.poll(1000)  # wait 1 sec for any data (1000ms)
             for obj, flag in events:
                 if flag & select.POLLIN:
                     # There is data available to be read on our UART.
@@ -139,8 +145,8 @@ class PicoDoorReceiver:
                         # We consider any data between two linefeeds to be a
                         # response
                         line, self.buffer = self.buffer.split(LF, 1)
-                        line = line.strip(CR) # strip any trailing carriage rtn
-                        resp = line.decode("ascii", "replace") # bytes to text
+                        line = line.strip(CR)  # strip any trailing carriage rtn
+                        resp = line.decode("ascii", "replace")  # bytes to text
                         self.log(resp)
 
                         if resp.startswith("+RCV="):
@@ -159,7 +165,7 @@ class PicoDoorReceiver:
 
                             address = int(address)
                             datalen = int(length)
-                            message = rest[:datalen] # message will be "HELLO"
+                            message = rest[:datalen]  # message will be "HELLO"
 
                             # call handle_message to process the message
                             self.handle_message(address, message)
@@ -180,12 +186,12 @@ class PicoDoorReceiver:
 
 OK = "+OK"
 commands = [
-    ("AT", ""), # flush any old data left in the UART pending CRLF
-    ("AT+IPR=115200", "+IPR=115200"), # baud rate
-    ("AT+BAND=915000000", OK), # mhz band
-    ("AT+NETWORKID=18", OK), # network number, shared by door
-    ("AT+ADDRESS=1", OK), # network address (1: door, 2: sender)
-    ]
+    ("AT", ""),  # flush any old data left in the UART pending CRLF
+    ("AT+IPR=115200", "+IPR=115200"),  # baud rate
+    ("AT+BAND=915000000", OK),  # mhz band
+    ("AT+NETWORKID=18", OK),  # network number, shared by door
+    ("AT+ADDRESS=1", OK),  # network address (1: door, 2: sender)
+]
 
 # reboot the board if we dont feed the dog every 5 seconds
 watchdog = machine.WDT(timeout=5000)
