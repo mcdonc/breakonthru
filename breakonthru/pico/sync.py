@@ -42,5 +42,5 @@ while True:
     time.sleep_ms(100)
 
 # see
-# https://github.com/peterhinch/micropython-async/blob/master/v3/as_demos/auart.py
+# https://github.com/peterhinch/micropython-async/blob/master/v3/as_demos/auart.py and https://github.com/peterhinch/micropython-async/blob/master/v3/as_demos/auart_hd.py
 # for a way you can write MicroPython code that looks synchronous but isn't.
