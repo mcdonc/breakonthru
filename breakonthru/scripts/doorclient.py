@@ -410,10 +410,11 @@ class ReyaxDoorTransmitter:
 
     def manage_state(self):
         now = time.time()
-        for address, when in self.unlocking.items():
+        for address, when in list(self.unlocking.items()):
             # if we haven't heard back from our reyax in the unlocked duration
             # plus 2 secs, warn.
             if now > (when + self.unlocked_duration + 2):
+                self.unlocking.pop(address)
                 reply = self.relocked.pop(address, None)
                 if reply is None:
                     self.logger.warn(f"No relock response from reyax {address}")
