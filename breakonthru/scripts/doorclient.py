@@ -1,22 +1,29 @@
 import asyncio
 import configparser
 import gpiozero
+import io
 import json
 import os
 import pexpect
 import queue
+import select
 import setproctitle
 import signal
 import socket
 import sys
+import termios
 import time
+import tty
 import websockets
 import websockets.exceptions
 
 from multiprocessing import Process, Queue
 
 from breakonthru.util import teelogger
-from breakonthru import reyaxlinux
+
+LF = b"\n"
+CR = b"\r"
+CRLF = CR+LF
 
 class UnlockListener:
     def __init__(
@@ -335,14 +342,40 @@ class PageExecutor:
         self.child.sendline(self.pagingsip)
 
 
-class DoorTransmitter(reyaxlinux.LinuxUartHandler):
+class ReyaxDoorTransmitter:
     def __init__(
             self, logger, reyax_queue, commands=(), device="/dev/ttyUSB0",
             baudrate=115200
-    ):
+            ):
+        self.logger = logger
         self.reyax_queue = reyax_queue
-        self.last_send = 0
-        reyaxlinux.LinuxUartHandler.__init__(self, logger, commands, device, baudrate)
+        self.pending_commands = commands
+
+        BAUD_MAP = {
+            115200: termios.B115200,
+        }
+        fd = os.open(device, os.O_NOCTTY|os.O_RDWR|os.O_NONBLOCK)
+        tty.setraw(fd)
+        iflag, oflag, cflag, lflag, ispeed, ospeed, cc = termios.tcgetattr(
+            fd)
+        baudrate = BAUD_MAP[baudrate]
+        termios.tcsetattr(fd, termios.TCSANOW,
+                          [iflag, oflag, cflag, lflag, baudrate, baudrate, cc])
+
+
+        uart = io.FileIO(fd, "r+")
+        # pop any bytes in the OS read buffers before returning to avoid any
+        # state left over since the last time we used the uart; this is
+        # nonblocking if there are no bytes to be read
+        uart.write(b'AT'+CRLF)
+        uart.flush()
+        uart.read()
+
+        self.uart = uart
+        self.buffer = bytearray()
+        self.pending_commands = list(commands) # dont mutate the original
+        self.poller = select.poll()
+        self.poller.register(uart, select.POLLIN)
 
     def log(self, msg):
         self.logger.info(f"REYXTR {msg}")
@@ -350,15 +383,87 @@ class DoorTransmitter(reyaxlinux.LinuxUartHandler):
     def handle_message(self, address, message, rssi, snr):
         self.log(f"RECEIVED {message} from {address}")
 
-    def handle_inputs(self):
+    def manage_state(self):
         try:
             address = self.reyax_queue.get(block=False)
         except queue.Empty:
             return
-        cmd = f"AT+SEND={address},3,80F"
+        msg = "UNLOCK"
+        msglen = len(msg)
+        cmd = f"AT+SEND={address},{msglen},{msg}"
         self.log(f"sending {cmd} to {address}")
         self.commands.append((cmd, ''))
 
+    def runforever(self):
+        # initialize some variables we use later
+        current_cmd = None
+        expect = None
+
+        while True:
+            # continually call manage_state to maybe relock and maybe blink led
+            self.manage_state()
+
+            if self.pending_commands and current_cmd is None:
+                # if there are any commands in our command list and we aren't
+                # already processing a command, pop the first command
+                # from the command list and send it to the Reyax
+                current_cmd, expect = self.pending_commands.pop(0)
+                self.log(current_cmd)
+                # current_cmd is a string, but the UART expects bytes, so
+                # we need to encode it to a bytes object
+                current_cmd_bytes = current_cmd.encode()
+                self.uart.write(current_cmd_bytes+CRLF)
+
+            events = self.poller.poll(1000) # wait 1 sec for any data (1000ms)
+            for obj, flag in events:
+                if flag & select.POLLIN:
+                    # There is data available to be read on our UART.
+                    # Continually add any data read from the UART to our buffer
+                    data = self.uart.read()
+                    self.buffer = self.buffer + data
+
+                    # process whatever's in the buffer
+                    while LF in self.buffer:
+                        # We consider any data between two linefeeds to be a
+                        # response
+                        line, self.buffer = self.buffer.split(LF, 1)
+                        line = line.strip(CR) # strip any trailing carriage rtn
+                        resp = line.decode("ascii", "replace") # bytes to text
+                        self.log(resp)
+
+                        if resp.startswith("+RCV="):
+                            # Usually we get a response to one of our own AT
+                            # commands when we process a full line, but this is
+                            # not one of those.  Instead, it is a message from
+                            # the sender e.g.  "+RCV=50,5,HELLO,-99,40"
+                            # (although in practice this is probably a door
+                            # unlock request, and the message would not be
+                            # "HELLO")
+
+                            address, length, rest = resp[5:].split(",", 2)
+
+                            # address will be "50", length will be "5"
+                            # "rest" will be "HELLO,-99,40"
+
+                            address = int(address)
+                            datalen = int(length)
+                            message = rest[:datalen] # message will be "HELLO"
+
+                            # call handle_message to process the message
+                            self.handle_message(address, message)
+
+                        elif resp and expect:
+                            # if we were expecting a response to a command,
+                            # compare the response against the expected value
+                            # and raise an AssertionError if it's not the
+                            # same
+                            if resp != expect:
+                                msg = f"expect {repr(expect)},got {repr(resp)}"
+                                raise AssertionError(msg)
+
+                        # we have finished processing a command
+                        current_cmd = None
+                        expect = None
 
 class ReyaxTransmissionHandler:
     def __init__(self, reyax_config, reyax_queue, logger):
@@ -388,7 +493,7 @@ class ReyaxTransmissionHandler:
             (f'AT+IPR={cfg["baudrate"]}', f'+IPR={cfg["baudrate"]}'), # baud rate
             (f'AT+ADDRESS={cfg["address"]}', OK)
         ]
-        tx = DoorTransmitter(
+        tx = ReyaxDoorTransmitter(
             self.logger,
             self.reyax_queue,
             commands = commands,
