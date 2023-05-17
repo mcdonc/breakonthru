@@ -52,13 +52,13 @@ class PicoDoorReceiver:
             self.unlock()
 
     def unlock(self):
-        self.log(f"Receiver unlocking using pin {self.unlock_pin}")
+        self.log(f"Receiver unlocking using {self.unlock_pin}")
         self.unlocked = time.time()
         self.unlock_pin.on()
         self.onboard_led.on()
 
     def relock(self):
-        self.log(f"Receiver relocking using pin {self.unlock_pin}")
+        self.log(f"Receiver relocking using {self.unlock_pin}")
         self.unlock_pin.off()
         self.onboard_led.off()
         self.unlocked = False
@@ -186,7 +186,7 @@ class PicoDoorReceiver:
 OK = "+OK"
 
 commands = [
-    ("AT", "")  # cope with last command in UART writebuffer not being finalized
+    ("AT", ""),  # last command in UART writebuffer might not be finalized
     ("AT+IPR=115200", "+IPR=115200"),  # baud rate
     ("AT+BAND=915000000", OK),  # mhz band
     ("AT+NETWORKID=18", OK),  # network number, shared by door
