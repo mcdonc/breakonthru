@@ -22,7 +22,7 @@ def readline(uart):
 
 
 for command in commands:
-    uart.write(command+ b"\r\n")
+    uart.write(command + b"\r\n")
     response = readline(uart)
     print(response)
 
