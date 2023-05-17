@@ -365,11 +365,15 @@ class ReyaxDoorTransmitter:
         device="/dev/ttyUSB0",
         baudrate=115200,
         unlock_msg="UNLOCK",
+        unlocked_duration=5,
     ):
         self.logger = logger
         self.reyax_queue = reyax_queue
         self.pending_commands = list(commands)
         self.unlock_msg = unlock_msg
+        self.unlocking = {}
+        self.relocked = {}
+        self.unlocked_duration = unlocked_duration
 
         BAUD_MAP = {
             115200: termios.B115200,
@@ -401,11 +405,23 @@ class ReyaxDoorTransmitter:
         self.logger.info(f"REYXTR {msg}")
 
     def handle_message(self, address, message):
+        self.relocked[address] = message
         self.log(f"RECEIVED {message} from {address}")
 
     def manage_state(self):
+        now = time.time()
+        for address, when in self.unlocking.items():
+            # if we haven't heard back from our reyax in the unlocked duration
+            # plus 2 secs, warn.
+            if now > (when + self.unlocked_duration + 2):
+                reply = self.relocked.pop(address, None)
+                if reply is None:
+                    self.logger.warn(f"No relock response from reyax {address}")
+                else:
+                    self.log(f"Relock response from reyax {address}: {reply}")
         try:
             address = self.reyax_queue.get(block=False)
+            self.unlocking[address] = now
         except queue.Empty:
             return
         msglen = len(self.unlock_msg)
@@ -486,7 +502,8 @@ class ReyaxDoorTransmitter:
 
 
 class ReyaxTransmissionHandler:
-    def __init__(self, reyax_config, reyax_queue, logger):
+    def __init__(self, unlocked_duration, reyax_config, reyax_queue, logger):
+        self.unlocked_duration = unlocked_duration
         self.reyax_config = reyax_config
         self.reyax_queue = reyax_queue
         self.logger = logger
@@ -523,6 +540,7 @@ class ReyaxTransmissionHandler:
             device=cfg["tty"],
             baudrate=cfg["baudrate"],
             unlock_msg=cfg["unlock_msg"],
+            unlocked_duration=self.unlocked_duration,
         )
         tx.runforever()
 
@@ -613,6 +631,7 @@ def run_doorclient(
                 name="reyax_handler",
                 daemon=True,
                 target=ReyaxTransmissionHandler(
+                    door_unlocked_duration,
                     reyax_config,
                     reyax_queue,
                     logger,
