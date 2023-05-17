@@ -14,9 +14,16 @@ rx_pin = machine.Pin(5)
 
 uart = machine.UART(1, 115200, tx=tx_pin, rx=rx_pin)
 
+def readline(uart):
+    while True:
+        if uart.any():
+            response = uart.readline().decode()
+            return response
+
+
 for command in commands:
     uart.write(command+ b"\r\n")
-    response = uart.readline().decode()
+    response = readline(uart)
     print(response)
 
 # send a message
@@ -28,9 +35,6 @@ send = f"AT+SEND={recipient},{msglen},{msg}\r\n".encode()
 uart.write(send)
 
 while True:
-    if uart.any():
-        response = uart.readline().decode()
-        print(response)
+    response = readline(uart)
+    print(response)
     time.sleep_ms(100)
-        
-        
