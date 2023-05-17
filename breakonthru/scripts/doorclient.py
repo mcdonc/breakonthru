@@ -368,7 +368,6 @@ class ReyaxDoorTransmitter:
         # pop any bytes in the OS read buffers before returning to avoid any
         # state left over since the last time we used the uart; this is
         # nonblocking if there are no bytes to be read
-        uart.write(b'AT'+CRLF)
         uart.flush()
         uart.read()
 
