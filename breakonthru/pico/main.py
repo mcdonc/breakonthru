@@ -202,9 +202,6 @@ watchdog = machine.WDT(timeout=5000)
 
 unlocker = PicoDoorReceiver(
     commands,
-    unlock_pin=16,
-    unlocked_duration=5,
-    authorized_sender=2,
     watchdog=watchdog,
 )
 
