@@ -20,7 +20,7 @@ def readline(uart):
             response = uart.readline().decode()
             return response
 
-
+# do AT commands that set up our LoRa module
 for command in commands:
     uart.write(command + b"\r\n")
     response = readline(uart)
