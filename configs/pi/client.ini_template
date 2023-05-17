@@ -10,6 +10,7 @@ reyax_address = 2
 reyax_band = 915000000
 reyax_baudrate = 115200
 reyax_tty = /dev/ttyUSB0
+reyax_unlock_msg = UNLOCK
 door_unlocked_duration = 5
 callbutton_gpio_pin = 16
 callbutton_bouncetime = 2

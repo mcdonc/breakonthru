@@ -345,11 +345,12 @@ class PageExecutor:
 class ReyaxDoorTransmitter:
     def __init__(
             self, logger, reyax_queue, commands=(), device="/dev/ttyUSB0",
-            baudrate=115200
+            baudrate=115200, unlock_message="UNLOCK"
             ):
         self.logger = logger
         self.reyax_queue = reyax_queue
         self.pending_commands = commands
+        self.unlock_message = unlock_message
 
         BAUD_MAP = {
             115200: termios.B115200,
@@ -388,11 +389,10 @@ class ReyaxDoorTransmitter:
             address = self.reyax_queue.get(block=False)
         except queue.Empty:
             return
-        msg = "UNLOCK"
-        msglen = len(msg)
-        cmd = f"AT+SEND={address},{msglen},{msg}"
+        msglen = len(self.unlock_msg)
+        cmd = f"AT+SEND={address},{msglen},{self.unlock_msg}"
         self.log(f"sending {cmd} to {address}")
-        self.commands.append((cmd, ''))
+        self.commands.append((cmd, ""))
 
     def runforever(self):
         # initialize some variables we use later
@@ -490,7 +490,7 @@ class ReyaxTransmissionHandler:
             ('AT', ''), # flush any old data pending CRLF
             (f'AT+BAND={cfg["band"]}', OK), # mhz band
             (f'AT+NETWORKID={cfg["networkid"]}', OK), # network number, shared
-            (f'AT+IPR={cfg["baudrate"]}', f'+IPR={cfg["baudrate"]}'), # baud rate
+            (f'AT+IPR={cfg["baudrate"]}', f'+IPR={cfg["baudrate"]}'), # baudrate
             (f'AT+ADDRESS={cfg["address"]}', OK)
         ]
         tx = ReyaxDoorTransmitter(
@@ -499,6 +499,7 @@ class ReyaxTransmissionHandler:
             commands = commands,
             device = cfg['tty'],
             baudrate = cfg['baudrate'],
+            unlock_msg = cfg['unlock_msg'],
         )
         tx.runforever()
 
@@ -680,5 +681,6 @@ def main():
     reyax['band'] = int(section.get('reyax_band', 915000000))
     reyax['baudrate'] = int(section.get('reyax_baudrate', 115200))
     reyax['tty'] = section.get('reyax_tty', "/dev/ttyUSB0")
+    reyax['unlock_msg'] = section.get('reyax_unlock_msg', "UNLOCK")
     logger.info(f"MAIN pid is {os.getpid()}")
     run_doorclient(**args)
