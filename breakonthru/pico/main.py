@@ -25,10 +25,9 @@ class PicoDoorReceiver:
         uart.init(
             baudrate=baudrate, tx=machine.Pin(tx_pin), rx=machine.Pin(rx_pin)
         )
-        # pop any bytes in the OS read/write buffers before returning to avoid
+        # pop any bytes in the OS readbuffer before returning to avoid
         # any state left over since the last time we used the uart; note that
         # read is nonblocking if there are no bytes to be read
-        uart.flush()
         uart.read()
 
         self.uart = uart
@@ -186,6 +185,7 @@ class PicoDoorReceiver:
 OK = "+OK"
 
 commands = [
+    ("AT", "")  # cope with last command in UART writebuffer not being finalized
     ("AT+IPR=115200", "+IPR=115200"),  # baud rate
     ("AT+BAND=915000000", OK),  # mhz band
     ("AT+NETWORKID=18", OK),  # network number, shared by door
