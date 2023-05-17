@@ -16,7 +16,7 @@ uart = machine.UART(1, 115200, tx=tx_pin, rx=rx_pin)
 
 for command in commands:
     uart.write(command+ b"\r\n")
-    response = uart.readline()
+    response = uart.readline().decode()
     print(response)
 
 # send a message
