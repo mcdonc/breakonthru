@@ -2,13 +2,13 @@ import logging
 
 
 def teelogger(logfile=None, loglevel="INFO"):
-    """ Log to stdout and logfile """
+    """Log to stdout and logfile"""
     loglevel = loglevel.upper()
     logging.basicConfig(
         filename=logfile,
         level=getattr(logging, loglevel),
-        format='%(asctime)s %(message)s',
-        datefmt='%m/%d/%Y %I:%M:%S %p'
+        format="%(asctime)s %(message)s",
+        datefmt="%m/%d/%Y %I:%M:%S %p",
     )
     logger = logging.getLogger()
     if logfile is not None:
@@ -16,8 +16,7 @@ def teelogger(logfile=None, loglevel="INFO"):
         ch = logging.StreamHandler()
         ch.setLevel(getattr(logging, loglevel))
         formatter = logging.Formatter(
-            '%(asctime)s %(message)s',
-            datefmt='%m/%d/%Y %I:%M:%S %p'
+            "%(asctime)s %(message)s", datefmt="%m/%d/%Y %I:%M:%S %p"
         )
         ch.setFormatter(formatter)
         logger.addHandler(ch)

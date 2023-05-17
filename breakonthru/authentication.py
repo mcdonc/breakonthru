@@ -14,22 +14,22 @@ class SessionSecurityPolicy:
         userid = self.helper.authenticated_userid(request)
         if userid is None:
             return None
-        return {'userid': userid}
+        return {"userid": userid}
 
     def authenticated_userid(self, request):
-        """ Return a string ID for the user. """
+        """Return a string ID for the user."""
         identity = self.identity(request)
         if identity is None:
             return None
-        return str(identity['userid'])
+        return str(identity["userid"])
 
     def permits(self, request, context, permission):
-        """ Allow access to everything if signed in. """
+        """Allow access to everything if signed in."""
         identity = self.identity(request)
         if identity is not None:
-            return Allowed('User is signed in.')
+            return Allowed("User is signed in.")
         else:
-            return Denied('User is not signed in.')
+            return Denied("User is not signed in.")
 
     def remember(self, request, userid, **kw):
         return self.helper.remember(request, userid, **kw)
@@ -43,7 +43,7 @@ def parse_passwords(text):
     entries = text.splitlines()
     for line in entries:
         line = line.strip()
-        if not ('=' in line):
+        if not ("=" in line):
             continue
         if line.startswith("#"):
             continue
@@ -51,13 +51,14 @@ def parse_passwords(text):
         name = name.strip()
         value = value.strip()
         try:
-            password, doors = [x.strip() for x in value.split(":",1) ]
-            doors = [ int(x) for x in doors ]
+            password, doors = [x.strip() for x in value.split(":", 1)]
+            doors = [int(x) for x in doors]
         except ValueError:
             password = value.strip()
-            doors = list(range(100)) # all doors
-        passwords[name] = {"password":password, "doors":doors}
+            doors = list(range(100))  # all doors
+        passwords[name] = {"password": password, "doors": doors}
     return passwords
+
 
 def parse_doors(text):
     doors = []
@@ -70,6 +71,7 @@ def parse_doors(text):
             continue
         doors.append(line)
     return doors
+
 
 def timeslice(period, currtime):
     low = int(math.floor(currtime)) - period + 1
@@ -86,15 +88,11 @@ def make_token(secret, password, valid_secs=token_valid_secs):
     now = time.time()
     slice = timeslice(valid_secs, now)
     timed = password.encode("utf-8") + str(slice).encode("ascii")
-    return hmac.new(
-        secret.encode("utf-8"),
-        timed,
-        'sha512_256'
-    ).hexdigest()
+    return hmac.new(secret.encode("utf-8"), timed, "sha512_256").hexdigest()
 
 
 def refresh_token(request, username, valid_secs=token_valid_secs):
-    userdata = request.registry.settings['passwords'].get(username.lower())
+    userdata = request.registry.settings["passwords"].get(username.lower())
     storedhash = userdata["password"]
     oldtoken = request.session.get("token")
     secret = request.registry.settings["secret"]
