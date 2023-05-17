@@ -27,8 +27,8 @@ class PicoDoorReceiver:
             baudrate=baudrate, tx=machine.Pin(tx_pin), rx=machine.Pin(rx_pin)
         )
         # pop any bytes in the OS read/write buffers before returning to avoid
-        # any state left over since the last time we used the uart; this is
-        # nonblocking if there are no bytes to be read
+        # any state left over since the last time we used the uart; note that
+        # read is nonblocking if there are no bytes to be read
         uart.flush()
         uart.read()
 
