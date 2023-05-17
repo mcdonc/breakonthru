@@ -2,9 +2,10 @@ from machine import Pin
 import time
 from .synchronous import receiver
 
+
 def test_receiver():
     relay = Pin(16, Pin.OUT, Pin.PULL_UP)
-    led=Pin("LED", Pin.OUT)
+    led = Pin("LED", Pin.OUT)
     relay.value(0)
     led.value(0)
     rx = receiver()
@@ -12,7 +13,7 @@ def test_receiver():
         if rx.uart.any():
             data = rx.receive()
             print(data)
-            if 'BUZZ' in data:
+            if "BUZZ" in data:
                 print("relay buzz")
                 led.value(1)
                 relay.value(1)
@@ -20,13 +21,6 @@ def test_receiver():
                 led.value(0)
                 relay.value(0)
         time.sleep_ms(500)
-        
+
+
 test_receiver()
-
- 
-
-
- 
-
-         
-

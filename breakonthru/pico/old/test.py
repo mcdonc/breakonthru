@@ -1,11 +1,13 @@
 from .synchronous import transmitter, receiver
 import time
 
+
 def test_transmitter():
     tx = transmitter()
     while True:
         tx.sendmsg(1, "BUZZ")
         time.sleep(5)
+
 
 def test_receiver():
     rx = receiver()
