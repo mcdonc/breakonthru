@@ -7,6 +7,7 @@ CR = b"\r"
 CRLF = CR + LF
 
 
+
 class PicoDoorReceiver:
     def __init__(
         self,
@@ -94,6 +95,15 @@ class PicoDoorReceiver:
         t = machine.Timer()
         t.init(mode=machine.Timer.ONE_SHOT, period=200, callback=turnoff)
 
+    def startup_blink(self):
+        # this will block for half a second, but it's only called at program
+        # startup.
+        for x in range(5):
+            self.onboard_led.on()
+            time.sleep_ms(100)
+            self.onboard_led.off()
+            time.sleep_ms(100)
+
     def manage_state(self):
         # This method is called continually by runforever (during normal
         # operations, every second or so).
@@ -125,6 +135,9 @@ class PicoDoorReceiver:
         print(msg)
 
     def runforever(self):
+        # do a startup blink once
+        self.startup_blink()
+
         # initialize some variables we use later
         current_cmd = None
         expect = None
