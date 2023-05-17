@@ -44,8 +44,10 @@ class Doorserver:
         while True:
             try:
                 message = await asyncio.wait_for(websocket.recv(), timeout=0.25)
-            except (websockets.ConnectionClosedOK,
-                    websockets.exceptions.ConnectionClosedError):
+            except (
+                websockets.ConnectionClosedOK,
+                websockets.exceptions.ConnectionClosedError,
+            ):
                 break
             except asyncio.TimeoutError:
                 now = time.time()
@@ -63,9 +65,11 @@ class Doorserver:
                     for ack in acklist:
                         await websocket.send(ack)
                     for broadcast in self.broadcasts:
-                        wids = broadcast['wids']
+                        wids = broadcast["wids"]
                         if wsid not in wids:
-                            await websocket.send(json.dumps(broadcast['message']))
+                            await websocket.send(
+                                json.dumps(broadcast["message"])
+                            )
                             wids.append(wsid)
 
                 continue
@@ -98,7 +102,9 @@ class Doorserver:
 
             if identification == "webclient":
                 if msgtype == "unlock":
-                    self.log(f"unlock request received from webclient {pprint.pformat(message)}")
+                    self.log(
+                        f"unlock request received from webclient {pprint.pformat(message)}"
+                    )
                     # we must send the secret to the doorclient
                     user = message["body"]
                     msgid = uuid.uuid4().hex
@@ -109,7 +115,7 @@ class Doorserver:
                             unlockdata = {
                                 "type": "unlock",
                                 "body": user,
-                                "doornum":doornum,
+                                "doornum": doornum,
                                 "msgid": msgid,
                                 "secret": self.secret,
                             }
@@ -149,28 +155,28 @@ def main():
     except IndexError:
         print("doorserver <config_file_name>")
         sys.exit(2)
-    if config_file in ('-h', '--help'):
+    if config_file in ("-h", "--help"):
         print("doorserver <config_file_name>")
         sys.exit(2)
 
     config = configparser.ConfigParser()
     config.read(config_file)
-    section = config['doorserver']
+    section = config["doorserver"]
 
     password_file = section.get("password_file")
     if password_file is None:
-        raise AssertionError('password_file must be supplied')
+        raise AssertionError("password_file must be supplied")
     args["password_file"] = password_file
 
     doors_file = section.get("doors_file")
     if doors_file is None:
-        raise AssertionError('doors_file must be supplied')
+        raise AssertionError("doors_file must be supplied")
     args["doors_file"] = doors_file
 
     secret = section.get("secret")
     if secret is None:
-        raise AssertionError('secret must be supplied')
-    args['secret'] = secret
+        raise AssertionError("secret must be supplied")
+    args["secret"] = secret
 
     loglevel = section.get("loglevel", "INFO")
     logfile = section.get("logfile")

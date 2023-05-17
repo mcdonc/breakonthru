@@ -13,10 +13,12 @@ def playrandom(directory, device):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--device', help="Dev through which to play a random wav file (default hw:1,0)",
-        default="hw:1,0")
+        "--device",
+        help="Dev through which to play a random wav file (default hw:1,0)",
+        default="hw:1,0",
+    )
     parser.add_argument(
-        '--dir', help="Directory full of wav files",
-        required=True)
+        "--dir", help="Directory full of wav files", required=True
+    )
     args = parser.parse_args()
     playrandom(args.dir, args.device)
