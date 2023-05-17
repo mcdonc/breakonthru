@@ -87,9 +87,9 @@ class PicoDoorReceiver:
         # This method is called continually by runforever (during normal
         # operations, every second or so).
 
-        # self.now is used in other methods that this one calls. Note that
-        # note that its value is max 1-second precision, unlike "normal"
-        # Python, which has a float component.
+        # self.now is used in other methods that this one calls. Note that its
+        # value is max 1-second precision, unlike "normal" Python, which has a
+        # float component.
         self.now = time.time()
 
         # self.log(f'Managing state at time {self.now}')
