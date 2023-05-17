@@ -366,6 +366,7 @@ class ReyaxDoorTransmitter:
         baudrate=115200,
         unlock_msg="UNLOCK",
     ):
+        self.commands = list(commands)
         self.logger = logger
         self.reyax_queue = reyax_queue
         self.pending_commands = commands
