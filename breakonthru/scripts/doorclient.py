@@ -400,7 +400,7 @@ class ReyaxDoorTransmitter:
     def log(self, msg):
         self.logger.info(f"REYXTR {msg}")
 
-    def handle_message(self, address, message, rssi, snr):
+    def handle_message(self, address, message):
         self.log(f"RECEIVED {message} from {address}")
 
     def manage_state(self):
