@@ -345,12 +345,12 @@ class PageExecutor:
 class ReyaxDoorTransmitter:
     def __init__(
             self, logger, reyax_queue, commands=(), device="/dev/ttyUSB0",
-            baudrate=115200, unlock_message="UNLOCK"
+            baudrate=115200, unlock_msg="UNLOCK"
             ):
         self.logger = logger
         self.reyax_queue = reyax_queue
         self.pending_commands = commands
-        self.unlock_message = unlock_message
+        self.unlock_msg = unlock_msg
 
         BAUD_MAP = {
             115200: termios.B115200,
