@@ -33,11 +33,11 @@ class PicoDoorReceiver:
         self.uart = uart
         self.last_blink = 0  # used by blink method
         self.unlocked = False  # used by unlock and relock methods
-        self.unlocked_duration = unlocked_duration
+        self.unlocked_duration = unlocked_duration # seconds
+        self.authorized_sender = authorized_sender # LoRa address of sender
+        self.unlock_message = unlock_message # message body sent by sender
+        self.relocked_message = relocked_message # message body in response
         self.onboard_led = machine.Pin("LED")
-        self.authorized_sender = authorized_sender
-        self.unlock_message = unlock_message
-        self.relocked_message = relocked_message
         self.unlock_pin = machine.Pin(unlock_pin, machine.Pin.OUT)
         self.buffer = bytearray()
         self.pending_commands = list(commands)  # dont mutate the original
