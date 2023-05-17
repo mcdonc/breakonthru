@@ -20,7 +20,6 @@ class PicoDoorReceiver:
         authorized_sender=2,
         unlock_message="UNLOCK",
         relocked_message="RELOCKED",
-        watchdog=None,
     ):
         uart = machine.UART(uartid)
         uart.init(
@@ -40,7 +39,6 @@ class PicoDoorReceiver:
         self.authorized_sender = authorized_sender
         self.unlock_message = unlock_message
         self.relocked_message = relocked_message
-        self.watchdog = watchdog
         self.unlock_pin = machine.Pin(unlock_pin, machine.Pin.OUT)
         self.buffer = bytearray()
         self.pending_commands = list(commands)  # dont mutate the original
@@ -76,7 +74,7 @@ class PicoDoorReceiver:
         # This turns on the onboard LED, then registers a callback to be called
         # 200 milliseconds in the future to turn it off.  We could blink the LED
         # more efficiently using a periodic timer, but the point is to be able
-        # to know that the software is still running by looking for blinks of
+        # to know that the mainloop is still running by looking for blinks of
         # the LED.
         self.onboard_led.on()
         self.last_blink = self.now
@@ -97,9 +95,6 @@ class PicoDoorReceiver:
         self.now = time.time()
 
         # self.log(f"Managing state at time {self.now}")
-
-        if self.watchdog is not None:
-            self.watchdog.feed()  # feed the watchdog timer to avoid reboot
 
         if self.unlocked:
             # the door is currently unlocked
@@ -189,20 +184,16 @@ class PicoDoorReceiver:
 
 
 OK = "+OK"
+
 commands = [
-    ("AT", ""),  # flush any old data left in the UART pending CRLF
     ("AT+IPR=115200", "+IPR=115200"),  # baud rate
     ("AT+BAND=915000000", OK),  # mhz band
     ("AT+NETWORKID=18", OK),  # network number, shared by door
     ("AT+ADDRESS=1", OK),  # network address (1: door, 2: sender)
 ]
 
-# reboot the board if we dont feed the dog every 5 seconds
-watchdog = machine.WDT(timeout=5000)
-
 unlocker = PicoDoorReceiver(
     commands,
-    watchdog=watchdog,
 )
 
 unlocker.runforever()
