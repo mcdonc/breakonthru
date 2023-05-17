@@ -18,6 +18,8 @@ class PicoDoorReceiver:
         unlock_pin=16,
         unlocked_duration=5,
         authorized_sender=2,
+        unlock_message="UNLOCK",
+        relocked_message="RELOCKED",
         watchdog=None,
     ):
         uart = machine.UART(uartid)
@@ -36,6 +38,8 @@ class PicoDoorReceiver:
         self.unlocked_duration = unlocked_duration
         self.onboard_led = machine.Pin("LED")
         self.authorized_sender = authorized_sender
+        self.unlock_message = unlock_message
+        self.relocked_message = relocked_message
         self.watchdog = watchdog
         self.unlock_pin = machine.Pin(unlock_pin, machine.Pin.OUT)
         self.buffer = bytearray()
@@ -45,7 +49,7 @@ class PicoDoorReceiver:
 
     def handle_message(self, address, message):
         self.log(f"RECEIVED {message} from {address}")
-        if message == "UNLOCK" and address == self.authorized_sender:
+        if message == self.unlock_message and address == self.authorized_sender:
             # this is a message to unlock the door
             self.unlock()
 
@@ -60,9 +64,9 @@ class PicoDoorReceiver:
         self.unlock_pin.off()
         self.onboard_led.off()
         self.unlocked = False
-        # send back "RELOCKED" to the sender indicating that the door has been
+        # send a message back to the sender indicating that the door has been
         # relocked
-        msg = "RELOCKED"
+        msg = self.relocked_message
         msglen = len(msg)
         self.pending_commands.append(
             (f"AT+SEND={self.authorized_sender},{msglen},{msg}", "")
@@ -92,7 +96,7 @@ class PicoDoorReceiver:
         # float component.
         self.now = time.time()
 
-        # self.log(f'Managing state at time {self.now}')
+        # self.log(f"Managing state at time {self.now}")
 
         if self.watchdog is not None:
             self.watchdog.feed()  # feed the watchdog timer to avoid reboot

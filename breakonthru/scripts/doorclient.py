@@ -230,8 +230,8 @@ class UnlockExecutor:
                 time.sleep(self.door_unlocked_duration)
             finally:
                 buzzer.off()
-                self.relock_queue.put((now, doornum))
                 self.log(f"relocked door {doornum}")
+                self.relock_queue.put((now, doornum))
                 last_relock_times[doornum] = now
 
 
