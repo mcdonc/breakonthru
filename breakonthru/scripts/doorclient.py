@@ -135,7 +135,8 @@ class UnlockListener:
                             user = message["body"]
                             msgid = message["msgid"]
                             doornum = message["doornum"]
-                            character = f"unlock request by {user} for door {doornum}"
+                            character = (f"unlock request by {user} for "
+                                         f"door {doornum}")
                             when = time.time()
                             self.unlock_queue.put((when, doornum))
                             self.log(f"enqueued {character}")
@@ -194,7 +195,8 @@ class UnlockExecutor:
         self.log("starting unlock executor")
         self.log(f"unlock gpio pins are {self.unlock_gpio_pins}")
         last_relock_times = {}
-        # gpiozero objects cannot be defined in the main process, only in subproc
+        # gpiozero objects cannot be defined in the main process, only in
+        # subproc
         buzzers = []
         for pin in self.unlock_gpio_pins:
             if pin.startswith("reyax:"):
@@ -216,7 +218,9 @@ class UnlockExecutor:
             buzzer = buzzers[doornum]
             try:
                 buzzer.on()
-                self.log(f"waiting {self.door_unlocked_duration} before relocking")
+                self.log(
+                    f"waiting {self.door_unlocked_duration} before relocking"
+                )
                 time.sleep(self.door_unlocked_duration)
             finally:
                 buzzer.off()
@@ -243,7 +247,8 @@ class PageListener:
 
     def run(self):
         setproctitle.setproctitle("doorclient-pagelistener")
-        # gpiozero objects cannot be defined in the main process, only in subproc
+        # gpiozero objects cannot be defined in the main process, only in
+        # subproc
         button = gpiozero.Button(
             pin=self.callbutton_gpio_pin,
             bounce_time=self.callbutton_bouncetime / 1000.0,
@@ -297,13 +302,16 @@ class PageExecutor:
         self.log("starting page executor")
 
         for i in range(0, 9):
-            self.log(f"pjsua attempting to register with asterisk, try number {i}")
+            self.log(
+                f"pjsua attempting to register with asterisk, try number {i}"
+            )
             try:
                 cmd = f'{self.pjsua_bin} --config-file {self.pjsua_config_file}'
                 self.log(f"executing {cmd}")
                 self.child = pexpect.spawn(cmd, encoding='utf-8', timeout=10)
                 self.child.logfile_read = sys.stdout
-                self.child.expect('registration success')  # fail if not successful
+                # fail if not successful
+                self.child.expect('registration success')
                 self.log("pjsua registration success")
                 break
             except pexpect.exceptions.TIMEOUT:
@@ -669,11 +677,15 @@ def main():
     for x in range(0, 3):
         val = section.get(f"unlock{x}_gpio_pin", default_pins[x])
         unlock_gpio_pins.append(val)
-    args['door_unlocked_duration'] = int(section.get("door_unlocked_duration", 5))
+    args['door_unlocked_duration'] = int(
+        section.get("door_unlocked_duration",5)
+    )
     args['clientidentity'] = section.get("clientidentity", "doorclient")
     args['callbutton_gpio_pin'] = int(section.get("callbutton_gpio_pin", 16))
     args['callbutton_bouncetime'] = int(section.get("callbutton_bouncetime", 2))
-    args['page_throttle_duration'] = int(section.get("page_throttle_duration", 15))
+    args['page_throttle_duration'] = int(
+        section.get("page_throttle_duration",15)
+    )
     args['reyax_config'] = reyax = {}
     reyax['networkid'] = int(section.get('reyax_networkid', 18))
     reyax['address'] = int(section.get('reyax_address', 2))
