@@ -20,6 +20,7 @@ class PicoDoorReceiver:
         authorized_sender=2,
         unlock_message="UNLOCK",
         relocked_message="RELOCKED",
+        watchdog=False,
     ):
         uart = machine.UART(uartid)
         uart.init(
@@ -43,6 +44,14 @@ class PicoDoorReceiver:
         self.pending_commands = list(commands)  # dont mutate the original
         self.poller = select.poll()
         self.poller.register(uart, select.POLLIN)
+
+        if watchdog:
+            # set up a watchdog timer that will restart the Pico if not fed
+            # at least every five seconds
+            # constructor
+            self.watchdog = machine.WDT(timeout=5000) # ms
+        else:
+            self.watchdog = None
 
     def handle_message(self, address, message):
         self.log(f"RECEIVED {message} from {address}")
@@ -88,6 +97,10 @@ class PicoDoorReceiver:
     def manage_state(self):
         # This method is called continually by runforever (during normal
         # operations, every second or so).
+
+        # feed the watchdog timer so we aren't rebooted
+        if self.watchdog is not None:
+            self.watchdog.feed()
 
         # self.now is used in other methods that this one calls. Note that its
         # value is max 1-second precision, unlike "normal" Python, which has a
