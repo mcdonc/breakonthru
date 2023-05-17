@@ -95,7 +95,7 @@ class PicoDoorReceiver:
         # self.log(f'Managing state at time {self.now}')
 
         if self.watchdog is not None:
-            self.watchdog.feed()  # feed the watchdog timer to avoid board reboot
+            self.watchdog.feed()  # feed the watchdog timer to avoid reboot
 
         if self.unlocked:
             # the door is currently unlocked
