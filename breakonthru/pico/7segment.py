@@ -84,9 +84,6 @@ def display_digits():
          display_digit(digit)
          utime.sleep(1)
 
-clicks = 0
-last_click = 0
-
 def button_pressed(pin):
     """ Interrupt handler that is called when our 
     button is clicked """
@@ -98,6 +95,9 @@ def button_pressed(pin):
         last_click = new_time
 
 buttonpin = machine.Pin(16, machine.Pin.IN, machine.Pin.PULL_UP)
+
+clicks = 0
+last_click = 0
 
 def game():
     global clicks
