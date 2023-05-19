@@ -114,7 +114,7 @@ def start_listening_for_clicks():
 def stop_listening_for_clicks():
     buttonpin.irq(trigger=machine.Pin.IRQ_FALLING, handler=None)  # type: ignore
 
-def make_noise(freq, duration=1):
+def make_noise(freq, duration=1.0):
     buzzer = machine.PWM(BUZZER_PIN)
     # Set a pwm frequency
     buzzer.freq(freq)
