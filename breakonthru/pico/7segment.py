@@ -2,8 +2,8 @@ import machine
 import random
 import utime
 
-# The segments of the display have ids.
-#
+# The segments of the display have letter ids.
+
 #  ---A----
 # |        |
 # F        B
@@ -13,23 +13,22 @@ import utime
 # E        C
 # |        |
 #  ---D----  . DP
-#
+
 
 SEGMENTS = {
-    # mapping of segment id to GPIO PIN
-    "A": machine.Pin(9,machine.Pin.OUT),
-    "B": machine.Pin(3,machine.Pin.OUT),
-    "C": machine.Pin(5,machine.Pin.OUT),
-    "D": machine.Pin(6,machine.Pin.OUT),
-    "E": machine.Pin(7,machine.Pin.OUT),
-    "F": machine.Pin(2,machine.Pin.OUT),
-    "G": machine.Pin(8,machine.Pin.OUT),
-    "DP": machine.Pin(4,machine.Pin.OUT),
-    }
+    # mapping of segment id to GPIO PIN on the Pico that turns it on and off
+    "A": machine.Pin(9, machine.Pin.OUT),  # (to pin 7 on unit)
+    "B": machine.Pin(3, machine.Pin.OUT),  # (to pin 6 on unit)
+    "C": machine.Pin(5, machine.Pin.OUT),  # (to pin 4 on unit)
+    "D": machine.Pin(6, machine.Pin.OUT),  # (to pin 2 on unit)
+    "E": machine.Pin(7, machine.Pin.OUT),  # (to pin 1 on unit)
+    "F": machine.Pin(2, machine.Pin.OUT),  # (to pin 9 on unit)
+    "G": machine.Pin(8, machine.Pin.OUT),  # (to pin 10 on unit)
+    "DP": machine.Pin(4, machine.Pin.OUT),  # (to pin 5 on unit)
+}
 
-# A mapping of a digit to the segment ids
-# that should be turned on to display that
-# particular digit
+# A mapping of a digit to the segment ids that should be turned on to display
+# that particular digit
 DIGITS = {
     0: ("A", "B", "C", "D", "E", "F"),
     1: ("B", "C"),
@@ -43,78 +42,83 @@ DIGITS = {
     9: ("A", "B", "C", "G", "F"),
 }
 
+
 def clear():
-    """ Turn off all segments """
+    """Turn off all segments"""
     for name, pin in SEGMENTS.items():
         pin.off()
 
+
 def display_digit(digit):
-    """ Display a digit """
+    """Display a digit"""
     segments = DIGITS[digit]
     for name, pin in SEGMENTS.items():
         if name in segments:
             pin.on()
         else:
             pin.off()
-    
+
+
 def dp_blink():
-    """ Turn off all segments then blink the decimal 
-    point segment a few times"""
+    """Turn off all segments then blink the decimal point segment a few
+    times"""
     clear()
     for x in range(3):
         SEGMENTS["DP"].on()
-        utime.sleep(.05)
+        utime.sleep(0.05)
         SEGMENTS["DP"].off()
-        utime.sleep(.05)
+        utime.sleep(0.05)
+
 
 def snake():
-    """ Animate a snake on the display """
-    order = [ "G", "F", "A", "B", "G", "E", "D", "C" ]
+    """Animate a snake on the display"""
+    order = ["G", "F", "A", "B", "G", "E", "D", "C"]
     for name in order:
         pin = SEGMENTS[name]
         pin.on()
-        utime.sleep(.1)
+        utime.sleep(0.1)
         pin.off()
-        utime.sleep(.1)
+        utime.sleep(0.1)
+
 
 def display_digits():
-    """ Display each digit 0-9 in order """
+    """Display each digit 0-9 in order"""
     for digit in range(10):
-         print(f"displaying {digit}")
-         display_digit(digit)
-         utime.sleep(.1)
+        print(f"displaying {digit}")
+        display_digit(digit)
+        utime.sleep(0.1)
+
 
 clicks = 0
 last_click = 0
 
+
 def button_pressed(pin):
-    """ Interrupt handler that is called when our 
-    button is clicked """
+    """Interrupt handler that is called when our button is clicked"""
     global clicks, last_click
     new_time = utime.ticks_ms()
     # debounce
-    if (new_time - last_click) > 100: 
+    if (new_time - last_click) > 100:
         clicks += 1
         last_click = new_time
 
+
 buttonpin = machine.Pin(16, machine.Pin.IN, machine.Pin.PULL_UP)
 
+
 def start_listening_for_clicks():
-    buttonpin.irq(
-        trigger=machine.Pin.IRQ_FALLING,
-        handler = button_pressed
-    )
+    buttonpin.irq(trigger=machine.Pin.IRQ_FALLING, handler=button_pressed)
 
 
 def stop_listening_for_clicks():
     buttonpin.irq(
-        trigger=machine.Pin.IRQ_FALLING,
-        handler = None # type: ignore
+        trigger=machine.Pin.IRQ_FALLING, handler=None  # type: ignore
     )
+
 
 def game():
     global clicks
-    digits = range(1,9)
+    digits = range(1, 9)
     while True:
         clear()
         dp_blink()
@@ -141,6 +145,6 @@ try:
     display_digits()
     snake()
     dp_blink()
-    game()    
+    game()
 finally:
     clear()
