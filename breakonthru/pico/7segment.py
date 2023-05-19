@@ -82,7 +82,7 @@ def display_digits():
     for digit in range(10):
          print(f"displaying {digit}")
          display_digit(digit)
-         utime.sleep(1)
+         utime.sleep(.1)
 
 clicks = 0
 last_click = 0
@@ -138,6 +138,7 @@ def game():
 
 try:
     clear()
+    display_digits()
     snake()
     dp_blink()
     game()    
