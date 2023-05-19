@@ -2,7 +2,21 @@ import machine
 import random
 import utime
 
-LEDS = {
+# The segments of the display have ids.
+#
+#  ---A----
+# |        |
+# F        B
+# |        |
+# |---G----|
+# |        |
+# E        C
+# |        |
+#  ---D----  . DP
+#
+
+SEGMENTS = {
+    # mapping of segment id to GPIO PIN
     "A": machine.Pin(9,machine.Pin.OUT),
     "B": machine.Pin(3,machine.Pin.OUT),
     "C": machine.Pin(5,machine.Pin.OUT),
@@ -13,8 +27,9 @@ LEDS = {
     "DP": machine.Pin(4,machine.Pin.OUT),
     }
 
-order = [ "G", "F", "A", "B", "G", "E", "D", "C" ]
-
+# A mapping of a digit to the segment ids
+# that should be turned on to display that
+# particular digit
 DIGITS = {
     0: ("A", "B", "C", "D", "E", "F"),
     1: ("B", "C"),
@@ -29,41 +44,41 @@ DIGITS = {
 }
 
 def clear():
-    for name, pin in LEDS.items():
+    """ Turn off all segments """
+    for name, pin in SEGMENTS.items():
         pin.off()
 
 def display_digit(digit):
+    """ Display a digit """
     segments = DIGITS[digit]
-    for name, pin in LEDS.items():
+    for name, pin in SEGMENTS.items():
         if name in segments:
             pin.on()
         else:
             pin.off()
     
 def dp_blink():
+    """ Turn off all segments then blink the decimal 
+    point segment a few times"""
     clear()
     for x in range(3):
-        LEDS["DP"].on()
+        SEGMENTS["DP"].on()
         utime.sleep(.05)
-        LEDS["DP"].off()
+        SEGMENTS["DP"].off()
         utime.sleep(.05)
 
 def snake():
+    """ Animate a snake on the display """
+    order = [ "G", "F", "A", "B", "G", "E", "D", "C" ]
     for name in order:
-        pin = LEDS[name]
+        pin = SEGMENTS[name]
         pin.on()
         utime.sleep(.1)
         pin.off()
         utime.sleep(.1)
 
-def boobs():
-    for digit in (8, 0, 0, 8, 5):
-        display_digit(digit)
-        utime.sleep(.5)
-        clear()
-        utime.sleep(.5)
-
 def display_digits():
+    """ Display each digit 0-9 in order """
     for digit in range(10):
          print(f"displaying {digit}")
          display_digit(digit)
@@ -73,6 +88,8 @@ clicks = 0
 last_click = 0
 
 def button_pressed(pin):
+    """ Interrupt handler that is called when our 
+    button is clicked """
     global clicks, last_click
     new_time = utime.ticks_ms()
     # debounce
@@ -104,7 +121,6 @@ def game():
             trigger=machine.Pin.IRQ_FALLING,
             handler = None # type: ignore
             )
-        #print(f"clicks {clicks}, digit {digit}, clicks_before {clicks_before}")
         dp_blink()
         supplied = clicks - clicks_before
         if supplied == digit:
@@ -120,7 +136,6 @@ try:
     dp_blink()
     game()    
 finally:
-    for name, pin in LEDS.items():
-        pin.off()
+    clear()
 
     
