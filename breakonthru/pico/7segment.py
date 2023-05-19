@@ -42,6 +42,7 @@ DIGITS = {
     9: ("A", "B", "C", "G", "F"),
 }
 
+BUZZER_PIN =  machine.Pin(21)
 
 def clear():
     """Turn off all segments"""
@@ -84,7 +85,6 @@ def snake():
 def display_digits():
     """Display each digit 0-9 in order"""
     for digit in range(10):
-        print(f"displaying {digit}")
         display_digit(digit)
         utime.sleep(0.1)
 
@@ -101,6 +101,7 @@ def button_pressed(pin):
     if (new_time - last_click) > 100:
         clicks += 1
         last_click = new_time
+        make_noise(512, 0.1)
 
 
 buttonpin = machine.Pin(16, machine.Pin.IN, machine.Pin.PULL_UP)
@@ -113,6 +114,19 @@ def start_listening_for_clicks():
 def stop_listening_for_clicks():
     buttonpin.irq(trigger=machine.Pin.IRQ_FALLING, handler=None)  # type: ignore
 
+def make_noise(freq, duration=1):
+    buzzer = machine.PWM(BUZZER_PIN)
+    # Set a pwm frequency
+    buzzer.freq(freq)
+    # Set the buzzer duty value
+    # this serves as volume control
+    # Max volume is a duty value of 512
+    buzzer.duty_u16(50)
+    # Let the sound ring for a certain duration
+    utime.sleep(duration)
+    #  Turn off the pulse by setting the duty to 0
+    buzzer.duty_u16(0)
+    buzzer.deinit()
 
 def game():
     global clicks
@@ -122,6 +136,7 @@ def game():
         dp_blink()
         clicks_before = clicks
         digit = random.choice(digits)
+        make_noise(1047)
         start_listening_for_clicks()
         for x in range(10):
             display_digit(digit)
@@ -133,8 +148,10 @@ def game():
         supplied = clicks - clicks_before
         if supplied == digit:
             print(f"Correct ({digit})")
+            make_noise(2000, .1)
             snake()
         else:
+            make_noise(500, .1)
             print(f"Incorrect (wanted {digit}, got {supplied})")
 
 
