@@ -102,7 +102,7 @@ def game():
             utime.sleep_ms(100)
         buttonpin.irq(
             trigger=machine.Pin.IRQ_FALLING,
-            handler = None
+            handler = None # type: ignore
             )
         #print(f"clicks {clicks}, digit {digit}, clicks_before {clicks_before}")
         dp_blink()
