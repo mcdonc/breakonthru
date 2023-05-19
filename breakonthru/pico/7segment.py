@@ -42,7 +42,7 @@ DIGITS = {
     9: ("A", "B", "C", "G", "F"),
 }
 
-BUZZER_PIN =  machine.Pin(21)
+BUZZER_PIN =  machine.Pin(0)
 
 def clear():
     """Turn off all segments"""
@@ -129,6 +129,12 @@ def make_noise(freq, duration=1):
     buzzer.deinit()
 
 def game():
+    """
+    The 7-segment display will show a digit.  If you click exactly that many
+    times on the button connected to BUTTONPIN within about 5 seconds, it will
+    show the snake animation and make a win noise.  If you click too many times
+    or too few times it will make a lose noise.
+    """
     global clicks
     digits = range(1, 9)
     while True:
@@ -151,8 +157,8 @@ def game():
             make_noise(2000, .1)
             snake()
         else:
-            make_noise(500, .1)
             print(f"Incorrect (wanted {digit}, got {supplied})")
+            make_noise(500, .1)
 
 
 try:
