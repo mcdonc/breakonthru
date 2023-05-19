@@ -111,9 +111,7 @@ def start_listening_for_clicks():
 
 
 def stop_listening_for_clicks():
-    buttonpin.irq(
-        trigger=machine.Pin.IRQ_FALLING, handler=None  # type: ignore
-    )
+    buttonpin.irq(trigger=machine.Pin.IRQ_FALLING, handler=None)  # type: ignore
 
 
 def game():

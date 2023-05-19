@@ -7,7 +7,6 @@ CR = b"\r"
 CRLF = CR + LF
 
 
-
 class PicoDoorReceiver:
     def __init__(
         self,
@@ -35,10 +34,10 @@ class PicoDoorReceiver:
         self.uart = uart
         self.last_blink = 0  # used by blink method
         self.unlocked = False  # used by unlock and relock methods
-        self.unlocked_duration = unlocked_duration # seconds
-        self.authorized_sender = authorized_sender # LoRa address of sender
-        self.unlock_message = unlock_message # message body sent by sender
-        self.relocked_message = relocked_message # message body in response
+        self.unlocked_duration = unlocked_duration  # seconds
+        self.authorized_sender = authorized_sender  # LoRa address of sender
+        self.unlock_message = unlock_message  # message body sent by sender
+        self.relocked_message = relocked_message  # message body in response
         self.onboard_led = machine.Pin("LED")
         self.unlock_pin = machine.Pin(unlock_pin, machine.Pin.OUT)
         self.buffer = bytearray()
@@ -49,7 +48,7 @@ class PicoDoorReceiver:
         if watchdog:
             # set up a watchdog timer that will restart the Pico if not fed
             # at least every five seconds
-            self.watchdog = machine.WDT(timeout=5000) # ms
+            self.watchdog = machine.WDT(timeout=5000)  # ms
         else:
             self.watchdog = None
 
