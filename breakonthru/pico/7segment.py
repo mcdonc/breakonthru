@@ -169,3 +169,4 @@ try:
     game()
 finally:
     clear()
+    make_noise(200, .1)
