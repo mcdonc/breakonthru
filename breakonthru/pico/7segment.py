@@ -99,6 +99,19 @@ def button_pressed(pin):
 
 buttonpin = machine.Pin(16, machine.Pin.IN, machine.Pin.PULL_UP)
 
+def start_listening_for_clicks():
+    buttonpin.irq(
+        trigger=machine.Pin.IRQ_FALLING,
+        handler = button_pressed
+    )
+
+
+def stop_listening_for_clicks():
+    buttonpin.irq(
+        trigger=machine.Pin.IRQ_FALLING,
+        handler = None # type: ignore
+    )
+
 def game():
     global clicks
     digits = range(1,9)
@@ -107,19 +120,13 @@ def game():
         dp_blink()
         clicks_before = clicks
         digit = random.choice(digits)
-        buttonpin.irq(
-            trigger=machine.Pin.IRQ_FALLING,
-            handler = button_pressed
-            )
+        start_listening_for_clicks()
         for x in range(10):
             display_digit(digit)
             utime.sleep_ms(400)
             clear()
             utime.sleep_ms(100)
-        buttonpin.irq(
-            trigger=machine.Pin.IRQ_FALLING,
-            handler = None # type: ignore
-            )
+        stop_listening_for_clicks()
         dp_blink()
         supplied = clicks - clicks_before
         if supplied == digit:
