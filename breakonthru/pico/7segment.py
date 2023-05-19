@@ -137,5 +137,3 @@ try:
     game()    
 finally:
     clear()
-
-    
