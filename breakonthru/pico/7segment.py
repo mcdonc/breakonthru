@@ -98,7 +98,7 @@ def button_pressed(pin):
     global clicks, last_click
     new_time = utime.ticks_ms()
     # debounce
-    if (new_time - last_click) > 100:
+    if (new_time - last_click) > 225:
         clicks += 1
         last_click = new_time
         make_noise(512, 0.1)
