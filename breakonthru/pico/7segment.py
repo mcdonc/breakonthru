@@ -44,10 +44,13 @@ DIGITS = {
 }
 
 # the pin that is connected to the speaker
-BUZZER_PIN =  machine.Pin(0)
+BUZZER_PIN =  machine.Pin(28)
 
 # the pin that is connected to the button
-BUTTON_PIN = machine.Pin(16, machine.Pin.IN, machine.Pin.PULL_UP)
+BUTTON_PIN = machine.Pin(16, machine.Pin.IN, machine.Pin.PULL_DOWN)
+
+CLICKS = 0
+BUTTON_LAST_STATE = BUTTON_PIN.value()
 
 def clear():
     """Turn off all segments"""
@@ -69,10 +72,11 @@ def dp_blink():
     """Turn off all segments then blink the decimal point segment a few
     times"""
     clear()
+    dp_pin = SEGMENTS["DP"]
     for x in range(3):
-        SEGMENTS["DP"].on()
+        dp_pin.on()
         utime.sleep_ms(50)
-        SEGMENTS["DP"].off()
+        dp_pin.off()
         utime.sleep_ms(50)
 
 
@@ -94,30 +98,42 @@ def display_digits():
         utime.sleep_ms(100)
 
 
-CLICKS = 0
-LAST_CLICK = 0
-
-
 def button_pressed(pin):
-    """Interrupt handler that is called when our button is clicked"""
-    global CLICKS, LAST_CLICK
-    new_time = utime.ticks_ms()
-    # debounce
-    if (new_time - LAST_CLICK) > 200:
+    """
+    Interrupt handler that is called when our button is pressed or released
+    """
+    global BUTTON_LAST_STATE, CLICKS
+
+    # software debounce
+    stop_listening_for_clicks()
+    utime.sleep_ms(1)
+
+    button_current_state = BUTTON_PIN.value()
+    if button_current_state and (not BUTTON_LAST_STATE):
+        # pressed: input is high and different from previous state
+        BUTTON_LAST_STATE = True
         CLICKS += 1
-        LAST_CLICK = new_time
-        make_noise(512, 0.1)
         sys.stdout.write("C")
+    elif (not button_current_state) and BUTTON_LAST_STATE:
+        # released: input is low and different from previous state
+        BUTTON_LAST_STATE = False
 
-
+    start_listening_for_clicks()
 
 
 def start_listening_for_clicks():
-    BUTTON_PIN.irq(trigger=machine.Pin.IRQ_FALLING, handler=button_pressed)
+    BUTTON_PIN.irq(
+        trigger=machine.Pin.IRQ_RISING|machine.Pin.IRQ_FALLING,
+        handler=button_pressed
+    )
 
 
 def stop_listening_for_clicks():
-    BUTTON_PIN.irq(trigger=machine.Pin.IRQ_FALLING, handler=None)  # type: ignore
+    BUTTON_PIN.irq(
+        trigger=machine.Pin.IRQ_RISING|machine.Pin.IRQ_FALLING,
+        handler=None # type: ignore
+    ) 
+
 
 def make_noise(freq, duration=1.0):
     buzzer = machine.PWM(BUZZER_PIN)
@@ -170,7 +186,6 @@ try:
     clear()
     display_digits()
     snake()
-    dp_blink()
     game()
 finally:
     clear()
