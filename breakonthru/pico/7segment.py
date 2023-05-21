@@ -44,7 +44,7 @@ DIGITS = {
 }
 
 # the pin that is connected to the speaker
-BUZZER_PIN =  machine.Pin(28)
+BUZZER_PIN =  machine.Pin(0)
 
 # the pin that is connected to the button
 BUTTON_PIN = machine.Pin(16, machine.Pin.IN, machine.Pin.PULL_DOWN)
@@ -113,6 +113,7 @@ def button_pressed(pin):
         # pressed: input is high and different from previous state
         BUTTON_LAST_STATE = True
         CLICKS += 1
+        make_noise(512, 0.1)
         sys.stdout.write("C")
     elif (not button_current_state) and BUTTON_LAST_STATE:
         # released: input is low and different from previous state
