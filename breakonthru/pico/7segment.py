@@ -1,5 +1,6 @@
 import machine
 import random
+import sys
 import utime
 
 # The segments of the display have letter ids.
@@ -42,7 +43,11 @@ DIGITS = {
     9: ("A", "B", "C", "G", "F"),
 }
 
+# the pin that is connected to the speaker
 BUZZER_PIN =  machine.Pin(0)
+
+# the pin that is connected to the button
+BUTTON_PIN = machine.Pin(16, machine.Pin.IN, machine.Pin.PULL_UP)
 
 def clear():
     """Turn off all segments"""
@@ -66,9 +71,9 @@ def dp_blink():
     clear()
     for x in range(3):
         SEGMENTS["DP"].on()
-        utime.sleep(0.05)
+        utime.sleep_ms(50)
         SEGMENTS["DP"].off()
-        utime.sleep(0.05)
+        utime.sleep_ms(50)
 
 
 def snake():
@@ -77,42 +82,42 @@ def snake():
     for name in order:
         pin = SEGMENTS[name]
         pin.on()
-        utime.sleep(0.1)
+        utime.sleep_ms(100)
         pin.off()
-        utime.sleep(0.1)
+        utime.sleep_ms(100)
 
 
 def display_digits():
     """Display each digit 0-9 in order"""
     for digit in range(10):
         display_digit(digit)
-        utime.sleep(0.1)
+        utime.sleep_ms(100)
 
 
-clicks = 0
-last_click = 0
+CLICKS = 0
+LAST_CLICK = 0
 
 
 def button_pressed(pin):
     """Interrupt handler that is called when our button is clicked"""
-    global clicks, last_click
+    global CLICKS, LAST_CLICK
     new_time = utime.ticks_ms()
     # debounce
-    if (new_time - last_click) > 225:
-        clicks += 1
-        last_click = new_time
+    if (new_time - LAST_CLICK) > 200:
+        CLICKS += 1
+        LAST_CLICK = new_time
         make_noise(512, 0.1)
+        sys.stdout.write("C")
 
 
-buttonpin = machine.Pin(16, machine.Pin.IN, machine.Pin.PULL_UP)
 
 
 def start_listening_for_clicks():
-    buttonpin.irq(trigger=machine.Pin.IRQ_FALLING, handler=button_pressed)
+    BUTTON_PIN.irq(trigger=machine.Pin.IRQ_FALLING, handler=button_pressed)
 
 
 def stop_listening_for_clicks():
-    buttonpin.irq(trigger=machine.Pin.IRQ_FALLING, handler=None)  # type: ignore
+    BUTTON_PIN.irq(trigger=machine.Pin.IRQ_FALLING, handler=None)  # type: ignore
 
 def make_noise(freq, duration=1.0):
     buzzer = machine.PWM(BUZZER_PIN)
@@ -135,12 +140,12 @@ def game():
     show the snake animation and make a win noise.  If you click too many times
     or too few times it will make a lose noise.
     """
-    global clicks
+    global CLICKS
     digits = range(1, 9)
     while True:
         clear()
         dp_blink()
-        clicks_before = clicks
+        clicks_before = CLICKS
         digit = random.choice(digits)
         make_noise(1047)
         start_listening_for_clicks()
@@ -151,13 +156,13 @@ def game():
             utime.sleep_ms(100)
         stop_listening_for_clicks()
         dp_blink()
-        supplied = clicks - clicks_before
+        supplied = CLICKS - clicks_before
         if supplied == digit:
-            print(f"Correct ({digit})")
+            print(f" Correct ({digit})")
             make_noise(2000, .1)
             snake()
         else:
-            print(f"Incorrect (wanted {digit}, got {supplied})")
+            print(f" Incorrect (wanted {digit}, got {supplied})")
             make_noise(500, .1)
 
 
