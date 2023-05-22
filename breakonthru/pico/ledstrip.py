@@ -1,9 +1,11 @@
 from np import Neopixel
 import utime
 import random
+import sys
 
 numpix = 144
-strip = Neopixel(numpix, 0, 16, "RGB")
+pin = 16
+strip = Neopixel(numpix, 0, pin)
 
 red = (255, 0, 0)
 orange = (255, 50, 0)
@@ -18,16 +20,44 @@ delay = 0.5
 strip.brightness(42)
 blank = (0,0,0)
 
-try:
-    while True:
-        strip.set_pixel(random.randint(0, numpix-1), colors_rgb[random.randint(0, len(colors_rgb)-1)])
-        strip.set_pixel(random.randint(0, numpix-1), colors_rgb[random.randint(0, len(colors_rgb)-1)])
-        strip.set_pixel(random.randint(0, numpix-1), colors_rgb[random.randint(0, len(colors_rgb)-1)])
-        strip.set_pixel(random.randint(0, numpix-1), colors_rgb[random.randint(0, len(colors_rgb)-1)])
-        strip.set_pixel(random.randint(0, numpix-1), colors_rgb[random.randint(0, len(colors_rgb)-1)])
-        strip.show()
-        utime.sleep(delay)
-        strip.fill((0,0,0))
-finally:
-    strip.fill((0,0,0))
-    strip.show()
+divided = {
+    0: blue,
+    1: green,
+    2: yellow,
+    3: red,
+}
+
+divisor = 4
+divided_into = int(numpix / divisor)
+
+for x in range(divisor):
+    color = divided[x]
+        
+    start = (numpix//divisor) * x
+    end = start + (numpix//divisor)
+
+    for pixel in range(start, end):
+        sys.stdout.write(f"{pixel} ")
+        sys.stdout.write(f"{color}\n")
+        strip.set_pixel(pixel, color)
+        utime.sleep_ms(1)
+
+strip.show()
+utime.sleep_ms(5000)
+strip.fill((0,0,0))
+strip.show()
+strip.fill((0,0,0))
+strip.show()
+# try:
+#     while True:
+#         strip.set_pixel(random.randint(0, numpix-1), colors_rgb[random.randint(0, len(colors_rgb)-1)])
+#         strip.set_pixel(random.randint(0, numpix-1), colors_rgb[random.randint(0, len(colors_rgb)-1)])
+#         strip.set_pixel(random.randint(0, numpix-1), colors_rgb[random.randint(0, len(colors_rgb)-1)])
+#         strip.set_pixel(random.randint(0, numpix-1), colors_rgb[random.randint(0, len(colors_rgb)-1)])
+#         strip.set_pixel(random.randint(0, numpix-1), colors_rgb[random.randint(0, len(colors_rgb)-1)])
+#         strip.show()
+#         utime.sleep(delay)
+#         strip.fill((0,0,0))
+# finally:
+#     strip.fill((0,0,0))
+#     strip.show()
