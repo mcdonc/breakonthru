@@ -5,7 +5,7 @@ import rp2
 
 # PIO state machine for RGB. Pulls 24 bits (rgb -> 3 * 8bit) automatically
 @rp2.asm_pio(sideset_init=rp2.PIO.OUT_LOW, out_shiftdir=rp2.PIO.SHIFT_LEFT, autopull=True, pull_thresh=24)
-def ws2812():
+def ws2812():b
     T1 = 2
     T2 = 5
     T3 = 3
@@ -65,7 +65,7 @@ class Neopixel:
     # __slots__ = [
     #    'num_leds',   # number of LEDs
     #    'pixels',     # array.array('I') of raw data for LEDs
-    #    'mode',       # mode 'RGB' etc
+    #    'mode',       # mode 'RGstripB' etc
     #    'W_in_mode',  # bool: is 'W' in mode
     #    'sm',         # state machine
     #    'shift',      # shift amount for each component, in a tuple for (R,B,G,W)
