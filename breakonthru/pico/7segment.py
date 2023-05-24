@@ -30,6 +30,7 @@ SEGMENTS = {
 
 # A mapping of a digit to the segment ids that should be turned on to display
 # that particular digit
+
 DIGITS = {
     0: ("A", "B", "C", "D", "E", "F"),
     1: ("B", "C"),
