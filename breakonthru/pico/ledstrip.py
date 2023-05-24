@@ -5,7 +5,7 @@ import utime
 
 from neopixel import NeoPixel
 
-numpix = 144
+numpix = 48
 pin = 28
 strip = NeoPixel(machine.Pin(pin), numpix)
 
@@ -59,14 +59,14 @@ def analog_audio_graph():
             start = 0
             end = int(numpix * percent)
             leds = list(range(start, end))
+            print((percent, leds))
             for x in leds:
                 strip[x] = yellow
             strip.write()
             utime.sleep_ms(10)
             clear()
     finally:
-        strip.fill(blank)
-        strip.write()
+        clear()
 
 AGO = utime.time_ns()
 ONE_SECOND_IN_NS = 1000000000
@@ -116,10 +116,8 @@ def clapper():
         while True:
             utime.sleep(1)
     finally:
+        clear()
         stop_listening_for_snaps()
 
-try:
-    clapper()
-finally:
-    clear()
+clapper()
 
