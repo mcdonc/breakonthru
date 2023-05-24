@@ -247,6 +247,7 @@ class PageListener:
         self.callbutton_gpio_pin = callbutton_gpio_pin
         self.callbutton_bouncetime = callbutton_bouncetime
         self.logger = logger
+        self.button_last_value = None
 
     def log(self, msg):
         self.logger.info(f"PAGEL {msg}")
@@ -259,15 +260,23 @@ class PageListener:
             pin=self.callbutton_gpio_pin,
             bounce_time=self.callbutton_bouncetime / 1000.0,
         )
+        self.button_last_value = button.value
         try:
             self.log("starting page listener")
             self.log(f"callbutton gpio pin is {self.callbutton_gpio_pin}")
 
             def enqueue(*arg):
-                now = time.time()
-                self.logger.debug("enqueuing page")
-                self.page_queue.put(now)
-                self.log("enqueued page")
+                value = button.value
+                # debounce (further)
+                if value and (not self.button_last_value):
+                    # input is high and diffeent from previous
+                    self.button_last_value = True
+                    now = time.time()
+                    self.logger.debug("enqueuing page")
+                    self.page_queue.put(now)
+                    self.log("enqueued page")
+                elif (not value) and self.button_last_value:
+                    self.button_last_value = False
 
             button.when_pressed = enqueue
             signal.pause()
