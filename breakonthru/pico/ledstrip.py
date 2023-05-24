@@ -1,10 +1,11 @@
-from neopixel import NeoPixel
 import machine
 import sys
 import time
 import utime
 
-numpix = 32
+from neopixel import NeoPixel
+
+numpix = 144
 pin = 28
 strip = NeoPixel(machine.Pin(pin), numpix)
 
@@ -54,16 +55,14 @@ def analog_audio_graph():
     try:
         while True:
             level = adc.read_u16()
-            percent = 65535 / level
-            print(percent)
+            percent = level / 65535
             start = 0
-            end = int(numpix * (percent/100))
+            end = int(numpix * percent)
             leds = list(range(start, end))
-            print(leds)
             for x in leds:
                 strip[x] = yellow
             strip.write()
-            utime.sleep_ms(100)
+            utime.sleep_ms(10)
             clear()
     finally:
         strip.fill(blank)
