@@ -112,8 +112,11 @@ def stop_listening_for_snaps():
 
 def clapper():
     start_listening_for_snaps()
-    while True:
-        utime.sleep(1)
+    try:
+        while True:
+            utime.sleep(1)
+    finally:
+        stop_listening_for_snaps()
 
 try:
     clapper()
