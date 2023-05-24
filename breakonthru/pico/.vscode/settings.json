@@ -10,5 +10,6 @@
     ],
     "picowgo.syncFolder": "",
     "picowgo.openOnStart": true,
+    "picowgo.syncAllFileTypes": true,
     "python.formatting.provider": "none"
 }

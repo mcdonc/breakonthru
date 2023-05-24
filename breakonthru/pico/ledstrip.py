@@ -3,8 +3,8 @@ import utime
 import sys
 import machine
 
-numpix = 144
-pin = 16
+numpix = 32
+pin = 28
 strip = NeoPixel(machine.Pin(pin), numpix)
 
 red = (255, 0, 0)
@@ -22,10 +22,10 @@ delay = 0.5
 blank = (0,0,0)
 
 divided = {
-    0: yellow,
-    1: yellow,
+    0: blue,
+    1: green,
     2: yellow,
-    3: yellow,
+    3: red,
 }
 
 divisor = 4
@@ -49,52 +49,50 @@ def clear():
     strip.fill(blank)
     strip.write()
 
-audio = machine.ADC(machine.Pin(26, machine.Pin.IN))
+adc = machine.ADC(machine.Pin(26, machine.Pin.IN, pull=None))
+digital_sensor_pin = machine.Pin(13, machine.Pin.IN, pull=None)
 
-def get_audio_level():
-    level = audio.read_u16()
-    return level
-
-try:
-    while True:
-        level = get_audio_level()
-        percent = 65535 / level
-        print(percent)
-        start = 0
-        end = int(numpix * (percent/100))
-        leds = list(range(start, end))
-        print(leds)
-        for x in leds:
-            strip[x] = yellow
+def analog_audio_graph():
+    try:
+        while True:
+            level = adc.read_u16()
+            percent = 65535 / level
+            print(percent)
+            start = 0
+            end = int(numpix * (percent/100))
+            leds = list(range(start, end))
+            print(leds)
+            for x in leds:
+                strip[x] = yellow
+            strip.write()
+            utime.sleep_ms(100)
+            clear()
+    finally:
+        strip.fill(blank)
         strip.write()
-        #utime.sleep_ms(100)
-        clear()
-finally:
-    strip.fill(blank)
-    strip.write()
+
+def snap_detected(pin):
+    stop_listening_for_snaps()
+    print('detected')
+    utime.sleep_ms(1)
+    start_listening_for_snaps()
 
 
-# try:
-#     segmented()
-#     utime.sleep(5)
-# finally:
-#     clear()
+def start_listening_for_snaps():
+    digital_sensor_pin.irq(
+        trigger=machine.Pin.IRQ_RISING|machine.Pin.IRQ_FALLING,
+        handler=snap_detected
+    )
 
-#utime.sleep_ms(5000)
-#strip.fill((0,0,0))
-#strip.show()
-#strip.fill((0,0,0))
-#strip.show()
-# try:
-#     while True:
-#         strip.set_pixel(random.randint(0, numpix-1), colors_rgb[random.randint(0, len(colors_rgb)-1)])
-#         strip.set_pixel(random.randint(0, numpix-1), colors_rgb[random.randint(0, len(colors_rgb)-1)])
-#         strip.set_pixel(random.randint(0, numpix-1), colors_rgb[random.randint(0, len(colors_rgb)-1)])
-#         strip.set_pixel(random.randint(0, numpix-1), colors_rgb[random.randint(0, len(colors_rgb)-1)])
-#         strip.set_pixel(random.randint(0, numpix-1), colors_rgb[random.randint(0, len(colors_rgb)-1)])
-#         strip.show()
-#         utime.sleep(delay)
-#         strip.fill((0,0,0))
-# finally:
-#     strip.fill((0,0,0))
-#     strip.show()
+def stop_listening_for_snaps():
+    digital_sensor_pin.irq(
+        trigger=machine.Pin.IRQ_RISING|machine.Pin.IRQ_FALLING,
+        handler=snap_detected
+    )
+
+def clapper():
+    start_listening_for_snaps()
+    while True:
+        utime.sleep(1)
+
+clapper()
