@@ -1,7 +1,8 @@
 from neopixel import NeoPixel
-import utime
-import sys
 import machine
+import sys
+import time
+import utime
 
 numpix = 32
 pin = 28
@@ -19,7 +20,6 @@ blank = (0,0,0)
 colors_rgb = [red, orange, yellow, green, blue, indigo, violet]
 
 delay = 0.5
-blank = (0,0,0)
 
 divided = {
     0: blue,
@@ -40,8 +40,6 @@ def segmented():
         end = start + (numpix//divisor)
 
         for pixel in range(start, end):
-            sys.stdout.write(f"{pixel} ")
-            sys.stdout.write(f"{color}\n")
             strip[pixel] = color
     strip.write()
 
@@ -49,8 +47,8 @@ def clear():
     strip.fill(blank)
     strip.write()
 
-adc = machine.ADC(machine.Pin(26, machine.Pin.IN, pull=None))
-digital_sensor_pin = machine.Pin(13, machine.Pin.IN, pull=None)
+adc = machine.ADC(machine.Pin(26, machine.Pin.IN, pull=None)) # type: ignore
+digital_sensor_pin = machine.Pin(13, machine.Pin.IN, pull=None) # type: ignore
 
 def analog_audio_graph():
     try:
@@ -71,22 +69,45 @@ def analog_audio_graph():
         strip.fill(blank)
         strip.write()
 
+AGO = utime.time_ns()
+ONE_SECOND_IN_NS = 1000000000
+STRIP_STATE = False
+
+def toggle_leds():
+    global STRIP_STATE
+    if STRIP_STATE is False:
+        segmented()
+        STRIP_STATE = True
+    else:
+        clear()
+        STRIP_STATE = False
+
+
+
 def snap_detected(pin):
     stop_listening_for_snaps()
-    print('detected')
-    utime.sleep_ms(1)
-    start_listening_for_snaps()
+    global AGO
+    try:
+        now = utime.time_ns()
+        if now <= AGO + ONE_SECOND_IN_NS:
+            return
+        else:
+            AGO = now
+        print('detected')
+        toggle_leds()
+    finally:
+        start_listening_for_snaps()
 
 
 def start_listening_for_snaps():
     digital_sensor_pin.irq(
-        trigger=machine.Pin.IRQ_RISING|machine.Pin.IRQ_FALLING,
+        trigger=machine.Pin.IRQ_RISING,
         handler=snap_detected
     )
 
 def stop_listening_for_snaps():
     digital_sensor_pin.irq(
-        trigger=machine.Pin.IRQ_RISING|machine.Pin.IRQ_FALLING,
+        trigger=machine.Pin.IRQ_RISING,
         handler=snap_detected
     )
 
@@ -95,4 +116,8 @@ def clapper():
     while True:
         utime.sleep(1)
 
-clapper()
+try:
+    clapper()
+finally:
+    clear()
+
