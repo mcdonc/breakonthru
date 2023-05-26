@@ -5,7 +5,7 @@ import utime
 
 from neopixel import NeoPixel
 
-numpix = 48
+numpix = 144
 pin = 28
 strip = NeoPixel(machine.Pin(pin), numpix)
 
@@ -107,7 +107,7 @@ def start_listening_for_snaps():
 def stop_listening_for_snaps():
     digital_sensor_pin.irq(
         trigger=machine.Pin.IRQ_RISING,
-        handler=snap_detected
+        handler=None
     )
 
 def clapper():
