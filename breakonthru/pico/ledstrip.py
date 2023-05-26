@@ -107,7 +107,7 @@ def start_listening_for_snaps():
 def stop_listening_for_snaps():
     digital_sensor_pin.irq(
         trigger=machine.Pin.IRQ_RISING,
-        handler=None
+        handler=None # type: ignore
     )
 
 def clapper():
