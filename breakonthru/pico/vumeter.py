@@ -27,8 +27,7 @@ divided = {
     3: red,
 }
 
-divisor = 4
-divided_into = int(numpix / divisor)
+divisor = len(divided)
 
 pixel_colors = {}
 
@@ -42,19 +41,11 @@ for x in range(divisor):
         pixel_colors[pixel] = color
 
 
-def segmented():
-    for pixel, color in pixel_colors.items():
-        strip[pixel] = color
-    strip.write()
-
-
 def clear():
     strip.fill(blank)
     strip.write()
 
 adc = machine.ADC(machine.Pin(26, machine.Pin.IN, pull=None)) # type: ignore
-digital_sensor_pin = machine.Pin(13, machine.Pin.IN, pull=None) # type: ignore
-
 
 def analog_audio_graph():
     try:
@@ -62,7 +53,7 @@ def analog_audio_graph():
             level = adc.read_u16()
             percent = level / (65535 / 2)
             if percent > 1:
-                percent -= 1
+                percent = 1
             if percent > .1: # don't register at 10% or below
                 start = 0
                 end = int(numpix * percent)
