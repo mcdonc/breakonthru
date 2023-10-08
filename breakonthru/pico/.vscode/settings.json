@@ -8,8 +8,8 @@
     "python.analysis.extraPaths": [
         ".vscode/Pico-W-Stub/stubs"
     ],
-    "picowgo.syncFolder": "",
-    "picowgo.openOnStart": true,
-    "picowgo.syncAllFileTypes": true,
+    "micropico.syncFolder": "",
+    "micropico.openOnStart": true,
+    "micropico.syncAllFileTypes": true,
     "python.formatting.provider": "none"
 }
