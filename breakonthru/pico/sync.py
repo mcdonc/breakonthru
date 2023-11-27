@@ -40,3 +40,14 @@ while True:
     response = readline(uart)
     print(response)
     time.sleep_ms(100)
+
+# other synchronous UART examples are in
+# https://www.youtube.com/watch?v=x4dZafO5FNg
+
+# see these links for a way you can write MicroPython code that looks
+# synchronous but isn't.
+#
+# - https://www.youtube.com/watch?v=5VLvmA__2v0&t=28s
+# - https://github.com/peterhinch/micropython-async/blob/master/v3/as_demos/auart.py
+# - https://github.com/peterhinch/micropython-async/blob/master/v3/as_demos/auart_hd.py
+#

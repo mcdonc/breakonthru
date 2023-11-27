@@ -18,51 +18,61 @@ class PicoDoorReceiver:
         unlock_pin=16,
         unlocked_duration=5,
         authorized_sender=2,
-        watchdog=None,
+        unlock_message="UNLOCK",
+        relocked_message="RELOCKED",
+        watchdog=False,
     ):
         uart = machine.UART(uartid)
         uart.init(
             baudrate=baudrate, tx=machine.Pin(tx_pin), rx=machine.Pin(rx_pin)
         )
-        # pop any bytes in the OS read/write buffers before returning to avoid
-        # any state left over since the last time we used the uart; this is
-        # nonblocking if there are no bytes to be read
-        uart.flush()
+        # pop any bytes in the OS readbuffer before returning to avoid
+        # any state left over since the last time we used the uart; note that
+        # read is nonblocking if there are no bytes to be read
         uart.read()
 
         self.uart = uart
         self.last_blink = 0  # used by blink method
         self.unlocked = False  # used by unlock and relock methods
-        self.unlocked_duration = unlocked_duration
+        self.unlocked_duration = unlocked_duration  # seconds
+        self.authorized_sender = authorized_sender  # LoRa address of sender
+        self.unlock_message = unlock_message  # message body sent by sender
+        self.relocked_message = relocked_message  # message body in response
         self.onboard_led = machine.Pin("LED")
-        self.authorized_sender = authorized_sender
-        self.watchdog = watchdog
         self.unlock_pin = machine.Pin(unlock_pin, machine.Pin.OUT)
         self.buffer = bytearray()
         self.pending_commands = list(commands)  # dont mutate the original
         self.poller = select.poll()
         self.poller.register(uart, select.POLLIN)
 
+        if watchdog:
+            # set up a watchdog timer that will restart the Pico if not fed
+            # at least every five seconds
+            self.watchdog = machine.WDT(timeout=5000)  # ms
+        else:
+            self.watchdog = None
+
     def handle_message(self, address, message):
         self.log(f"RECEIVED {message} from {address}")
-        if message == "UNLOCK" and address == self.authorized_sender:
-            # this is a message to unlock the door
+        if message == self.unlock_message and address == self.authorized_sender:
+            # this is a message to unlock the door, and it came from
+            # the network address we deem authorized
             self.unlock()
 
     def unlock(self):
-        self.log(f"Receiver unlocking using pin {self.unlock_pin}")
+        self.log(f"Receiver unlocking using {self.unlock_pin}")
         self.unlocked = time.time()
         self.unlock_pin.on()
         self.onboard_led.on()
 
     def relock(self):
-        self.log(f"Receiver relocking using pin {self.unlock_pin}")
+        self.log(f"Receiver relocking using {self.unlock_pin}")
         self.unlock_pin.off()
         self.onboard_led.off()
         self.unlocked = False
-        # send back "RELOCKED" to the sender indicating that the door has been
+        # send a message back to the sender indicating that the door has been
         # relocked
-        msg = "RELOCKED"
+        msg = self.relocked_message
         msglen = len(msg)
         self.pending_commands.append(
             (f"AT+SEND={self.authorized_sender},{msglen},{msg}", "")
@@ -72,7 +82,7 @@ class PicoDoorReceiver:
         # This turns on the onboard LED, then registers a callback to be called
         # 200 milliseconds in the future to turn it off.  We could blink the LED
         # more efficiently using a periodic timer, but the point is to be able
-        # to know that the software is still running by looking for blinks of
+        # to know that the mainloop is still running by looking for blinks of
         # the LED.
         self.onboard_led.on()
         self.last_blink = self.now
@@ -83,19 +93,29 @@ class PicoDoorReceiver:
         t = machine.Timer()
         t.init(mode=machine.Timer.ONE_SHOT, period=200, callback=turnoff)
 
+    def startup_blink(self):
+        # this will block for half a second, but it's only called at program
+        # startup.
+        for x in range(5):
+            self.onboard_led.on()
+            time.sleep_ms(100)
+            self.onboard_led.off()
+            time.sleep_ms(100)
+
     def manage_state(self):
         # This method is called continually by runforever (during normal
         # operations, every second or so).
+
+        # feed the watchdog timer so we aren't rebooted
+        if self.watchdog is not None:
+            self.watchdog.feed()
 
         # self.now is used in other methods that this one calls. Note that its
         # value is max 1-second precision, unlike "normal" Python, which has a
         # float component.
         self.now = time.time()
 
-        # self.log(f'Managing state at time {self.now}')
-
-        if self.watchdog is not None:
-            self.watchdog.feed()  # feed the watchdog timer to avoid reboot
+        # self.log(f"Managing state at time {self.now}")
 
         if self.unlocked:
             # the door is currently unlocked
@@ -113,6 +133,9 @@ class PicoDoorReceiver:
         print(msg)
 
     def runforever(self):
+        # do a startup blink once
+        self.startup_blink()
+
         # initialize some variables we use later
         current_cmd = None
         expect = None
@@ -185,23 +208,14 @@ class PicoDoorReceiver:
 
 
 OK = "+OK"
+
 commands = [
-    ("AT", ""),  # flush any old data left in the UART pending CRLF
+    ("AT", ""),  # last command in UART writebuffer might not be finalized
     ("AT+IPR=115200", "+IPR=115200"),  # baud rate
     ("AT+BAND=915000000", OK),  # mhz band
     ("AT+NETWORKID=18", OK),  # network number, shared by door
-    ("AT+ADDRESS=1", OK),  # network address (1: door, 2: sender)
+    ("AT+ADDRESS=1", OK),  # network address (1: ours, 2: sender)
 ]
 
-# reboot the board if we dont feed the dog every 5 seconds
-watchdog = machine.WDT(timeout=5000)
-
-unlocker = PicoDoorReceiver(
-    commands,
-    unlock_pin=16,
-    unlocked_duration=5,
-    authorized_sender=2,
-    watchdog=watchdog,
-)
-
+unlocker = PicoDoorReceiver(commands)
 unlocker.runforever()
