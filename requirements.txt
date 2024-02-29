@@ -1,0 +1,13 @@
+plaster_pastedeploy
+pyramid
+pyramid_chameleon
+waitress
+bcrypt
+websockets
+gpiozero
+pexpect
+setproctitle
+requests
+websocket-client
+#RPi.GPIO
+-e .

@@ -1,0 +1,26 @@
+inputs:
+  nixpkgs:
+    url: github:mcdonc/nixpkgs/nixos-23.11-python-env-venv
+  nixpkgs-unstable:
+    url: github:NixOS/nixpkgs/nixpkgs-unstable
+  nixpkgs-python:
+    url: github:cachix/nixpkgs-python
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
+  nix2container:
+    url: github:nlewo/nix2container
+    inputs:
+      nixpkgs:
+        follows: nixpkgs-unstable
+  mk-shell-bin:
+    url: github:rrbutani/nix-mk-shell-bin
+  devenv:
+    #url: github:mcdonc/devenv/nonroot-containers
+    url: path:/home/chrism/projects/devenv/?dir=src/modules
+  overlays:
+    url: path:./dev
+    overlays:
+      - default
+
+allowUnfree: true
