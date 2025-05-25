@@ -35,6 +35,10 @@ def main(global_config, **settings):
         websocket_url = os.environ.get("DOORSERVER_WEBSOCKET_URL")
         if websocket_url is None:
             websocket_url = settings["websocket_url"]
+        wssecret = os.environ.get("DOORSERVER_WSSECRET")
+        if wssecret is None:
+            wssecret = settings["secret"]
+        config.registry.settings["secret"] = wssecret
         config.registry.settings["websocket_url"] = websocket_url
         config.registry.settings["passwords"] = passwords
         config.registry.settings["doors"] = parse_doors(doors_text)
@@ -52,7 +56,7 @@ def main(global_config, **settings):
         policy = SessionSecurityPolicy()
         config.set_security_policy(policy)
         factory = SignedCookieSessionFactory(
-            settings["secret"], max_age=fiveyears, timeout=fiveyears
+            wssecret, max_age=fiveyears, timeout=fiveyears
         )
         config.set_session_factory(factory)
         config.scan()
