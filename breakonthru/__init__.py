@@ -1,3 +1,4 @@
+import os
 import time
 
 from pyramid.config import Configurator
@@ -15,14 +16,26 @@ fiveyears = 5 * 365 * 24 * 60 * 60
 
 def main(global_config, **settings):
     """This function returns a Pyramid WSGI application."""
-    password_file = settings["password_file"]
-    doors_file = settings["doors_file"]
+    password_file = os.environ.get("DOORSERVER_PASSWORDS_FILE")
+    if password_file is None:
+        password_file = settings["password_file"]
+    doors_file = os.environ.get("DOORSERVER_DOORS_FILE")
+    if doors_file is None:
+        doors_file = settings["doors_file"]
     with open(password_file, "r") as f:
         passwords_text = f.read()
     with open(doors_file, "r") as f:
         doors_text = f.read()
     passwords = parse_passwords(passwords_text)
     with Configurator(settings=settings) as config:
+        doorsip = os.environ.get("DOORSERVER_DOORSIP")
+        if doorsip is None:
+            doorsip = settings["doorsip"]
+        config.registry.settings["doorsip"] = doorsip
+        websocket_url = os.environ.get("DOORSERVER_WEBSOCKET_URL")
+        if websocket_url is None:
+            websocket_url = settings["websocket_url"]
+        config.registry.settings["websocket_url"] = websocket_url
         config.registry.settings["passwords"] = passwords
         config.registry.settings["doors"] = parse_doors(doors_text)
         config.include("pyramid_chameleon")
