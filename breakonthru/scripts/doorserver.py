@@ -17,7 +17,7 @@ from breakonthru.util import teelogger
 class Doorserver:
     unlockdata = None
 
-    def __init__(self, secret, password_file, doors_file, logger):
+    def __init__(self, secret, password_file, doors_file, port, logger):
         self.secret = secret
         with open(password_file, "r") as f:
             passwords = f.read()
@@ -26,6 +26,7 @@ class Doorserver:
         self.acks = {}
         self.pending_acks = {}
         self.broadcasts = []
+        self.port = port
 
     def log(self, msg):
         self.logger.info(msg)
@@ -34,7 +35,7 @@ class Doorserver:
         asyncio.run(self.serve())
 
     async def serve(self):
-        async with websockets.serve(self.handler, "", 8001):
+        async with websockets.serve(self.handler, "", self.port):
             await asyncio.Future()  # run forever
 
     async def handler(self, websocket):
@@ -162,6 +163,13 @@ def main():
     config = configparser.ConfigParser()
     config.read(config_file)
     section = config["doorserver"]
+
+    port = os.environ.get("DOORSERVER_WSSERVER_PORT")
+    if port is None:
+        port = section.get("port")
+        if port is None:
+            port = 8001
+    args["port"] = int(port)
 
     password_file = os.environ.get("DOORSERVER_PASSWORDS_FILE")
     if password_file is None:
