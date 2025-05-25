@@ -12,7 +12,7 @@ requires = [
     "plaster_pastedeploy",
     "pyramid",
     "pyramid_chameleon",
-    "pyramid_debugtoolbar",
+    # "pyramid_debugtoolbar", # not packaged via nix
     "waitress",
     "bcrypt",
     "websockets",
