@@ -175,7 +175,9 @@ def main():
 
     secret = section.get("secret")
     if secret is None:
-        raise AssertionError("secret must be supplied")
+        secret = os.environ.get("DOORSERVER_WSSECRET")
+        if secret is None:
+            raise AssertionError("secret must be supplied")
     args["secret"] = secret
 
     loglevel = section.get("loglevel", "INFO")
