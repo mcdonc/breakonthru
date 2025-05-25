@@ -163,19 +163,23 @@ def main():
     config.read(config_file)
     section = config["doorserver"]
 
-    password_file = section.get("password_file")
+    password_file = os.environ.get("DOORSERVER_PASSWORD_FILE")
     if password_file is None:
-        raise AssertionError("password_file must be supplied")
+        password_file = section.get("password_file")
+        if password_file is None:
+            raise AssertionError("password_file must be supplied")
     args["password_file"] = password_file
 
-    doors_file = section.get("doors_file")
+    doors_file = os.environ.get("DOORSERVER_DOORS_FILE")
     if doors_file is None:
-        raise AssertionError("doors_file must be supplied")
+        doors_file = section.get("doors_file")
+        if doors_file is None:
+            raise AssertionError("doors_file must be supplied")
     args["doors_file"] = doors_file
 
-    secret = section.get("secret")
+    secret = os.environ.get("DOORSERVER_WSSECRET")
     if secret is None:
-        secret = os.environ.get("DOORSERVER_WSSECRET")
+        secret = section.get("secret")
         if secret is None:
             raise AssertionError("secret must be supplied")
     args["secret"] = secret
