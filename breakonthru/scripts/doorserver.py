@@ -163,7 +163,7 @@ def main():
     config.read(config_file)
     section = config["doorserver"]
 
-    password_file = os.environ.get("DOORSERVER_PASSWORD_FILE")
+    password_file = os.environ.get("DOORSERVER_PASSWORDS_FILE")
     if password_file is None:
         password_file = section.get("password_file")
         if password_file is None:
