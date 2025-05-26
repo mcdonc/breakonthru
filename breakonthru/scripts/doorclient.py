@@ -697,9 +697,11 @@ def main():
     if server is None:
         raise AssertionError("server must be supplied")
     args["server"] = server
-    secret = section.get("secret")
+    secret = os.environ.get("DOORSERVER_WSSECRET")
     if secret is None:
-        raise AssertionError("secret must be supplied")
+        secret = section.get("secret")
+        if secret is None:
+            raise AssertionError("secret must be supplied")
     args["secret"] = secret
     pjsua_bin = section.get("pjsua_bin")
     if pjsua_bin is None:
