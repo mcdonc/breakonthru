@@ -25,6 +25,11 @@ LF = b"\n"
 CR = b"\r"
 CRLF = CR + LF
 
+if os.environ.get("GPIOZERO_PIN_FACTORY") == "NATIVE":
+    from gpiozero import Device
+    from gpiozero.pins.native import NativeFactory
+    Device.pin_factory = NativeFactory()
+
 
 class UnlockListener:
     def __init__(
