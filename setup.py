@@ -1,5 +1,5 @@
 import os
-import platform
+#import platform
 from setuptools import setup, find_packages
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -23,8 +23,8 @@ requires = [
     "websocket-client",
 ]
 
-if platform.machine() == "aarch64":
-    requires.append("RPi.GPIO")
+# if platform.machine() == "aarch64":
+#     requires.append("RPi.GPIO")
 
 tests_require = [
     "WebTest",
