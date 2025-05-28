@@ -614,7 +614,8 @@ def run_doorclient(
             logger,
         ).run,
     )
-    #page_listener.start()
+    if not os.environ.get("DOORSERVER_NOPAGE"):
+        page_listener.start()
 
     page_executor = Process(
         name="page_executor",
@@ -629,7 +630,8 @@ def run_doorclient(
             logger,
         ).run,
     )
-    #procs.append(page_executor)
+    if not os.environ.get("DOORSERVER_NOPAGE"):
+        procs.append(page_executor)
 
     for pin in unlock_gpio_pins:
         if pin.startswith("reyax:"):
