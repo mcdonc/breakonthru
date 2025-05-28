@@ -26,6 +26,9 @@ CR = b"\r"
 CRLF = CR + LF
 
 if os.environ.get("GPIOZERO_PIN_FACTORY") == "NATIVE":
+    # wont work on nix kernel
+    # https://arestless.rest/blog/lab--raspberry-pi-4b-gpio-debugging/
+    # the gpio pins are renumbered +512
     from gpiozero import Device
     from gpiozero.pins.native import NativeFactory
     Device.pin_factory = NativeFactory()
