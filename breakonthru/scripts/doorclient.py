@@ -260,13 +260,14 @@ class PageListener:
         setproctitle.setproctitle("doorclient-pagelistener")
         # gpiozero objects cannot be defined in the main process, only in
         # subproc
-        button = gpiozero.Button(
-            pin=self.callbutton_gpio_pin,
-            bounce_time=self.callbutton_bouncetime / 1000.0,
-        )
         try:
             self.log("starting page listener")
             self.log(f"callbutton gpio pin is {self.callbutton_gpio_pin}")
+            button = gpiozero.Button(
+                pin=self.callbutton_gpio_pin,
+                bounce_time=self.callbutton_bouncetime / 1000.0,
+            )
+            self.log("button set up properly")
 
             def enqueue(*arg):
                 now = time.time()
@@ -615,7 +616,7 @@ def run_doorclient(
         ).run,
     )
     if not os.environ.get("DOORSERVER_NOPAGE"):
-        page_listener.start()
+        procs.append(page_listener)
 
     page_executor = Process(
         name="page_executor",
